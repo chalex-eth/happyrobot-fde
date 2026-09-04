@@ -9,10 +9,11 @@ Verification date: 2026-09-04 (Europe/Paris). Credentials never belong here.
 3. Official FMCSA, HappyRobot, OTP-provider and framework documentation.
 4. Sanitized live-environment evidence.
 5. Approved local specifications and decisions.
-6. Fran's pinned submission as a comparison only.
+6. The pinned reference submission as a comparison only.
 
-The supplied implementation plan is preserved in [input-plan.md](input-plan.md).
-The local `references/fran-happyrobot-challenge` checkout was not copied or used
+The supplied implementation plan is copied into [input-plan.md](input-plan.md),
+with the original-author references removed per repository naming policy.
+The local `references/reference-challenge` checkout was not copied or used
 as an authoritative protocol source during scaffolding. Assignment, TMS, FMCSA,
 HappyRobot App and Twin facts still require direct verification in Milestone 0/1.
 

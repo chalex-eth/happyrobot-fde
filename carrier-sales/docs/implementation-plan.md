@@ -40,9 +40,9 @@ Local checks passed on 2026-09-04 with Node 22.16.0:
 - `pnpm test:e2e`: 2 Chromium smoke tests, including unauthenticated API rejection.
 - Docker image build and isolated container smoke check: root returned content;
   unconfigured manager API returned fail-closed HTTP 503; image runs as `node`.
-- Supplied plan copy matched its attachment byte for byte. A focused credential-key
-  pattern scan found no candidate secrets. This is not a substitute for a full
-  secret-scanning tool at Milestone 9.
+- Supplied plan content is included with original-author references removed. A
+  focused credential-key pattern scan found no candidate secrets. This is not a
+  substitute for a full secret-scanning tool at Milestone 9.
 
 These results cover scaffold plumbing only. HappyRobot hosting, MCP protocol,
 Twin, TMS, FMCSA, OTP, voice behavior and live mutations were not attempted.

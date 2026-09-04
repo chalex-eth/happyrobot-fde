@@ -127,7 +127,7 @@ The domain layer must not import Next.js, React, MCP transport code or provider 
 | TMS transport | Built-in `node:net` | Direct control of raw TCP framing, deadlines, buffering and socket closure |
 | REST clients | Built-in `fetch` with `AbortSignal` | FMCSA, Twin and OTP use HTTP; no extra client library is needed |
 | Dashboard data | TanStack Query only for live-refresh client views | Handles polling, stale state and retry behavior cleanly |
-| Unit and integration tests | Vitest | Fast TypeScript tests and already proven in Fran’s implementation |
+| Unit and integration tests | Vitest | Fast TypeScript tests and already proven in the reference implementation |
 | Browser smoke tests | Playwright, limited to critical App paths | Verifies authentication, dashboard rendering and protected-field absence |
 | Package manager | `pnpm` with one frozen lockfile | Reproducible installs and good Node/Vercel compatibility |
 | Deployment | Multi-stage Node Docker image | Satisfies the one-command deployment requirement and supports the Railway fallback |
@@ -202,9 +202,9 @@ TypeScript checks our source code while it is compiled. It cannot guarantee the 
 - Parsed TMS fields.
 - Browser requests.
 
-Zod validates those values at runtime and produces the TypeScript types used elsewhere. This follows one of the strongest patterns in Fran’s repository: shared schemas drive both HTTP/MCP validation and application types.
+Zod validates those values at runtime and produces the TypeScript types used elsewhere. This follows one of the strongest patterns in the reference repository: shared schemas drive both HTTP/MCP validation and application types.
 
-Use the current stable Zod release supported by the MCP packages. Do not copy Fran’s Zod 3 version automatically because his dependency snapshot is only a reference.
+Use the current stable Zod release supported by the MCP packages. Do not copy the reference repository’s Zod 3 version automatically because its dependency snapshot is only a reference.
 
 ### MCP framework
 
@@ -312,7 +312,7 @@ The domain layer receives normalized business results and never processes raw pr
 
 ### TanStack Query
 
-Fran uses TanStack Query effectively for dashboard refreshes. Retain it only where the App needs live client-side state.
+The reference implementation uses TanStack Query effectively for dashboard refreshes. Retain it only where the App needs live client-side state.
 
 Use it for:
 
@@ -346,13 +346,13 @@ Voice behavior remains verified through HappyRobot Prompt Playground and Web Cal
 
 ### HappyRobot SDK
 
-Fran uses `@happyrobot-ai/sdk` for workflow synchronization and Web Call tokens. Add it only if the current HappyRobot documentation and workspace prove that it reduces manual configuration.
+The reference implementation uses `@happyrobot-ai/sdk` for workflow synchronization and Web Call tokens. Add it only if the current HappyRobot documentation and workspace prove that it reduces manual configuration.
 
 Core domain logic must not depend on the SDK. This protects the application from SDK changes and allows manual platform configuration if an SDK feature is incomplete.
 
-### Libraries from Fran that are not selected initially
+### Reference libraries that are not selected initially
 
-| Fran dependency | Decision | Reason |
+| Reference dependency | Decision | Reason |
 |---|---|---|
 | Hono | Conditional fallback | Next.js Route Handlers already provide the HTTP layer |
 | `@hono/node-server` | Excluded initially | Only required for a standalone Hono process |
@@ -366,7 +366,7 @@ Core domain logic must not depend on the SDK. This protects the application from
 | React Simple Maps | Excluded | A map is not needed to demonstrate the required operational workflow |
 | Number Flow | Excluded | Animated metrics do not improve assignment coverage |
 
-If Milestone 1 forces a standalone Railway gateway, use Hono as a thin HTTP/MCP shell around the same framework-independent domain and integration modules. That follows Fran’s effective separation without copying his whole monorepo.
+If Milestone 1 forces a standalone Railway gateway, use Hono as a thin HTTP/MCP shell around the same framework-independent domain and integration modules. That follows the reference implementation’s effective separation without copying its whole monorepo.
 
 ### Logging and observability
 
@@ -427,7 +427,7 @@ Create four maintained documents before production implementation:
    - Framework documentation and pinned versions.
    - Verification dates.
    - Sanitized documentation/runtime discrepancies.
-   - Fran comparison.
+   - Reference implementation comparison.
    - Environment-variable registry without values.
 
 3. `docs/test-plan.md`
@@ -459,7 +459,7 @@ Architecture decisions go under `docs/decisions/`, including:
 3. Official FMCSA, HappyRobot, OTP-provider and framework documentation.
 4. Sanitized live-environment evidence.
 5. Approved project specifications and decisions.
-6. Fran’s submission as a reference only.
+6. The reference implementation’s submission as a reference only.
 
 ### Reference registry
 
@@ -472,7 +472,7 @@ Architecture decisions go under `docs/decisions/`, including:
 | FMCSA | [QCMobile API](https://mobile.fmcsa.dot.gov/QCDevsite/docs/qcApi) and [response elements](https://mobile.fmcsa.dot.gov/QCDevsite/docs/apiElements) | Docket lookup and authority fields |
 | Next.js | [App Router](https://nextjs.org/docs/app) and [Route Handlers](https://nextjs.org/docs/app/getting-started/route-handlers) | App and server-route structure |
 | MCP | [Official TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk) | MCP protocol implementation |
-| Reference candidate | [Fran’s repository](https://github.com/franalgaba/happyrobot-challenge/tree/main), pinned at `6a7c0897d77371514ee15b9f971aaa239f2ac3ee` | Patterns and comparison only |
+| Reference candidate | Pinned at `6a7c0897d77371514ee15b9f971aaa239f2ac3ee` | Patterns and comparison only |
 | Local design | [architecture-plan.md](</Users/alex/Documents/ChatGPT/HappyRobot FDE/docs/architecture-plan.md>) | Proposed design pending specification approval |
 
 ### Milestone 0 — Specification and framework approval
@@ -490,7 +490,7 @@ Architecture decisions go under `docs/decisions/`, including:
 
 - Every requirement and external integration has an authoritative source.
 - TMS framing, response boundaries and retry rules are explicit.
-- Fran’s architecture is separated from assignment requirements.
+- The reference architecture is separated from assignment requirements.
 - Every dependency has a stated purpose.
 - No credentials appear in tracked documents.
 - Another engineer can implement the system without conversation history.
