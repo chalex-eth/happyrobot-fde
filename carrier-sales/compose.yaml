@@ -1,0 +1,9 @@
+services:
+  app:
+    build: .
+    ports:
+      - "127.0.0.1:3000:3000"
+    environment:
+      GATEWAY_BEARER_TOKEN: ${GATEWAY_BEARER_TOKEN:-}
+      MANAGER_BEARER_TOKEN: ${MANAGER_BEARER_TOKEN:-}
+    restart: unless-stopped
