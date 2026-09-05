@@ -1,0 +1,26 @@
+{
+  "version_id": "01a07202-62df-7b5f-9dea-ee147a179a90",
+  "node_id": "01a07202-62eb-7b5b-83f6-ebe262e90663",
+  "changes": [
+    {
+      "id": "01a07202-6336-70af-90e9-058c45284d3e",
+      "description": "Call create_otp immediately after authority passes. Reuse a pending code, which remains valid for this call. Retry generation only after a confirmed failure with retry_allowed=true. Generation and verification share one retry; successful generation and carrier rechecks do not restore it. On OTP_FAILED close and finalize without another OTP attempt."
+    },
+    {
+      "id": "01a07202-6336-7298-b9db-2eea7f513000",
+      "description": "Call verify_otp only with six caller-dictated digits as a string, preserving zeros. Clarify incomplete digits without a tool call. On failure with retry_allowed=true ask for the same screen code again. The second OTP failure across generation and verification ends the flow. Never invent, disclose or read back digits; no protected load access before verified=true."
+    },
+    {
+      "id": "01a07202-6336-70d0-a276-ae4bfcfa3371",
+      "description": "After AUTHORITY_REQUIRED or OTP_REQUIRED satisfy the missing prerequisite before protected actions. A carrier change invalidates verification while retaining spent OTP failures. Verification otherwise lasts for the remaining call; never request verification solely because time passed. On OTP_FAILED stop and finalize; do not regenerate or recheck to restore a retry."
+    },
+    {
+      "id": "01a07202-6336-766d-a7f7-aa7f535bb627",
+      "description": "Explain technical failures truthfully without fabricated data. A confirmed OTP failure may use the one shared retry only when retry_allowed=true; distinguish a service failure from a wrong code. A second generation or verification failure closes with technical_error when technical, or conversation_complete for wrong-code exhaustion. An uncertain result or unavailable authoritative state requires technical closure without another OTP attempt."
+    },
+    {
+      "id": "01a07202-6336-7876-8b45-0d0b8bd0429a",
+      "description": "Do not retry uncertain mutations automatically. The backend may reconcile an OTP result from its saved receipt; the agent follows only the confirmed result and retry_allowed. OTP_RESULT_UNCERTAIN or OTP_OPERATION_CHANGED requires truthful technical closure. Expressly permitted negotiation/finalization duplicate delivery must use identical arguments."
+    }
+  ]
+}

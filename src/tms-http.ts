@@ -2,7 +2,7 @@ import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { runTms, TmsError, validateRequest } from './tms';
 
 const requestIdPattern = /^[A-Za-z0-9._:-]{1,128}$/;
-const upstreamStatus = (code: string) => code === 'TMS_TIMEOUT' ? 504
+export const upstreamStatus = (code: string) => code === 'TMS_TIMEOUT' ? 504
   : ['TMS_NOT_CONFIGURED', 'CANCELLED'].includes(code) ? 503
   : code === 'INTERNAL_ERROR' ? 500 : 502;
 

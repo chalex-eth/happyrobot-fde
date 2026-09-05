@@ -9,6 +9,20 @@ jobs:
   check:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: poc_test
+          POSTGRES_PASSWORD: test_only
+          POSTGRES_DB: poc_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U poc_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -16,6 +30,22 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - run: npm test
+      - name: Verify transactional OTP policy in disposable PostgreSQL
+        env:
+          PGPASSWORD: test_only
+        run: psql -h localhost -U poc_test -d poc_test -v ON_ERROR_STOP=1 -f docs/twin-m3.sql -f docs/twin-m3.1.sql -f docs/twin-m3.2.sql -f docs/twin-m3.5.sql -f docs/twin-m3.6.sql -f tests/otp-transitions.sql -f tests/call-transitions.sql -f tests/finalize-transitions.sql -f tests/negotiation-transitions.sql
+      - name: Verify concurrent OTP and negotiation requests
+        env:
+          PGPASSWORD: test_only
+          PGUSER: poc_test
+          PGPORT: 5432
+          PSQL_BIN: psql
+          OTP_TEST_DB: poc_test
+          NEGOTIATION_TEST_DB: poc_test
+        run: |
+          node scripts/verify-otp-db.mjs
+          node scripts/verify-negotiation-db.mjs
       - run: npm run typecheck
       - run: npm run build
-      # Deployment/import into HappyRobot is managed manually.
+      # HappyRobot deployment is deferred; this workflow only validates the app.

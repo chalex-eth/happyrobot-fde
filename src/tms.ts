@@ -79,7 +79,7 @@ export function parseResponse(lines: string[], request: TmsRequest): PublicLoad[
   return records;
 }
 
-function sendOnce(request: TmsRequest, signal?: AbortSignal): Promise<PublicLoad[]> {
+function sendOnce(request: TmsRequest, signal?: AbortSignal, inspectDetail?: (lines: string[]) => void): Promise<PublicLoad[]> {
   const host = process.env.TMS_HOST;
   const port = Number(process.env.TMS_PORT);
   const token = process.env.TMS_TOKEN;
@@ -127,7 +127,9 @@ function sendOnce(request: TmsRequest, signal?: AbortSignal): Promise<PublicLoad
         if (line === 'END') {
           try {
             if (pending) throw new TmsError('MALFORMED_RESPONSE', true);
-            return finish(undefined, parseResponse(lines, request));
+            const records = parseResponse(lines, request);
+            inspectDetail?.(lines);
+            return finish(undefined, records);
           } catch (error) { return finish(error instanceof TmsError ? error : new TmsError('MALFORMED_RESPONSE', true)); }
         }
         lines.push(line);
@@ -140,13 +142,13 @@ function sendOnce(request: TmsRequest, signal?: AbortSignal): Promise<PublicLoad
   });
 }
 
-export async function runTms(input: unknown, signal?: AbortSignal) {
+async function executeTms(input: unknown, signal?: AbortSignal, inspectDetail?: (lines: string[]) => void) {
   const request = validateRequest(input);
   const started = Date.now();
   const failures: string[] = [];
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
-      const records = await sendOnce(request, signal);
+      const records = await sendOnce(request, signal, inspectDetail);
       return { ok: true as const, command: request.command, complete: true, elapsed_ms: Date.now() - started, attempts: attempt, failures, record_count: records.length, records };
     } catch (error) {
       const fault = error instanceof TmsError ? error : new TmsError('INTERNAL_ERROR');
@@ -160,4 +162,37 @@ export async function runTms(input: unknown, signal?: AbortSignal) {
     }
   }
   throw new TmsError('INTERNAL_ERROR');
+}
+
+export function runTms(input: unknown, signal?: AbortSignal) {
+  return executeTms(input, signal);
+}
+
+export function moneyCents(value: string): number {
+  if (!/^\d{1,7}(?:\.\d{1,2})?$/.test(value)) throw new TmsError('TMS_PRICING_UNAVAILABLE');
+  const [whole, fraction = ''] = value.split('.');
+  const cents = Number(whole) * 100 + Number(fraction.padEnd(2, '0'));
+  if (cents <= 0 || cents > 100_000_000) throw new TmsError('TMS_PRICING_UNAVAILABLE');
+  return cents;
+}
+
+// Backend-only pricing path. The ordinary TMS adapter still strips MAX_BUY.
+// Parse only after a complete END-terminated frame; never expose raw fields.
+export function parsePrivatePricing(lines: string[]) {
+  if (lines.length !== 1) throw new TmsError('TMS_PRICING_UNAVAILABLE');
+  const fields = parseFields(lines[0]);
+  const listedCents = moneyCents(fields.RATE ?? '');
+  const maxCents = moneyCents(fields.MAX_BUY ?? '');
+  if (maxCents < listedCents) throw new TmsError('TMS_PRICING_UNAVAILABLE');
+  if (fields.STATUS !== 'OPEN') throw new TmsError('LOAD_UNAVAILABLE');
+  return { listedCents, maxCents };
+}
+
+export async function getLoadPricing(loadId: string, signal?: AbortSignal) {
+  let pricing: ReturnType<typeof parsePrivatePricing> | undefined;
+  const result = await executeTms({ command: 'LOAD_GET', fields: { LOAD_ID: loadId } }, signal,
+    lines => { pricing = parsePrivatePricing(lines); });
+  if (!result.ok) throw new TmsError(result.error, result.retryable);
+  if (!pricing) throw new TmsError('TMS_PRICING_UNAVAILABLE');
+  return { result, pricing };
 }

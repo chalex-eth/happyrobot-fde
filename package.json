@@ -10,17 +10,30 @@
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",
     "start": "next start --hostname 0.0.0.0",
-    "typecheck": "next typegen && tsc --noEmit"
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "verify:local": "node --env-file=.env.local scripts/verify-local.mjs",
+    "start:local": "next start --hostname 127.0.0.1",
+    "verify:fmcsa": "node scripts/verify-fmcsa.mjs",
+    "mcp:proxy": "node scripts/mcp-proxy.mjs",
+    "mcp:tunnel": "ngrok http http://127.0.0.1:3002 --inspect=false",
+    "happyrobot:mcp": "node --env-file=.env.local --import tsx scripts/happyrobot/mcp-connect.ts",
+    "verify:mcp": "node --env-file=.env.local --import tsx scripts/verify-mcp.ts"
   },
   "dependencies": {
+    "@happyrobot-ai/sdk": "0.1.45",
+    "@modelcontextprotocol/sdk": "1.30.0",
+    "livekit-client": "2.17.2",
     "next": "16.3.4",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "zod": "4.5.4"
   },
   "devDependencies": {
     "@types/node": "22.20.1",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.7",
+    "tsx": "4.23.13",
     "typescript": "7.0.2"
   }
 }

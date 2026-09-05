@@ -1,0 +1,218 @@
+{
+  "verify_carrier": {
+    "result": {
+      "error": "SCHEMA_PREVIEW_ONLY",
+      "retryable": false,
+      "ok": false,
+      "authority": {
+        "reason": "",
+        "carrier": {
+          "dotNumber": "",
+          "legalName": "",
+          "outOfService": "",
+          "commonAuthority": "",
+          "allowedToOperate": false,
+          "contractAuthority": "",
+          "outOfServiceReported": false
+        },
+        "outcome": "",
+        "eligible": false,
+        "mcNumber": "",
+        "checkedAt": ""
+      },
+      "verified": false,
+      "otp_status": "",
+      "demo": false,
+      "delivery": "",
+      "request_id": "",
+      "failures_remaining": 0,
+      "retry_allowed": false
+    },
+    "is_error": true
+  },
+  "create_otp": {
+    "result": {
+      "error": "SCHEMA_PREVIEW_ONLY",
+      "retryable": false,
+      "ok": false,
+      "authority": {
+        "reason": "",
+        "carrier": {
+          "dotNumber": "",
+          "legalName": "",
+          "outOfService": "",
+          "commonAuthority": "",
+          "allowedToOperate": false,
+          "contractAuthority": "",
+          "outOfServiceReported": false
+        },
+        "outcome": "",
+        "eligible": false,
+        "mcNumber": "",
+        "checkedAt": ""
+      },
+      "verified": false,
+      "otp_status": "",
+      "demo": false,
+      "delivery": "",
+      "delivered": false,
+      "request_id": "",
+      "failures_remaining": 0,
+      "retry_allowed": false
+    },
+    "is_error": true
+  },
+  "verify_otp": {
+    "result": {
+      "error": "SCHEMA_PREVIEW_ONLY",
+      "retryable": false,
+      "ok": false,
+      "authority": {
+        "reason": "",
+        "carrier": {
+          "dotNumber": "",
+          "legalName": "",
+          "outOfService": "",
+          "commonAuthority": "",
+          "allowedToOperate": false,
+          "contractAuthority": "",
+          "outOfServiceReported": false
+        },
+        "outcome": "",
+        "eligible": false,
+        "mcNumber": "",
+        "checkedAt": ""
+      },
+      "verified": false,
+      "otp_status": "",
+      "demo": false,
+      "delivery": "",
+      "request_id": "",
+      "failures_remaining": 0,
+      "retry_allowed": false
+    },
+    "is_error": true
+  },
+  "search_loads": {
+    "result": {
+      "error": "SCHEMA_PREVIEW_ONLY",
+      "retryable": false,
+      "ok": false,
+      "command": "",
+      "complete": false,
+      "elapsed_ms": 0,
+      "attempts": 0,
+      "failures": [],
+      "record_count": 0,
+      "records": [
+        {
+          "LOAD_ID": "",
+          "ORIG_CITY": "",
+          "ORIG_STATE": "",
+          "ORIG_ZIP": "",
+          "DEST_CITY": "",
+          "DEST_STATE": "",
+          "DEST_ZIP": "",
+          "PICKUP_DT": "",
+          "EQTYPE": "",
+          "RATE": "",
+          "MILES": "",
+          "STATUS": ""
+        }
+      ],
+      "request_id": ""
+    },
+    "is_error": true
+  },
+  "get_load": {
+    "result": {
+      "error": "SCHEMA_PREVIEW_ONLY",
+      "retryable": false,
+      "ok": false,
+      "command": "",
+      "complete": false,
+      "elapsed_ms": 0,
+      "attempts": 0,
+      "failures": [],
+      "record_count": 0,
+      "records": [
+        {
+          "LOAD_ID": "",
+          "ORIG_CITY": "",
+          "ORIG_STATE": "",
+          "ORIG_ZIP": "",
+          "DEST_CITY": "",
+          "DEST_STATE": "",
+          "DEST_ZIP": "",
+          "PICKUP_DT": "",
+          "DELIVERY_DT": "",
+          "EQTYPE": "",
+          "RATE": "",
+          "MILES": "",
+          "STATUS": "",
+          "WEIGHT": "",
+          "PIECES": ""
+        }
+      ],
+      "request_id": "",
+      "negotiation": {
+        "status": "",
+        "load_id": "",
+        "offer_id": "",
+        "offered_rate": 0,
+        "agreed_rate": 0,
+        "counter_rounds": 0,
+        "rounds_remaining": 0,
+        "expires_at": "",
+        "booking_confirmed": false
+      }
+    },
+    "is_error": true
+  },
+  "finalize_call": {
+    "result": {
+      "error": "SCHEMA_PREVIEW_ONLY",
+      "retryable": false,
+      "ok": false,
+      "outcome": "",
+      "finalized_at": "",
+      "authority_passed": false,
+      "verified": false,
+      "selected_load_id": "",
+      "booking_confirmed": false,
+      "request_id": "",
+      "negotiation": {
+        "status": "",
+        "load_id": "",
+        "offer_id": "",
+        "offered_rate": 0,
+        "agreed_rate": 0,
+        "counter_rounds": 0,
+        "rounds_remaining": 0,
+        "expires_at": "",
+        "booking_confirmed": false
+      }
+    },
+    "is_error": true
+  },
+  "negotiate_offer": {
+    "result": {
+      "error": "SCHEMA_PREVIEW_ONLY",
+      "retryable": false,
+      "ok": false,
+      "negotiation": {
+        "status": "",
+        "load_id": "",
+        "offer_id": "",
+        "offered_rate": 0,
+        "agreed_rate": 0,
+        "counter_rounds": 0,
+        "rounds_remaining": 0,
+        "expires_at": "",
+        "booking_confirmed": false
+      },
+      "request_id": ""
+    },
+    "is_error": true
+  }
+}
