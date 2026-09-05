@@ -1,397 +1,298 @@
-# Inbound Carrier Sales POC - Architecture Plan
+# Inbound Carrier Sales — testable POC milestones
 
-## 1. The system in plain language
+Updated: 2026-09-05. This is an execution plan, not evidence that the remaining integrations work. The reference-codebase guidance below complements the milestone sequence.
 
-- **HappyRobot voice agent** is the salesperson. It talks to the carrier and asks one question at a time.
-- **Our MCP gateway** is the rule enforcer and translator. For the POC, it can live in the HappyRobot App's Next.js server routes rather than in a separately deployed service. The agent cannot verify itself, skip OTP, decide a rate ceiling, or claim a booking without this code.
-- **FMCSA** answers whether the carrier has active operating authority.
-- **OTP workflow** proves that the caller controls the supplied contact channel before any load is discussed.
-- **Legacy TMS** is the source of truth for available loads and bookings. It speaks a fragile TCP protocol, not HTTP or JSON.
-- **Twin** is the audit notebook. It records every call state, tool event, verification, negotiation, booking attempt, and final outcome.
-- **HappyRobot App** is the manager's control screen. It reads approved operational views from Twin and highlights exceptions.
+## Objective and working method
 
-The most important boundary is this: the language model manages the conversation, while deterministic code manages compliance, money, mutations, and audit state.
+Get one real carrier Web Call through authority verification, a delivered OTP, real load search, controlled negotiation, a confirmed challenge-TMS booking, and a mocked senior-rep handoff. Capture activity in Twin and make it visible in a HappyRobot App. Then improve the experience and finish the assignment's QA and delivery requirements.
 
-## 2. Proposed architecture
+Build and test one milestone at a time. Record the result, fix failures that block the next step, and update this plan when live behavior changes our assumptions. A partial checkpoint is useful progress; it is not a completed assignment.
 
-```mermaid
-flowchart LR
-  Carrier[Carrier] -->|Web Call| Voice[HappyRobot voice agent]
+- Reuse the existing code and real assignment services. Start with one backend, small modules, and one workflow. Add components when their milestone needs them.
+- Implement mandatory verification, pricing, authentication, and booking safeguards alongside each feature. Defer optional sophistication.
+- Read only the platform/protocol documentation needed for the current step. Try one small real operation before designing abstractions around it.
+- Timebox an uncertain integration approach to roughly 30–45 minutes before reviewing the concrete blocker. This is a decision checkpoint, not a delivery estimate or permission to bypass requirements.
+- Keep evidence compact: existing scripts, sanitized results, and one QA table. Use narrow injected failures where a scenario cannot be reproduced reliably against the real service.
+- Execute under the user's actual authorization; a plan is not permission to send messages or publish resources. Use tester-controlled contacts for authorized delivery tests.
 
-  Voice -->|MCP over HTTPS and Bearer auth| Gateway[HappyRobot App server: MCP gateway]
-  Gateway --> State[Call state machine]
-  Gateway --> Policy[Negotiation policy]
-  Gateway --> FMCSA[FMCSA REST API]
-  Gateway -->|ASCII over one TCP connection per request| TMS[Legacy TMS]
-  Gateway -->|Authenticated REST| Twin[(HappyRobot Twin)]
+## Sources and baseline
 
-  Gateway -->|Authenticated webhook| OTPFlow[HappyRobot OTP sender workflow]
-  OTPFlow -->|Send SMS action| Phone[Carrier phone]
+Requirements: `/Users/alex/Downloads/FDE_Technical_Challenge_-_Inbound_Carrier_Sales.pdf`, especially pages 2–5.
 
-  Manager[Operations manager] --> App[HappyRobot App UI]
-  App --> Gateway
+References:
 
-  Voice -->|Completion dump| Twin
-```
+- [TMS handbook](https://fde-challenge-candidate-handbook-production.up.railway.app/spec/)
+- [HappyRobot workspace](https://platform.happyrobot.ai/fdealexandrechalard/)
+- [HappyRobot documentation](https://docs.happyrobot.ai/)
+- [FMCSA API documentation](https://mobile.fmcsa.dot.gov/QCDevsite/docs/qcApi)
+- Existing `carrier-sales/README.md`, `carrier-sales/src/tms.ts`, and `carrier-sales/local-results.jsonl`.
+- User-selected implementation foundation: [franalgaba/happyrobot-challenge](https://github.com/franalgaba/happyrobot-challenge/tree/6a7c0897d77371514ee15b9f971aaa239f2ac3ee), reviewed at commit `6a7c0897d77371514ee15b9f971aaa239f2ac3ee` on 2026-09-05.
 
-### Runtime components
+Use the logged-in browser for gated assignment resources. Keep supplied credentials server-side, outside planning documents and outputs. Use the selected reference to accelerate agent setup, error handling, and tested coding patterns. Our assignment and Next.js App + Twin architecture govern adaptations; the reference is not a runtime dependency.
 
-| Component | Responsibility | Must never do |
+**Current evidence:** the local result file records eight passing HTTP checks: missing/wrong authentication, booking-command rejection, delimiter-injection rejection, required-filter validation, real echo, real query, and real detail. The README also records an earlier timeout/incomplete-response failure and a successful build. These are historical local results inspected during planning; they were not rerun. They do not establish deployed connectivity or end-to-end success. Fetch fresh loads in later tests; old load IDs and pickup dates may become stale.
+
+## Milestone map
+
+| Milestone | Demonstrable outcome | Status |
 | --- | --- | --- |
-| Voice workflow | Web Call, natural conversation, collect inputs, invoke tools, mock handoff | Decide authority, OTP success, allowed price, or booking success |
-| HappyRobot App server / MCP gateway | Authenticate tools, enforce state, normalize input, call TCP/REST dependencies, return safe results | Expose secrets or private rate fields |
-| FMCSA adapter | Normalize MC, call FMCSA with deadline, validate response, fail closed | Fall back to a demo carrier during a real call |
-| OTP service | Generate code, store only its digest, dispatch through HappyRobot SMS, verify attempts and expiry | Return the code to the voice model or logs |
-| TMS adapter | Encode frames, use fresh sockets, parse complete responses, classify faults | Let the agent construct raw TMS commands |
-| Policy engine | Count negotiation rounds and enforce the ceiling deterministically | Put `max_rate` in the prompt, tool schema, or public response |
-| Twin repository | Persist the state machine and append-only events | Store OTP plaintext or credentials |
-| HappyRobot App | Show funnel, calls, bookings, failures, and review queue | Call Twin directly from the browser or expose unrestricted tables |
+| M0 — Local TMS checkpoint | Authenticated HTTP request reads real TMS loads through TCP | Recorded local pass |
+| M1 — Deployed tool path | HappyRobot invokes a deployed authenticated backend tool that reads the real TMS | Next |
+| M2 — Verified caller | FMCSA result and successful real OTP verification are persisted in Twin | Pending |
+| M3 — First useful voice call | Verified caller hears a relevant real load offer through Web Call | Pending |
+| M4 — First complete transaction | Agreement produces one confirmed TMS booking, Twin record, and mocked handoff | Pending |
+| M5 — Operational POC | Manager can inspect real calls and act on cases in HappyRobot Apps | Pending |
+| M6 — QA and refinement | Scripted normal, edge, and adversarial scenarios have documented results | Pending |
+| M7 — Reproducible submission | Docker/cloud deployment, private repository, documents, workflow link, and video are ready | Pending |
 
-## 3. Enforced call flow
+M4 is the first complete call. M5 is the first operational POC. M6–M7 complete the required submission. Every milestone has its own acceptance tests; testing does not start at M6.
 
-```mermaid
-stateDiagram-v2
-  [*] --> Started
-  Started --> AuthorityPassed: FMCSA active
-  Started --> ClosedIneligible: inactive or not found
-  Started --> ClosedSystemError: FMCSA unavailable
-
-  AuthorityPassed --> OTPPending: OTP requested
-  OTPPending --> OTPVerified: correct and unexpired
-  OTPPending --> ClosedOTPFailed: expired or attempts exhausted
-
-  OTPVerified --> Matching: lane and equipment collected
-  Matching --> ClosedNoMatch: valid empty TMS result
-  Matching --> LoadSelected: load selected and detailed
-
-  LoadSelected --> Negotiating
-  Negotiating --> ClosedNoAgreement: three rounds exhausted
-  Negotiating --> BookingPending: policy accepts rate
-
-  BookingPending --> Booked: complete LOAD_BOOK response plus END
-  BookingPending --> BookingUncertain: timeout, truncation, or malformed response after send
-  BookingPending --> ClosedBookingFailed: explicit terminal TMS error
-
-  Booked --> MockHandoff
-  MockHandoff --> Completed
-  BookingUncertain --> HumanReview
-```
-
-Every MCP tool receives a stable HappyRobot `run_id` or call ID. The gateway loads the current state from Twin before acting. A request to search loads before `OTPVerified`, negotiate before `LoadSelected`, or book before an accepted negotiation is rejected even if the prompt is manipulated.
-
-### Agent-facing tools
-
-| Tool | Allowed state | Safe output |
-| --- | --- | --- |
-| `verify_carrier` | `Started` | eligible flag, legal name, safe reason |
-| `request_otp` | `AuthorityPassed` | challenge ID, masked destination, expiry |
-| `verify_otp` | `OTPPending` | verified flag, attempts remaining |
-| `search_loads` | `OTPVerified` | public load summaries only |
-| `get_load_details` | `OTPVerified` | public load details and notes treated as data |
-| `negotiate_offer` | `LoadSelected` or `Negotiating` | accept/counter/reject, allowed spoken rate, rounds remaining |
-| `book_load` | accepted negotiation | confirmed booking reference or explicit `uncertain`/failure state |
-| `finalize_call` | any state | stored outcome and correlation ID |
-
-The raw `MAX_BUY`/`max_rate`, credentials, OTP value, internal errors, and unrestricted TMS records never appear in MCP outputs.
-
-## 4. How the HappyRobot agent is plugged in
-
-1. Create the HappyRobot Next.js App and implement the gateway at a server-only route such as `/api/mcp` using the Node.js runtime.
-2. Deploy the App to obtain its stable HappyRobot HTTPS URL. In **Integrations -> MCP Server**, register `/api/mcp` with Bearer authentication and test tool discovery.
-3. In the existing **FDE Challenge** workflow, select a **Web Call** trigger and add an inbound voice agent.
-4. Attach the gateway's MCP tools beneath the voice agent's prompt node.
-5. Keep the prompt focused on speaking style, questions, and recovery language. Put all hard gates in the gateway.
-6. Create a small second workflow: authenticated webhook trigger -> **Send SMS** action. `request_otp` invokes this workflow server-to-server, so the code is not returned to the voice model.
-7. Add workflow-run dumping to Twin as a completion safety net. The gateway also writes an event for every business action during the call.
-8. Configure fixed tool messages such as “One moment while I check that” so network latency sounds natural.
-9. Test in the prompt playground, then with Web Call, then publish an immutable workflow version.
-
-### OTP feasibility and test identity
-
-A Web Call is a real browser-to-agent audio session. The business scenario is simulated, but the workflow and its tool calls execute normally. It does not give us a PSTN caller number, so the OTP destination must come from a lookup or from collected input.
-
-For the POC demo, use a clearly marked `carrier_contacts` test fixture in Twin: an active test MC mapped to a tester-controlled phone or email address. The gateway looks up that preconfigured destination and sends a real OTP there; the caller cannot substitute a different destination during the call. The tester reads the received code aloud, and the same expiry, attempt-limit, and state-gate logic used in production verifies it. This is a synthetic test identity, not evidence that the tester represents the real carrier.
-
-The current TMS exposes loads rather than carrier contacts, and FMCSA authority data does not establish that a caller-provided phone belongs to the legal carrier. A production deployment therefore needs a trusted carrier-contact registry. Unknown contacts should require onboarding or human review. If caller-provided contact delivery is demonstrated instead, describe it accurately as a possession check, not carrier identity verification.
-
-Live workspace check on 2026-09-04: Twin is **Available** and its API Gateway is **Running**. The integrations catalog shows **0 connected integrations**; Twilio SMS and Telnyx SMS are available to connect. A HappyRobot-managed sender may also be supported by the Send SMS node, but a usable sender has not yet been verified in this workspace. Real OTP delivery therefore remains a setup dependency. An SMS/email mock is acceptable for local tests, but does not satisfy the final real-delivery requirement.
-
-## 5. Legacy TMS adapter
-
-The gateway converts clean JSON tool calls into the legacy wire protocol:
+## Starting architecture
 
 ```text
-HappyRobot MCP JSON -> validation -> TMS command encoder -> TCP socket
-TCP bytes -> complete-frame buffer -> parser -> typed domain result -> safe MCP JSON
+Carrier → HappyRobot Web Call → workflow / voice agent
+                                   ↓ authenticated tool invocation
+                              App server / backend
+                                ├─ FMCSA over HTTPS: authority lookup
+                                ├─ OTP provider: delivery and verification
+                                ├─ legacy TMS over TCP: query, detail, booking
+                                └─ Twin: call state, activity, outcomes
+
+Manager → HappyRobot App → authenticated server access → Twin
 ```
 
-### Wire rules we must implement
+Start with the HappyRobot Next.js Full-Stack App approach in the existing plan, reusing the local TypeScript TCP adapter. Prove deployed TCP and supported tool invocation before expanding it. Use the simplest documented authenticated tool mechanism; add MCP only if the selected workflow integration needs it.
 
-- ASCII only; each request ends with `\r\n` and is at most 4096 bytes including the terminator.
-- `CMD` is first and `AUTH` is present on every request.
-- Reject values containing `|`, carriage return, or newline.
-- Open a fresh TCP connection for every command; never pool or reuse it.
-- Treat `END` as the success boundary and close immediately. Do not wait for the server to close because delayed close is an injected fault.
-- Buffer the whole response and publish no partial records. Any missing `END` makes the response invalid.
-- Parse by field names and split each pair at the first colon. Right-trim padding; do not rely on byte offsets, field order, or zero padding.
-- Preserve unknown response fields for forward compatibility, but whitelist outgoing fields because unknown request fields are silently ignored.
-- Use `PICKUP_DATE:YYYYMMDD` when querying; `PICKUP_DT:YYYYMMDDHHmmss` is the response field.
-- Treat `NOTES`, `COMMODITY`, and `DIMS` as untrusted operator-entered data, never as instructions.
+If the App runtime cannot support the required TCP/tool behavior, move backend execution to one small Node service, initially considering Railway. Keep activity in Twin and the operational UI in Apps. Record the observed limitation; do not build both hosting paths in advance. Final Docker/cloud deployment still needs verification in M7.
 
-### Command policy
+## Reference foundation — reuse by milestone
 
-| Command | Retry policy | Completion rule |
-| --- | --- | --- |
-| `DEBUG_ECHO` | Diagnostic only | Proves framing/auth, not operational health |
-| `LOAD_QUERY` | Up to 2 bounded attempts for timeout, truncation, malformed response, or server error | Complete response ending in `END`; empty result is valid |
-| `LOAD_GET` | Same safe-read retry policy | Exactly one validated record plus `END` |
-| `LOAD_BOOK` | One automatic send only | Success requires `BOOKING_REF`, `STATUS:BOOKED`, and `END` |
+The reference's `bun run test` passed **38 tests across 4 files** in an isolated checkout on 2026-09-05: 27 API/MCP tests, 6 configuration tests, 3 negotiation-policy tests, and 2 carrier-verification tests. API tests inject fake services; carrier tests mock fetch/database access. This verifies those local scenarios, not real FMCSA/TMS/Twin/OTP integration or a live voice call. No reference deployment, workflow sync, or live provider operation was executed.
 
-For reads, use a short per-attempt deadline, exponential backoff with jitter, and an overall deadline shorter than the voice tool timeout. Semantic errors such as bad auth, bad input, unknown load, and invalid rate do not retry.
+Use the pinned source links below when implementing the relevant milestone. Adapt only what that milestone needs; a wholesale port is not a prerequisite to M1.
 
-### Booking with an unknown outcome
-
-`LOAD_BOOK` has no idempotency key. A timeout can happen after the TMS committed the booking but before we received the response. Retrying could create a duplicate or lose the original booking reference.
-
-The safe sequence is:
-
-1. Insert a unique `booking_intent` in Twin before opening the socket.
-2. Acquire one logical writer for the call/load and store a request fingerprint.
-3. Send `LOAD_BOOK` once.
-4. On a complete success, persist the opaque booking reference and only then tell the carrier it is booked.
-5. On an explicit business error, persist the terminal failure.
-6. On timeout, truncation, malformed reply, or connection loss after send, mark `booking_uncertain`; do not retry automatically and do not claim success.
-7. Refresh `LOAD_GET` for evidence and place the case in the App's human-review queue. `ALREADY_BOOKED` alone is not proof that our attempt succeeded because the protocol cannot return the earlier booking owner/reference.
-
-This does not pretend to create exactly-once behavior that the legacy system cannot guarantee. It prevents our automation from making the ambiguity worse.
-
-## 6. Negotiation and ceiling secrecy
-
-The carrier hears the public loadboard rate first. Each carrier counteroffer goes to deterministic code. The service owns the three-round count, returns only the next permitted spoken counter or a final decision, and stores an idempotency key plus request fingerprint for each round.
-
-The private ceiling is:
-
-- read from `MAX_BUY` when available;
-- stored only in a private Twin record or held inside the gateway's policy calculation;
-- excluded from the public load DTO, MCP schema, voice prompt, model context, normal logs, and carrier-facing App views;
-- never sent as an explanatory field such as `threshold`, `max`, or `reason`;
-- treated as unavailable when `MAX_BUY` is absent, which disables automatic agreement and routes to review.
-
-Repeated delivery of the same negotiation operation returns the stored result and does not consume another round. Reusing an idempotency key with different input is a conflict. Terminal negotiations cannot be mutated.
-
-## 7. Twin data model
-
-| Table | Purpose | Key constraints |
-| --- | --- | --- |
-| `calls` | One row per HappyRobot run and current state | unique `run_id`; terminal outcome |
-| `call_events` | Append-only audit trail | unique operation/event ID; redacted JSON payload |
-| `carrier_verifications` | FMCSA decision and checked timestamp | linked to call; source and safe status |
-| `carrier_contacts` | Trusted production contacts or clearly marked POC test contacts | destination selected by gateway; never replaced by caller input |
-| `otp_challenges` | OTP digest, masked destination, expiry, attempts | no plaintext code; one active challenge per call |
-| `load_snapshots` | Public fields observed from TMS | linked to call/load and retrieval time |
-| `negotiations` | Round count and terminal decision | unique call/load; terminal states immutable |
-| `negotiation_operations` | Idempotent offer results | unique operation ID plus request fingerprint |
-| `booking_intents` | Write-ahead record for `LOAD_BOOK` | unique call/load; confirmed/failed/uncertain |
-| `handoffs` | Mock handoff and review state | linked to confirmed booking or exception |
-
-Schema changes live as SQL files in the code repository even though Twin applies them through its SQL console. The App accesses Twin through authenticated server routes that select explicit columns; browser code never calls the Twin gateway directly.
-
-## 8. HappyRobot App
-
-The custom App should answer operational questions without opening raw workflow logs:
-
-- funnel: calls -> authority passed -> OTP verified -> matched -> agreed -> booked;
-- booking and agreement rate;
-- average rounds and agreed-rate distribution;
-- FMCSA, OTP, TMS-read, and booking failure counts;
-- recent calls with state, load, public rate, agreed rate, timestamps, and correlation ID;
-- exception queue for uncertain bookings, locked OTPs, missing `MAX_BUY`, and integration failures;
-- safe actions such as refresh a load, assign a review owner, and mark an exception resolved.
-
-For POC speed, the first App can be one overview page, one recent-calls table, and one exception queue. HappyRobot's organization RBAC controls access, and every server route performs an authorization check before reading or writing Twin.
-
-### What a HappyRobot App actually is
-
-Verified in the documentation and this workspace's Create App dialog on 2026-09-04:
-
-- A custom **Next.js App Router web application**, including React pages and server route handlers. It is not a fixed set of dashboard widgets.
-- HappyRobot creates a managed GitHub repository and a Vercel project, then exposes the app at a stable `https://<slug>.happyrobot.ai` URL (or the organization's configured apps domain).
-- The app can be edited in HappyRobot's sandbox, which contains a code editor, live preview, and coding-agent sidebar, or cloned through **Develop locally** and edited with local tools.
-- The Next.js template supports HappyRobot sign-in and checks workspace membership and app permissions. Server routes still require their own authentication checks before data access.
-- Custom secrets are server-only environment variables. Twin's gateway URL and organization identity are injected by the platform.
-- The Create App dialog supports a default template or an existing GitHub repository under Advanced settings. Imports create a managed copy with a squashed initial commit; they are not a live link to the source repository.
-- New apps should use Next.js Full-Stack. The older Vite Static template is being deprecated, so the reference Vite dashboard should be ported selectively rather than assumed directly compatible with a new App.
-- A failed deployment leaves the last successful version live. Build logs and history are available in HappyRobot.
-
-### Concrete POC screens
-
-| Screen | Contents | Data/action path |
-| --- | --- | --- |
-| Overview | Calls, verified calls, matches, confirmed bookings, failures, funnel | Authenticated App server route -> Twin aggregate views |
-| Calls | Filterable table by outcome, MC, date, load, and correlation ID | App server route -> Twin public operational fields |
-| Call detail | Verification, offers, accepted rate, booking reference, event timeline | App server route -> Twin call and event tables |
-| Needs attention | Uncertain bookings, failed integrations, locked OTPs | App server route -> Twin exception view |
-| Review action | Assign owner, add an operational note, refresh a load, resolve a case | Server action -> Twin or authenticated gateway; never raw TCP from the browser |
-
-For the POC, the gateway and UI should be one HappyRobot App deployment. The browser renders the manager UI, while server-only Next.js routes implement MCP, FMCSA, Twin, and TMS access. The browser never opens the TCP socket or receives secrets.
-
-HappyRobot workflow Custom Code is not an alternative host for this gateway: its Python sandbox disables network access and arbitrary packages. A HappyRobot App uses a full Next.js server runtime deployed by HappyRobot to Vercel. Vercel documents complete Node.js API compatibility, which should include the `node:net` client required for the TMS. We must prove that assumption with a deployed, authenticated `DEBUG_ECHO` spike before building the rest of the gateway.
-
-If the App runtime cannot reach the TMS host, cannot satisfy the MCP transport, or has unacceptable cold-start latency, deploy the same server module as the existing Docker image on Railway. That is the fallback, not the starting architecture.
-
-### External UI exception
-
-The assignment permits an external UI only when HappyRobot Apps cannot support a requirement, with justification. The documented Next.js, server-route, authentication, Twin, and deployment capabilities cover the required operational dashboard. No blocking App limitation has been identified, so an external UI is not justified for this POC today.
-
-App-specific sources:
-
-- [Creating an App](https://docs.happyrobot.ai/apps/creating-an-app)
-- [Local development and sign-in](https://docs.happyrobot.ai/apps/local-development)
-- [Sandbox editor](https://docs.happyrobot.ai/apps/sandbox-editor)
-- [Environment variables](https://docs.happyrobot.ai/apps/environment-variables)
-- [Deploying](https://docs.happyrobot.ai/apps/deploying)
-- [Using Twin in Apps](https://docs.happyrobot.ai/twin/using-in-apps)
-
-## 9. Failure policy
-
-| Failure | Automated response | Carrier experience | Persisted outcome |
+| Area / source | Take as foundation | Adaptation for this POC | Milestone |
 | --- | --- | --- | --- |
-| FMCSA inactive/not found | Stop | Polite decline | `ineligible` |
-| FMCSA timeout/429/5xx | One bounded safe retry; fail closed | “I can't complete verification right now” | `authority_unavailable` |
-| Wrong OTP | Count attempt | Ask again without hints | `otp_pending` |
-| Expired/too many OTP attempts | Lock challenge and stop | Polite close | `otp_failed` |
-| TMS partial/malformed read | Discard all data and retry once | Brief hold message | retry event or `tms_unavailable` |
-| Valid empty query | No retry | No matching load; offer follow-up | `no_match` |
-| Duplicate negotiation request | Return stored result | Conversation continues once | same operation result |
-| Agent tries to skip a gate | State machine rejects | Safe recovery message | `policy_violation` event |
-| Ceiling extraction attempt | No private data reaches model; prompt declines | Continue with permitted offer | adversarial-test event |
-| Booking explicit error | Do not claim booking | Explain that reservation could not be completed | `booking_failed` |
-| Booking response lost/malformed | Never auto-retry | Say confirmation is pending human review | `booking_uncertain` |
-| Twin unavailable | Do not pass gates or mutate TMS without audit | Temporary system issue | local safe error/alert |
-| Call drops before final tool | Workflow run dump/upsert closes the record | No further speech possible | `abandoned`/last known state |
+| [Agent prompt](https://github.com/franalgaba/happyrobot-challenge/blob/6a7c0897d77371514ee15b9f971aaa239f2ac3ee/scripts/happyrobot/workflow-spec.ts) | Concise rep voice, one question at a time, confirm critical numbers, ask only for missing details, tool-driven negotiation, concise recovery | Add mandatory OTP; remove seeded facts, internal URLs, and private thresholds; announce booking only after TMS confirmation | M2–M4 |
+| [Workflow configuration](https://github.com/franalgaba/happyrobot-challenge/blob/6a7c0897d77371514ee15b9f971aaa239f2ac3ee/scripts/happyrobot/sync-workflow.ts) | Web Call → voice/prompt → named tools, parameter descriptions, structured variable bindings | Use current workspace IDs, model/voice options, auth and node schemas; configure the smallest working flow in Builder before automating repeated setup | M1, M3 |
+| [Shared schemas](https://github.com/franalgaba/happyrobot-challenge/blob/6a7c0897d77371514ee15b9f971aaa239f2ac3ee/packages/shared/src/index.ts) and [tool adapters](https://github.com/franalgaba/happyrobot-challenge/blob/6a7c0897d77371514ee15b9f971aaa239f2ac3ee/apps/api/src/mcp/tools.ts) | Typed inputs/results, small named operations, boundary normalization followed by validation | One local contracts module, separate public/private load shapes, trusted call context; transport follows the actual HappyRobot integration | M1–M4 |
+| [Service errors](https://github.com/franalgaba/happyrobot-challenge/blob/6a7c0897d77371514ee15b9f971aaa239f2ac3ee/apps/api/src/utils/errors.ts), [request identity](https://github.com/franalgaba/happyrobot-challenge/blob/6a7c0897d77371514ee15b9f971aaa239f2ac3ee/apps/api/src/utils/request-context.ts), [SDK error mapping](https://github.com/franalgaba/happyrobot-challenge/blob/6a7c0897d77371514ee15b9f971aaa239f2ac3ee/apps/api/src/services/happyrobot.ts) | Stable error codes, safe messages, request correlation, expected versus unexpected errors | Implement in Next route handlers; retain safe retry metadata, bound FMCSA requests, align deadlines, sanitize logs | M1–M2 |
+| [Carrier verification](https://github.com/franalgaba/happyrobot-challenge/blob/6a7c0897d77371514ee15b9f971aaa239f2ac3ee/apps/api/src/services/carriers.ts) | MC lookup, extracted carrier identity, source and timestamp on verification | Validate actual authority payload; preserve unknown values; store in Twin; no seeded approval when live verification fails | M2 |
+| [Negotiation function](https://github.com/franalgaba/happyrobot-challenge/blob/6a7c0897d77371514ee15b9f971aaa239f2ac3ee/apps/api/src/services/negotiations.ts) and [policy tests](https://github.com/franalgaba/happyrobot-challenge/blob/6a7c0897d77371514ee15b9f971aaa239f2ac3ee/apps/api/test/negotiation-policy.test.ts) | Pure decision function separated from storage, explicit decision/round/remaining-round outputs | Use real TMS ceiling and agreed policy; separate agreement from booking; terminal-state and action-replay protection; correct currency precision | M4 |
+| [Call persistence](https://github.com/franalgaba/happyrobot-challenge/blob/6a7c0897d77371514ee15b9f971aaa239f2ac3ee/apps/api/src/services/calls.ts) | Real run/session identities, duplicate-finalization handling, structured call outcome | Incremental Twin activity and disconnect capture; durable action identity and verified conditional writes instead of copying SQL locks | M2, M4–M5 |
+| [API tests](https://github.com/franalgaba/happyrobot-challenge/blob/6a7c0897d77371514ee15b9f971aaa239f2ac3ee/apps/api/test/app.test.ts) and [carrier tests](https://github.com/franalgaba/happyrobot-challenge/blob/6a7c0897d77371514ee15b9f971aaa239f2ac3ee/apps/api/test/carrier-verification.test.ts) | Inject small fake dependencies for focused auth, validation, error, and policy checks | Test Next handlers and our policies; extend for OTP, real TCP framing, private-field exclusion, Twin state, and uncertain booking | Every milestone, M6 |
 
-All errors carry a correlation ID and a stable machine code. Logs are structured and redact credentials, OTPs, raw transcripts, private ceilings, and provider payloads. Only one layer owns retries so MCP, domain services, and the workflow do not multiply attempts.
+### Agent configuration: fastest useful adaptation
 
-## 10. Repository structure
+Maintain one small prompt/config source alongside the application when M3 starts. Reuse the reference's voice style and conversation structure, with our brokerage name. Use an available English/US voice and model from the actual workspace; the reference's static IDs and old SDK examples are clues, not current configuration facts.
+
+The first full agent flow is:
 
 ```text
-app/
-  page.tsx                 # HappyRobot App operations UI
-  api/
-    mcp/route.ts           # HappyRobot agent tool endpoint
-    operations/            # authenticated manager endpoints
-src/
-  auth/
-  gateway/
-    domain/
-    services/
-    adapters/fmcsa/
-    adapters/tms/
-    adapters/twin/
-    adapters/happyrobot/
-packages/
-  contracts/               # separate public and private Zod schemas
-happyrobot/
-  prompts/
-  workflow/
-  evals/
-twin/
-  migrations/
-tests/
-  unit/
-  tms-contract/
-  integration/
-  adversarial/
-docs/
-  architecture-plan.md
-  build-description.md
-  qa-results.md
-  prospect-email.md
-  demo-script.md
-Dockerfile
-docker-compose.yml
+Collect MC → authority tool → issue/verify OTP → preferences
+→ search/detail tools → pitch → negotiation tool
+→ booking operation → confirmed result → mocked handoff → final summary
 ```
 
-Use TypeScript, Next.js route handlers, Zod, the MCP Streamable HTTP transport, Node's TCP client, and Vitest. A Dockerfile packages the same full-stack application for the portability requirement. Twin and the HappyRobot App replace the external Postgres and external dashboard in the reference design.
+Keep natural acknowledgements and one recovery question when useful. Do not let recovery reset three-round limits or verification gates. Bind call/run identity through platform context, not a number the model invents. The backend decides allowable next actions. Negotiation acceptance is an agreement; only the booking operation can establish a booked outcome. The final summary adds conversational context to the existing Twin activity rather than acting as the sole record.
 
-## 11. Reference implementation versus the current deliverables
+For the first configured tool, inspect the actual arguments and result in a workflow run. The reference encountered numeric strings, unresolved optional template values, and JSON encoded as text. Normalize only unambiguous, observed formatting at the boundary, then validate. Never silently supply missing required IDs, grant verification from a string boolean, guess ambiguous MC numbers from prose, or discard meaningful false/zero values. Add each necessary conversion with a focused test instead of importing a general compatibility layer.
 
-Reference reviewed at commit `6a7c0897d77371514ee15b9f971aaa239f2ac3ee`.
+### Error handling and coding conventions to use immediately
 
-| Requirement | Reference implementation | What we keep/change |
-| --- | --- | --- |
-| Voice/Web Call | Prompt and workflow sync scripts | Keep the separation, rebuild the current workflow in-platform |
-| MCP integration | Authenticated Hono MCP plus shared Zod schemas | Reuse this pattern and add state-gated tools |
-| FMCSA | Live lookup with seeded fallback | Keep basic mapping; add deadlines, classification, no real-call fallback |
-| Legacy TMS | Missing; queries seeded Drizzle loads | Replace with real TCP encoder/parser/client |
-| OTP before matching | Missing | Add cryptographic challenge plus HappyRobot Send SMS |
-| Negotiation | Deterministic three-round service | Keep deterministic policy; add idempotency and terminal-state rules |
-| Ceiling secrecy | `targetRate` and `maxAutoRate` reach the LLM and prompt | Split private/public contracts; never expose the ceiling |
-| Booking | Spoken `transfer_mock`; no `LOAD_BOOK` | Add real booking and uncertain-outcome handling |
-| Activity store | External Postgres | Use Twin for required call activity and state |
-| Manager UI | External React dashboard/BFF | Build a HappyRobot App backed by Twin |
-| Authentication | REST API key and MCP path/Bearer | Keep layered auth; authenticate every public endpoint and App server route |
-| Failure handling | Good typed-error base; incomplete retry semantics | Add TMS fault taxonomy, bounded read retries, mutation reconciliation |
-| QA | 38 passing API/unit tests | Add TMS fault, OTP, leakage, replay, voice, and adversarial tests |
-| Deployment | Strong Docker/Railway shape | Reuse the simple container/deployment pattern |
-| Prospect docs | Email, build description, demo script exist | Produce assignment-specific versions plus QA results and video |
+- Keep route handlers small: authenticate → validate → call operation → map safe result/error. Use one local contracts module and a schema library if useful; no shared-package monorepo is needed.
+- Separate policy functions from TMS/FMCSA/Twin access so the important rules can be tested without real bookings. Pass the few external functions needed by a test; do not introduce a dependency-injection framework or generic repositories.
+- Carry a request ID for diagnostics and a stable call ID for workflow state. An action ID identifies one negotiation/booking operation across retries; these three identities have different purposes.
+- Use a compact error shape such as `{ error: { code, message, requestId, retryable, retryAfterSeconds? } }`. These are proposed local fields. `retryable` means this operation may safely be repeated, not merely that the upstream failure might be temporary.
+- Map invalid input to 400/422 consistently, caller authentication to 401, state conflicts to 409, malformed upstream responses to 502, unavailable verification to 503, and upstream timeout to 504. Handle rate limits deliberately, preserving a safe retry delay. Do not confuse our caller's bad credentials with an upstream credential/configuration failure.
+- Let one backend integration layer own bounded retries for safe reads. Keep its total budget below the voice-tool deadline and propagate cancellation where supported. Never automatically retry an ambiguously sent booking. Do not add retries independently to agent, handler, and provider layers.
+- Log an allowlist of operation, request/call IDs, duration, attempt, and safe error code. Exclude raw provider bodies, query-string keys, OTPs, private ceilings, and exception causes that might contain secrets. Sensitive call content belongs in appropriately restricted platform records, not ordinary debug logs.
+- Extend the existing scripts and local TypeScript conventions. Bring in a focused test runner when policy/handler tests need it; keep Node/npm and the working Next App. Do not add Bun, Hono, a Vite dashboard, Drizzle/Postgres, Terraform, or the reference deployment stack merely to reuse a helper.
 
-The reference repository is useful engineering material, but it is not evidence that the current brief is complete. In particular, its seeded database is a replacement for the required TMS, and its external database/dashboard choices conflict with the current Twin/App requirements.
+### Specific reference behavior to change
 
-## 12. QA and acceptance
+These differences were found in the pinned source and affect our brief directly:
 
-### Dry-run layers
+1. **Private rates reach the model.** `workflow-spec.ts` embeds demo target/max rates; `LoadSchema` includes `targetRate`/`maxAutoRate`, and the search service returns them. Remove these from all agent-visible configuration, results, examples, and extracted-data templates. Keep the real ceiling private in backend policy.
+2. **Agreement is presented as booking.** The negotiation function returns `transfer_mock` with a booked message before any legacy-TMS booking. Introduce explicit agreed, booking-confirmed, and booking-uncertain states and change the prompt/tests accordingly.
+3. **FMCSA demo fallback and incomplete parsing.** Production demo MCs can be approved from seeded data. The parser selects the first carrier and treats unknown out-of-service values permissively. Reuse the lookup structure, but validate identity/authority and preserve unknown/missing statuses. Live authority failure must not become simulated approval.
+4. **Retry and idempotency need adaptation.** FMCSA fetch has no explicit timeout; the reference voice SDK timeout is 30 seconds with two retries while its dashboard proxy timeout is 20 seconds. Negotiation locks serialize writes but do not deduplicate offers or freeze terminal decisions. Our existing milestone requirements address these gaps using bounded reads and durable action results.
+5. **Workflow sync recreates resources.** `resolveWorkflow` calls a deletion path that cancels runs, unpublishes, and deletes an existing workflow before replacement. Reuse selected configuration ideas, not execution of that script against our workspace. Inspect/configure the current workflow or an editable version instead. Prefer Builder for the first call if it is faster.
 
-| Layer | What is real | What is simulated/disabled | Available from current materials |
-| --- | --- | --- | --- |
-| Protocol unit tests | Our encoder/parser/state logic | Local fake TCP server injects timeout, truncation, malformed frames, delayed close | Yes: handbook transcripts and documented faults |
-| Read-only TMS checks | TCP, candidate auth, `DEBUG_ECHO`, `LOAD_QUERY`, `LOAD_GET` | No `LOAD_BOOK` | Yes; these commands were verified earlier in this session |
-| FMCSA integration checks | Read-only API lookup with supplied key | Known active/inactive/invalid MC test cases | Yes; live results still need to be validated by the adapter |
-| OTP unit tests | Code generation, digest, expiry, attempt count, gate | Delivery captured in a test sink outside the agent context | Yes after implementing the OTP service |
-| Voice dry run | Web Call, tools, FMCSA, OTP logic, TMS reads, Twin events | Booking disabled; result is `dry_run_would_book`, never `booked` | Requires gateway/workflow wiring; real SMS also requires a verified sender |
-| Full demo | Web Call, real OTP delivery, real challenge-TMS booking, Twin/App | Senior-rep transfer only | Final acceptance test after setup; not a read-only dry run |
+The reference does not supply the real legacy TCP adapter, OTP gate, or Twin/App integration required here. Those remain our milestone work. Treat its SDK mismatch notes as troubleshooting leads to recheck against the live workspace, not a reason to implement every workaround in advance.
 
-`DEBUG_ECHO` bypasses fault injection, so it is only a connectivity/auth check. Use a local fault server for deterministic failure tests and operational read commands for integration coverage. A real `LOAD_BOOK` changes candidate-scoped TMS state and has no documented undo; do not use it in the default dry-run path.
+## M0 — Preserve the local TMS checkpoint
 
-### Minimum scripted tests
+**Components present:** authenticated `POST /api/tms`, read-only input validation, Node TCP connection, response parsing, public-field filtering, bounded read retry, probe and HTTP verification scripts.
 
-- active and inactive FMCSA carrier;
-- FMCSA timeout, malformed JSON, 429 with retry guidance, and 5xx;
-- correct, wrong, expired, replayed, and brute-force OTP;
-- social-engineering attempts to skip OTP;
-- TMS empty, partial, malformed, delayed close, timeout, unknown fields, and bad auth;
-- request-date contract: `PICKUP_DATE` versus response `PICKUP_DT`;
-- no match, load detail, and stale/booked load;
-- three negotiation rounds, duplicate delivery, concurrent delivery, terminal replay;
-- direct and indirect attempts to extract the private ceiling;
-- successful booking with complete `END`;
-- booking commit followed by lost response, with no automatic retry;
-- dropped call before `finalize_call`;
-- Twin/App authorization and public-field filtering.
+**Acceptance evidence:** the local results described above. This checkpoint sent no `LOAD_BOOK`; FMCSA, OTP, Twin, and workflow integration are outside it.
 
-### North-star and guardrail metrics
+**Next use:** reuse this code in M1. Rerun local checks if code/configuration changes or deployed failure needs comparison. Do not rebuild a second TMS client.
 
-- **North star:** percentage of eligible, OTP-verified calls that produce a confirmed booking.
-- Authority verification success and latency.
-- OTP completion rate and time.
-- Load-match rate.
-- Agreement rate and average negotiation rounds.
-- Confirmed booking rate.
-- TMS fault rate by category.
-- Uncertain booking count and time to resolution.
-- Ceiling-leakage and gate-bypass rate in adversarial tests: target zero.
-- Duplicate mutation rate in replay tests: target zero.
+## M1 — Prove deployed HappyRobot → backend → TMS
 
-## 13. Build order for the POC
+**Reference shortcut:** adapt small service-error/request-ID helpers around our existing TCP client, then use the configuration examples to connect one tool. Keep the first deployment small.
 
-1. Freeze tool contracts, state transitions, Twin schema, and error codes.
-2. Build and fault-test the TMS protocol adapter against fixtures and the live read-only commands.
-3. Add FMCSA and Twin repositories plus the authenticated MCP route inside the HappyRobot App.
-4. Implement the OTP sender workflow and hard state gate.
-5. Implement idempotent negotiation and conservative booking.
-6. Wire the Web Call voice workflow and completion dump.
-7. Build the compact operations UI in the same HappyRobot App.
-8. Run scripted and adversarial evaluations; capture results.
-9. Deploy the App, publish the workflow/App versions, record the five-minute walkthrough, and prepare the prospect email/build document.
+**Build**
 
-This sequence resolves the riskiest boundary - the legacy TMS - before spending time on prompt polish or dashboard visuals.
+1. Inspect the actual App template, tool authentication, and runtime limits needed for this step. Reuse a suitable existing App if available.
+2. Deploy the server route with server-side credentials and authentication. Configure a reachable cloud server binding; the current localhost-only startup command is a local setting.
+3. Run `DEBUG_ECHO`, a filtered `LOAD_QUERY`, and `LOAD_GET` using a freshly returned ID through the deployed route.
+4. Expose one minimal read-only tool and invoke it from a HappyRobot workflow test. Keep this diagnostic path operator-only; it must not become an unguarded carrier search tool.
+5. Check OTP delivery channel and sender readiness now, so provisioning does not first surface as a blocker in M2.
+
+**Test / pass**
+
+- Missing/wrong auth is rejected before TCP access.
+- Deployed HTTP and HappyRobot tool invocation both return complete real load data, with measured latency.
+- Private `MAX_BUY`, credentials, and raw upstream errors are absent from tool responses.
+- Exercise a few sequential reads and record observed failures. Echo alone is insufficient because it bypasses normal TMS fault behavior.
+- Backend request/retry budgets fit inside the configured tool deadline. Failure returns a safe result rather than partial load data or a hanging call.
+
+**Evidence:** endpoint/workflow references, sanitized outputs, timing, and failures. A handful of successes does not establish production reliability.
+
+**Defer:** dashboard layout, a general gateway framework, booking, multiple hosting targets.
+
+## M2 — Verify the caller and persist the gates
+
+**Reference shortcut:** reuse the carrier-result structure and failed-provider test pattern; replace persistence with Twin and remove seeded approval. OTP is a new component.
+
+Split this milestone into three independently testable checks.
+
+### M2a — Twin persistence
+
+- Create the smallest call record keyed by a stable platform call/run identity: verification state, current stage, timestamps, and terminal outcome. Append activity as steps happen.
+- Write/read a real record; confirm another request retrieves it after a backend restart.
+- Verify Twin's actual support for protected OTP state and the conditional writes/uniqueness needed to prevent duplicate M4 bookings. Do not assume generic storage provides atomic claims.
+- If a necessary guarantee is unavailable, document that exact limitation and use the smallest justified external store only for that requirement. Keep activity in Twin. Resolve this before booking implementation.
+
+### M2b — FMCSA authority
+
+- Add an operation such as `verify_carrier(call_id, mc_number)`; names here describe application behavior, not verified platform tool contracts.
+- Normalize input, query with the supplied key, validate the actual response, and evaluate relevant active carrier authority. Finding a company alone does not pass.
+- Persist identity, authority decision, reason, and check time. Distinguish ineligible, not found/ambiguous, and unavailable service.
+- Test a real successful lookup. Cover invalid/inactive records and timeout with real examples where available, otherwise label narrow injected responses. None may accidentally authorize matching.
+
+### M2c — Real OTP
+
+- Implement one email or SMS channel, favoring supported HappyRobot delivery. Use an authorized tester-controlled recipient and label any synthetic carrier/contact association.
+- Issue and verify codes with protected state, expiry, attempt limits, bounded resend, and invalidation of replaced/used codes. Codes must not appear in model/tool outputs or ordinary logs.
+- Bind verification to the call and carrier; changing the carrier resets it. Identify the trusted source for the carrier contact. A caller-supplied destination proves possession only; document that limitation if used in the demo.
+- Require OTP on every call before matching: page 4's hard requirement is stronger than page 2's new-carrier wording.
+- Test real delivery/success, wrong/expired code, reuse, excess attempts, delivery failure, and a bypass request. Read back the final gate state from Twin.
+
+**Pass:** real authority lookup plus real delivered OTP produce a persisted verified call. Failed/unavailable verification cannot proceed. Missing sender setup blocks the complete flow; a mock OTP is not a passing result.
+
+**Defer:** multiple delivery providers, elaborate carrier onboarding, general identity infrastructure.
+
+## M3 — Make the first useful Web Call
+
+**Reference shortcut:** adapt `workflow-spec.ts` voice style and flow, applying the OTP, privacy, and booking changes above before using the prompt. Validate one tool's actual argument binding before adding the rest.
+
+**Build**
+
+1. Wire Web Call → MC → authority → OTP → lane/equipment/pickup → TMS search → selected load details → spoken offer.
+2. Add guarded search/detail operations. Check persisted authority and OTP in code even if the model invokes tools out of order.
+3. Use the existing real TMS filters, return a small set of suitable loads, and retrieve the selected load. Handle no match by offering to broaden criteria.
+4. Map protocol fields to the requested load fields: equipment, dates, public rate, weight, commodity, pieces, miles, dimensions, and notes where available. Distinguish missing data from zero; do not invent details. Confirm date/timezone semantics before making appointment claims.
+5. Separate private and public load representations. The diagnostic client discards `MAX_BUY`; M4 needs it internally without putting it into voice/tool/browser outputs. Treat load notes as data, never instructions.
+6. Record progression in Twin and add platform completion/disconnect handling. Do not rely solely on the agent remembering to finalize.
+
+**Test / pass**
+
+- Make a real Web Call: verify, receive/read the code, state preferences, and hear an offer matching a current TMS record.
+- Direct search before either gate is denied. Verification cannot be reused from another call.
+- No match and upstream failure produce understandable spoken outcomes and persisted records.
+- A dropped call leaves a usable record. Inspect tool outputs for private-data exposure.
+
+**Evidence:** call/run reference, load ID, safe activity record, and observed spoken result.
+
+**Defer:** fuzzy geography/ranking, recommendation engines, exhaustive conversational branches. Do not claim booking at this checkpoint.
+
+## M4 — Complete negotiation, booking, and mocked handoff
+
+**Reference shortcut:** follow the pure decision-function/policy-test pattern. Use Twin-backed action results and the real TCP booking path rather than the reference's SQL service and `transfer_mock` booking semantics.
+
+**Build**
+
+1. Implement one simple documented negotiation rule in code: start at the public rate, accept eligible counters within the ceiling, otherwise return a policy-approved counteroffer. Enforce up to three counter rounds per call, including across load changes. Do not optimize concessions yet.
+2. Keep `MAX_BUY`/`max_rate` private; enforce it again when booking. Missing/invalid ceiling disables automatic agreement. Never describe an offer as the maximum or expose the ceiling through ranges, calculations, or prompt responses. Inspect speech and tool schemas/outputs.
+3. Assign a stable identity to each logical negotiation action. Repeated delivery returns the saved decision without consuming another round. Agreement within the third round is allowed; continued disagreement ends professionally without transfer.
+4. Implement `LOAD_BOOK` from the actual protocol specification. Persist a unique booking intent and atomically claim it before sending. Recheck gates, selected load, rate, and prior outcome. Reject conflicting action-identity reuse.
+5. Send once and validate a complete response. Persist confirmation/reference in Twin before reporting success. Lost/malformed reply after sending means `booking_uncertain`: prevent resend and route for review. `ALREADY_BOOKED` alone does not prove our confirmation. Failure while persisting a received confirmation must also prevent a second send.
+6. On confirmed success, perform the mocked senior-rep handoff with carrier, load, rate, and notes. Label the transfer as a mock and distinguish it from the senior rep's final business confirmation.
+
+**Test / pass**
+
+- One real Web Call produces one actual challenge-TMS booking confirmation, matching Twin record, and mocked handoff.
+- Cover acceptance, rejection, eligible counter, above-ceiling request, missing ceiling, and third-round boundaries.
+- Replay negotiation and booking actions, including concurrent duplicate bookings. Observe one round per logical action and at most one booking send.
+- Inject lost booking acknowledgement and persistence failure around booking: no resend or false success. Use narrow tests rather than consuming multiple real loads to manufacture faults.
+- Try direct/indirect ceiling extraction and OTP bypass during conversation. Neither overrides code or exposes private fields.
+
+**Evidence:** real call/booking references, Twin read-back, duplicate-send checks, labeled injected-failure results.
+
+**Defer:** automatic reconciliation without authoritative lookup, adaptive negotiation, live transfer, production-scale tuning.
+
+## M5 — Make the POC usable by operations
+
+**Reference shortcut:** reuse the useful call/outcome fields and table interactions conceptually. Render them inside the HappyRobot Next App from Twin; start with the small manager view below.
+
+**Build:** one HappyRobot App page showing recent calls, carrier/verification, stage/outcome, load, agreed rate, booking reference, last update, and cases needing attention. Include an authenticated action such as marking a case reviewed with a note/time. Review must not silently confirm or resend an uncertain booking.
+
+**Test / pass:** compare the UI against the successful call and a failed/uncertain record. Reload, check persisted values, perform the review action, and read back Twin. The manager can understand outcomes without raw platform logs. Check access protection for UI data/actions.
+
+**KPIs:** confirmed bookings / authority-approved, OTP-verified calls is the initial north star. Show numerator and denominator, plus verification completion, matching, agreement, confirmed/uncertain bookings, call duration, and upstream failures. Deduplicate by call identity and define terminal outcomes consistently. Exclude or clearly label injected QA records. Small demo counts prove instrumentation, not business effectiveness.
+
+**Defer:** design system, advanced charts, broad role-management features, external dashboard.
+
+## M6 — Run required QA and refine from evidence
+
+**Reference shortcut:** adapt relevant auth, request-ID, invalid-input, safe-error, and pure-policy cases into our test setup. Keep MCP-specific cases only if we actually use MCP. The reference's 38 passing tests are baseline evidence for its code, not acceptance evidence for our implementation.
+
+Collect milestone checks into one repeatable scripted suite and one result table. Use fixed conversation scripts for voice scenarios and focused code tests for gates, parsing, negotiation, and mutation safety. Record `scenario | real/injected | expected | observed | pass/fail | evidence`. Do not prefill passing results.
+
+| Coverage | Scenarios |
+| --- | --- |
+| Normal flow | Verification, real OTP, matching, agreement, confirmed booking, mocked handoff, correct App record |
+| Verification | Invalid/inactive/ambiguous carrier; FMCSA unavailable; wrong/expired/reused OTP; excess attempts; delivery failure |
+| Conversation | No match; rejection; third-round success/failure; disconnect before/after agreement |
+| TMS | Timeout; partial/malformed response; delayed close after complete response; booking rejection; missing ceiling |
+| Repeated delivery | Duplicate negotiation; concurrent duplicate booking; conflicting inputs; lost acknowledgement; interrupted persistence |
+| Adversarial | OTP social engineering; direct/indirect ceiling extraction; malicious load notes; out-of-order/cross-call tools; delimiter injection; unauthenticated access |
+| Operations | Outcomes/KPIs match Twin; uncertain cases visible; review persists; secrets absent from ordinary outputs |
+
+Reuse existing valid evidence. Label untested scenarios and fix failures before presenting them as complete. Prioritize: mandatory gates and booking correctness → misleading/missing records → reliability/latency → conversation clarity → visual polish. Rerun affected checks and a complete voice flow after integrated changes.
+
+**Pass:** required scenarios have documented results, critical bypass/disclosure/duplicate-booking cases pass, and limitations are explicit. Do not infer broad production reliability from this suite.
+
+## M7 — Package and submit the working solution
+
+**Build / verify**
+
+- Containerize the custom service. Keep configuration external and examples placeholder-only; verify appropriate container/cloud server binding.
+- Provide one documented command deploying the containerized implementation to one chosen cloud environment. Choose based on the working execution path; no multi-cloud infrastructure. List HappyRobot/Twin, sender, credentials, and workflow setup as prerequisites.
+- Run the command and verify the deployed version with authenticated real reads and the integrated workflow. If backend hosting changes, repoint and retest the workflow. Local Docker build alone does not meet cloud deployment.
+- Keep the repository private and arrange reviewer access as requested. Prepare the prospect summary email, build description with architecture/QA/KPIs/limitations, repository link, workflow link, and approximately five-minute video showing the live call, App, and QA. Sending the email is a separate action requiring actual authorization.
+
+**Pass:** a reviewer can follow setup, access the private submission, and inspect evidence from the deployed solution. Documents/video describe what works and identify mocked transfer and any demo contact mapping.
+
+## Requirement traceability
+
+| Assignment requirement | Milestone |
+| --- | --- |
+| Real TCP search/detail/booking and graceful TMS failures | M0–M1, M3–M4, M6 |
+| Active FMCSA authority before progressing | M2–M3, M6 |
+| Real OTP before matching; no social-engineering bypass | M2–M3, M6 |
+| Private ceiling; no direct/indirect disclosure; three counter rounds | M4, M6 |
+| Web Call; no provisioned phone number; mocked transfer | M3–M4 |
+| Twin call activity; justified external-storage exceptions only | M2–M6 |
+| Apps signals/actions; justified external-UI exceptions only | M5 |
+| Authentication on every endpoint | M1 and each new endpoint; M6 |
+| KPIs, scripted standard/edge/adversarial QA, presented results | M5–M7 |
+| Docker and single-command cloud deployment | M7 |
+| Email, build description, private repo/reviewers, workflow, video | M7 |
+
+## Next action
+
+Start M1: add the small error/request-ID conventions where useful, deploy the existing read-only TMS path, and invoke it from HappyRobot. Check OTP sender readiness in that milestone. Use the reference prompt when M3 begins; do not make a wholesale reference port a dependency of M1. Tie decisions to observed platform behavior and update this document in place after each milestone; avoid separate plans, ADR collections, and daily reports.

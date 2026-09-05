@@ -1,40 +1,33 @@
 {
-  "name": "happyrobot-carrier-sales",
+  "name": "carrier-sales",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@10.34.5",
-  "engines": { "node": ">=22.12.0 <23" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",
-    "postbuild": "node scripts/prepare-standalone.mjs",
-    "start": "node .next/standalone/server.js",
-    "lint": "eslint . --max-warnings 0",
-    "typecheck": "next typegen && tsc --noEmit",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:e2e": "playwright test",
-    "check": "node scripts/check.mjs"
+    "start": "next start --hostname 0.0.0.0",
+    "start:local": "next start --hostname 127.0.0.1",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "probe:tms": "node --env-file=.env.local --import tsx scripts/probe-tms.ts",
+    "verify:local": "node --env-file=.env.local --import tsx scripts/verify-local.ts",
+    "verify:deployed": "node --env-file=.env.local --import tsx scripts/verify-local.ts --deployed"
   },
   "dependencies": {
-    "@modelcontextprotocol/node": "2.0.0",
-    "@modelcontextprotocol/server": "2.0.0",
-    "hono": "4.13.5",
     "next": "16.3.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
-    "server-only": "0.0.1",
-    "zod": "4.5.4"
+    "server-only": "0.0.1"
   },
   "devDependencies": {
-    "@playwright/test": "1.62.1",
     "@types/node": "22.20.1",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.7",
-    "eslint": "9.39.5",
-    "eslint-config-next": "16.3.4",
-    "typescript": "5.9.3",
-    "vitest": "4.1.11"
+    "tsx": "4.23.13",
+    "typescript": "7.0.2"
   }
 }
