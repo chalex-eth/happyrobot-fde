@@ -19,4 +19,4 @@ jobs:
       - run: npm test
       - run: npm run typecheck
       - run: npm run build
-      # HappyRobot's managed Git integration owns deployment. No second deploy job.
+      # Deployment/import into HappyRobot is managed manually.

@@ -1,14 +1,27 @@
-# Carrier sales: local TMS checkpoint
+# Carrier sales — Next.js starter
 
-Real local Next.js HTTP → Node TCP → challenge TMS. No booking implementation, mock TMS, or deployment.
+Next.js App Router starter for the HappyRobot inbound carrier-sales POC. The implemented slice is an authenticated HTTP → Node TCP → challenge TMS connection. Deployment remains unverified.
+
+The application lives at the repository root:
+
+```text
+app/                 Pages and API route handlers
+src/                 TMS client and HTTP handling
+tests/               HTTP contract tests
+scripts/             Local and deployed integration checks
+docs/                Architecture and milestone plan
+.github/workflows/   Install, test, typecheck, and build checks
+vercel.json          Vercel build configuration
+```
 
 ## Run
 
-Node 22+ and npm. The supplied credentials and approved generated `LOCAL_API_TOKEN` are already in `.env.local` (Git-ignored). On another machine, copy `.env.example` to `.env.local` and fill in real credentials plus a separate local API token.
+Use Node 22 (`nvm use`) and npm. From the repository root, copy `.env.example` to `.env.local` and fill in real credentials plus a separate `LOCAL_API_TOKEN`. Keep an existing `.env.local` if already configured; environment files are Git-ignored.
 
 ```sh
 npm ci
-npm run probe:tms
+npm test
+npm run typecheck
 npm run build
 npm run start
 ```
@@ -20,6 +33,18 @@ npm run verify:local
 ```
 
 Server: `http://127.0.0.1:3000`. To use another local port, run `npm run start -- --port 3001` and set `LOCAL_BASE_URL=http://127.0.0.1:3001` for verification. `npm run dev` is available for editing.
+
+## Vercel / manual HappyRobot import
+
+Import the repository with **Root Directory `.`**, **Framework Next.js**, and **Node.js 22.x**. `vercel.json` configures `npm ci` and `npm run build`; keep the framework's default output directory. This follows [Vercel's project configuration](https://vercel.com/docs/project-configuration/vercel-json).
+
+Set `TMS_HOST`, `TMS_PORT`, `TMS_TOKEN`, and `LOCAL_API_TOKEN` as server-side environment variables in the destination platform. `FMCSA_API_KEY` is reserved for the later carrier-validation milestone. Do not prefix these secrets with `NEXT_PUBLIC_`.
+
+The `/api/tms` handler explicitly uses the Node.js runtime for TCP and a 15-second function duration. Building requires no TMS credentials; live verification does.
+
+GitHub Actions checks pull requests and pushes to `main`. Import/update HappyRobot manually from this repository; no HappyRobot deployment automation is configured here.
+
+After deployment, set `DEPLOYED_BASE_URL` in your local `.env.local` to the HTTPS origin you control, then run `npm run verify:deployed`. The script sends the API token to that origin and checks real TMS echo, query, and detail. A successful build alone does not confirm deployed TCP connectivity.
 
 ## Interface
 

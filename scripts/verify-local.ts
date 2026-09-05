@@ -1,15 +1,19 @@
 import assert from 'node:assert/strict';
 import { appendFile } from 'node:fs/promises';
 const deployed = process.argv.includes('--deployed');
-// Explicitly pin the authorized App destination before transmitting the bearer token.
-const base = deployed ? 'https://plain-cinder-4kgyg.custom-apps.happyrobot.ai' : process.env.LOCAL_BASE_URL ?? 'http://127.0.0.1:3000';
-if (!deployed && !['127.0.0.1', 'localhost', '[::1]'].includes(new URL(base).hostname)) throw new Error('Use --deployed for the configured HappyRobot App; local mode only permits localhost.');
+// Require an explicit deployment origin before transmitting the bearer token.
+const base = deployed ? process.env.DEPLOYED_BASE_URL : process.env.LOCAL_BASE_URL ?? 'http://127.0.0.1:3000';
+if (!base) throw new Error('Set DEPLOYED_BASE_URL to your deployment origin before using --deployed.');
+const url = new URL(base);
+if (url.username || url.password || url.pathname !== '/' || url.search || url.hash) throw new Error('Base URL must be an origin without credentials, path, query, or fragment.');
+if (deployed && url.protocol !== 'https:') throw new Error('Deployment verification requires HTTPS.');
+if (!deployed && (url.protocol !== 'http:' || !['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname))) throw new Error('Local mode only permits HTTP on localhost.');
 const token = process.env.LOCAL_API_TOKEN;
 if (!token) throw new Error('LOCAL_API_TOKEN is missing. Supply or authorize a local token before verifying HTTP.');
 const run = new Date().toISOString();
 async function request(label: string, body: unknown, expected: number, authorization?: string) {
   const started = Date.now();
-  const response = await fetch(`${base}/api/tms`, {
+  const response = await fetch(`${url.origin}/api/tms`, {
     method: 'POST', redirect: 'error',
     headers: { 'Content-Type': 'application/json', ...(authorization ? { Authorization: authorization } : {}) },
     body: JSON.stringify(body), signal: AbortSignal.timeout(15000),

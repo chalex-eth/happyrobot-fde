@@ -25,7 +25,7 @@ References:
 - [HappyRobot workspace](https://platform.happyrobot.ai/fdealexandrechalard/)
 - [HappyRobot documentation](https://docs.happyrobot.ai/)
 - [FMCSA API documentation](https://mobile.fmcsa.dot.gov/QCDevsite/docs/qcApi)
-- Existing `carrier-sales/README.md`, `carrier-sales/src/tms.ts`, and `carrier-sales/local-results.jsonl`.
+- Existing `README.md`, `src/tms.ts`, and `local-results.jsonl` (app moved to the repository root).
 - User-selected implementation foundation: [franalgaba/happyrobot-challenge](https://github.com/franalgaba/happyrobot-challenge/tree/6a7c0897d77371514ee15b9f971aaa239f2ac3ee), reviewed at commit `6a7c0897d77371514ee15b9f971aaa239f2ac3ee` on 2026-09-05.
 
 Use the logged-in browser for gated assignment resources. Keep supplied credentials server-side, outside planning documents and outputs. Use the selected reference to accelerate agent setup, error handling, and tested coding patterns. Our assignment and Next.js App + Twin architecture govern adaptations; the reference is not a runtime dependency.
