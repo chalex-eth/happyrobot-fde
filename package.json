@@ -10,24 +10,17 @@
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",
     "start": "next start --hostname 0.0.0.0",
-    "start:local": "next start --hostname 127.0.0.1",
-    "test": "node --import tsx --test tests/*.test.ts",
-    "typecheck": "next typegen && tsc --noEmit",
-    "probe:tms": "node --env-file=.env.local --import tsx scripts/probe-tms.ts",
-    "verify:local": "node --env-file=.env.local --import tsx scripts/verify-local.ts",
-    "verify:deployed": "node --env-file=.env.local --import tsx scripts/verify-local.ts --deployed"
+    "typecheck": "next typegen && tsc --noEmit"
   },
   "dependencies": {
     "next": "16.3.4",
     "react": "19.2.8",
-    "react-dom": "19.2.8",
-    "server-only": "0.0.1"
+    "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@types/node": "22.20.1",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.7",
-    "tsx": "4.23.13",
     "typescript": "7.0.2"
   }
 }

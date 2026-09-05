@@ -1,83 +1,35 @@
-# Carrier sales — Next.js starter
+# Carrier sales
 
-Next.js App Router starter for the HappyRobot inbound carrier-sales POC. The implemented slice is an authenticated HTTP → Node TCP → challenge TMS connection. Deployment remains unverified.
+Minimal Next.js starter for the HappyRobot app, using Node 22 and npm.
 
-The application lives at the repository root:
-
-```text
-app/                 Pages and API route handlers
-src/                 TMS client and HTTP handling
-tests/               HTTP contract tests
-scripts/             Local and deployed integration checks
-docs/                Architecture and milestone plan
-.github/workflows/   Install, test, typecheck, and build checks
-vercel.json          Vercel build configuration
-```
-
-## Run
-
-Use Node 22 (`nvm use`) and npm. From the repository root, copy `.env.example` to `.env.local` and fill in real credentials plus a separate `LOCAL_API_TOKEN`. Keep an existing `.env.local` if already configured; environment files are Git-ignored.
+## Development
 
 ```sh
+nvm use
 npm ci
-npm test
+npm run dev
+```
+
+Open http://localhost:3000. No environment variables are required for the starter.
+
+## Checks
+
+```sh
 npm run typecheck
 npm run build
-npm run start
 ```
 
-In a second terminal, from this directory:
+Run the production build locally with `npm start`. GitHub Actions runs typechecking and the build on pull requests and pushes to `main`.
 
-```sh
-npm run verify:local
-```
+## Import
 
-Server: `http://127.0.0.1:3000`. To use another local port, run `npm run start -- --port 3001` and set `LOCAL_BASE_URL=http://127.0.0.1:3001` for verification. `npm run dev` is available for editing.
+Use **Next.js**, **Root Directory `.`**, and **Node.js 22.x**. `vercel.json` sets the install and build commands. Keep the default output directory.
 
-## Vercel / manual HappyRobot import
+HappyRobot imports and updates are manual.
 
-Import the repository with **Root Directory `.`**, **Framework Next.js**, and **Node.js 22.x**. `vercel.json` configures `npm ci` and `npm run build`; keep the framework's default output directory. This follows [Vercel's project configuration](https://vercel.com/docs/project-configuration/vercel-json).
+## Structure
 
-Set `TMS_HOST`, `TMS_PORT`, `TMS_TOKEN`, and `LOCAL_API_TOKEN` as server-side environment variables in the destination platform. `FMCSA_API_KEY` is reserved for the later carrier-validation milestone. Do not prefix these secrets with `NEXT_PUBLIC_`.
-
-The `/api/tms` handler explicitly uses the Node.js runtime for TCP and a 15-second function duration. Building requires no TMS credentials; live verification does.
-
-GitHub Actions checks pull requests and pushes to `main`. Import/update HappyRobot manually from this repository; no HappyRobot deployment automation is configured here.
-
-After deployment, set `DEPLOYED_BASE_URL` in your local `.env.local` to the HTTPS origin you control, then run `npm run verify:deployed`. The script sends the API token to that origin and checks real TMS echo, query, and detail. A successful build alone does not confirm deployed TCP connectivity.
-
-## Interface
-
-`POST /api/tms`, `Content-Type: application/json`, `Authorization: Bearer <LOCAL_API_TOKEN>`.
-
-```json
-{"command":"LOAD_QUERY","fields":{"EQTYPE":"DRY_VAN","MAX_RESULTS":"3"}}
-```
-
-Then use an actual returned ID with `{"command":"LOAD_GET","fields":{"LOAD_ID":"<returned ID>"}}`. `{"command":"DEBUG_ECHO"}` checks transport/auth only. Query supports the handbook's origin/destination city, state, ZIP, equipment, `PICKUP_DATE`, and a local `MAX_RESULTS` limit of 1–20. At least one actual filter is required.
-
-Responses include command, elapsed milliseconds, attempts, safe failure codes, and complete public records. Wire field names and numeric/date strings are preserved. `MAX_BUY`, unknown fields, and operator free text are excluded from this diagnostic endpoint. This is a connectivity checkpoint, not the final carrier-facing tool contract.
-
-Every request uses a fresh socket, a 4-second overall attempt deadline, and a 256 KiB response cap. One transient read retry follows after 150 ms. Success requires `END\r\n`; complete error lines do not require END. Partial/malformed results are discarded. Missing/wrong API token returns 401; missing server auth configuration returns 503; invalid input returns 400; exhausted timeout returns 504; other upstream failures return 502. Error messages never forward upstream payloads.
-
-## Observed results — 2026-09-04
-
-| Check | Real result |
-| --- | --- |
-| Direct TCP echo / query / detail | Passed; approximately 240–250 ms each |
-| Georgia example query | Valid empty result; broadened the real query to dry vans |
-| HTTP echo | 200, 243 ms |
-| HTTP dry-van query | 200, 245 ms; three actual loads |
-| HTTP detail | 200, 241 ms; `LD00694`, Colorado Springs → Huntsville |
-| Missing / wrong authentication | 401 / 401 |
-| Booking command / delimiter injection / missing filter | 400 / 400 / 400, rejected before TCP |
-| Credential and private-field checks | Passed on live HTTP responses |
-| First HTTP query attempt | Real 4-second timeout; retry received incomplete response; safe 502 after 4.4 s, no partial data |
-| Next complete verification run | All eight checks passed; exact output in `local-results.jsonl` |
-| TypeScript / production build | Passed |
-
-The script appends safe evidence to `local-results.jsonl` and exits nonzero on failure. The first observed upstream failure above occurred before file-based evidence logging was added. A later successful run does not erase that failure or prove production reliability. Only timeout and incomplete-response faults were observed; malformed and delayed-close cases are not claimed as live-tested.
-
-**Checkpoint passed locally. Vercel/HappyRobot deployment remains unverified and deferred.** No `LOAD_BOOK` was sent to the TMS. FMCSA, OTP, Twin, and workflow integration are outside this checkpoint.
-
-Protocol source: [candidate handbook](https://fde-challenge-candidate-handbook-production.up.railway.app/spec/), inspected through the logged-in browser. Route implementation follows [Next.js Route Handlers](https://nextjs.org/docs/app/api-reference/file-conventions/route).
+- `app/`: application pages and layout.
+- `src/`: retained TMS implementation for later integration; currently unused by the app.
+- `.github/workflows/`: build checks.
+- `vercel.json`: deployment configuration.

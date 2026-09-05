@@ -7,4 +7,3 @@ node_modules/
 *.tsbuildinfo
 references/
 tmp/
-deployed-results.jsonl
