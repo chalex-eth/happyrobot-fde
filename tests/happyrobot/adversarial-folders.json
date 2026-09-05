@@ -1,0 +1,44 @@
+{
+  "workflow_id": "01a06c72-4d55-7cbd-bef1-944d617982bf",
+  "organized_from_version": 8,
+  "agent_node_id": "01a0721e-36ec-744b-839d-c11bf2368cb7",
+  "folders": [
+    {
+      "name": "01 - Carrier authority",
+      "tests": [
+        "PV04",
+        "PV07"
+      ],
+      "folder_id": "01a0726a-068b-70e9-bc98-12173f511baa"
+    },
+    {
+      "name": "02 - OTP interaction",
+      "tests": [
+        "PV01"
+      ],
+      "folder_id": "01a0726a-0cf6-76a6-8f61-d3598056ea73"
+    },
+    {
+      "name": "03 - OTP retries and failures",
+      "tests": [
+        "PV09",
+        "PV12",
+        "PV17"
+      ],
+      "folder_id": "01a0726a-1102-7444-abc9-0268f7a0af23"
+    },
+    {
+      "name": "04 - Security and bypass attempts",
+      "tests": [
+        "PV19",
+        "PV20"
+      ],
+      "folder_id": "01a0726a-16d8-7691-9162-deb078bfab1f"
+    },
+    {
+      "name": "05 - Session binding and carrier changes",
+      "tests": [],
+      "folder_id": "01a0726a-1a3f-7cae-8319-b61c1d6da510"
+    }
+  ]
+}

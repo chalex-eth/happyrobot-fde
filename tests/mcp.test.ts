@@ -97,3 +97,32 @@ test('MCP-only proxy cannot publish operator routes, assets or alternate paths',
   }
   assert.equal((await fetch(`http://127.0.0.1:${port}/api/mcp`,{method:'PUT'})).status,405);
 });
+
+
+test('reused JSON-RPC IDs on separate invocations do not replay a previous OTP attempt', async t => {
+  configure(t);
+  const values = { OTP_DEMO_MODE: 'true', OTP_HASH_SECRET: 'test-receipt-secret-'.repeat(4), DEMO_OTP_EMAIL: 'test@example.invalid' };
+  const old = Object.fromEntries(Object.keys(values).map(k => [k, process.env[k]]));
+  Object.assign(process.env, values);
+  t.after(() => { for (const [k,v] of Object.entries(old)) { if (v === undefined) delete process.env[k]; else process.env[k] = v; } });
+  const operations: string[] = [];
+  t.mock.method(globalThis, 'fetch', async (_url: URL, init: RequestInit) => {
+    const b = JSON.parse(String(init.body));
+    if (b.p_action === 'status') return Response.json({ ok: true, session: { callId: id,
+      challengeId: id, expiresAt: new Date(Date.now() + 3600_000).toISOString(), authorityRevision: 1, verified: false } });
+    assert.equal(b.p_action, 'prepare_verify');
+    operations.push(b.p_metadata.operationId);
+    return Response.json({ ok: false, error: 'OTP_INVALID' });
+  });
+  for (const code of ['123456', '123456', '123457']) {
+    const response = await handleMcp(new Request('http://localhost/api/mcp', { method: 'POST',
+      headers: { 'Content-Type': 'application/json', Accept: 'application/json, text/event-stream' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 2, method: 'tools/call', params: { name: 'verify_otp', arguments: { code } } }),
+    }), { authenticate: () => {}, resolve: async () => ({ hash: 'a'.repeat(64) }) });
+    const result = (await response.json()).result;
+    assert.equal(value(result).error, 'OTP_INVALID');
+    assert.equal(result.isError, false, 'A rejected code is an observed outcome, not a transport/execution failure');
+  }
+  assert.equal(operations.length, 3);
+  assert.equal(new Set(operations).size, 3, 'An identical code or reset RPC counter still represents a new caller attempt');
+});

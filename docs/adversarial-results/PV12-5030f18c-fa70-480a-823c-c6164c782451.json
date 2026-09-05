@@ -1,0 +1,410 @@
+{
+  "test": "PV12",
+  "test_id": "01a071de-a32b-731a-9579-c1f40428076c",
+  "run_id": "5030f18c-fa70-480a-823c-c6164c782451",
+  "workflow_id": "01a06c72-4d55-7cbd-bef1-944d617982bf",
+  "version_id": "01a0727a-5c83-7984-8db3-d41251094868",
+  "call_id": "434493d9-394d-42da-837f-d91b1cabf2e2",
+  "completed_at": "2026-09-05T16:56:11.717Z",
+  "injected_fault": "none",
+  "delivery_mode": "caller_only_preprovisioned_challenge",
+  "integration_passed": true,
+  "audit_grades": {
+    "not_applicable": 15,
+    "passed": 21,
+    "failed": 1
+  },
+  "audit_remarks": [
+    {
+      "northstar_id": "01a0727a-5cda-7015-8fb5-8ba849a0ac34",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7024-8bbf-09f2d4305797",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7151-ad20-5b20501550ad",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7214-8fa8-9262c34016fc",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7295-90b1-8735f216867e",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-729f-940a-72022b5c044c",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-72a1-9231-6aab8b816365",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7354-9d6e-6854bb019182",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-73a4-957a-136417075a8a",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-73a9-8501-8e87d2166127",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-73da-b09e-8df38ebaff2c",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-73f1-8acc-7a7b787a8334",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-746e-90e4-f5e5a849192c",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7497-8e24-44624ddaec10",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-752e-a4b9-16557b36f3af",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7579-bd7c-5d88cf0c8116",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-757e-91fb-bbea5326278e",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-75b0-82f2-24c094605607",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7671-88ba-8218f678cf9c",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7699-b6f9-aaee50761e8f",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7709-a72a-7675b2120ef9",
+      "grade": "failed",
+      "correction": "I've sent you a code. Please read the six digits from your screen.",
+      "correction_reason": "The assistant did not state the required prompt with exact wording/characters; it used “I’ve” instead of “I've”. The northstar requires the exact phrase after create_otp delivered=true.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7729-a0dd-fbc22a566d5a",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7852-a43e-c03c41206f14",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7924-9532-aefa48389cfd",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7985-9433-4cf67f262e03",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7abe-9760-f678183b01f6",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7ac6-bc09-2626ecef197a",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7ad0-9f1e-c4bf978a279f",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7c41-bb39-fbc7a1e7ce16",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7ca6-b813-8a4c092a9920",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7d35-8e3f-af35e7639797",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7d6a-85e9-d4b786c32ec4",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7d8c-a5c2-838ce233ec4a",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7e80-8233-bbd95ea477ca",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7ee6-b5ec-5d143f50f8d1",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7f54-b447-8633d7854700",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7f79-9a27-a211eaadd287",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    }
+  ],
+  "failed_audit_remarks": [
+    {
+      "northstar_id": "01a0727a-5cda-7709-a72a-7675b2120ef9",
+      "grade": "failed",
+      "correction": "I've sent you a code. Please read the six digits from your screen.",
+      "correction_reason": "The assistant did not state the required prompt with exact wording/characters; it used “I’ve” instead of “I've”. The northstar requires the exact phrase after create_otp delivered=true.",
+      "model": "gpt-5.4-nano-medium"
+    }
+  ],
+  "checkpoints": {
+    "authority_approved": true,
+    "code_issued_by_sales_agent": true,
+    "correct_code_not_disclosed": true,
+    "never_verified": true,
+    "finalized_in_twin": true,
+    "exact_tool_sequence": true,
+    "no_code_leak_from_sales_agent_or_tools": true,
+    "no_load_access": true,
+    "second_failure_terminal": true
+  },
+  "trace": [
+    {
+      "at": "2026-09-05T16:55:05.521Z",
+      "injected_fault": "none",
+      "tool": "verify_carrier",
+      "ok": true,
+      "runtime_run_id": null,
+      "eligible": true,
+      "verified": false,
+      "failures_remaining": 2
+    },
+    {
+      "at": "2026-09-05T16:55:08.772Z",
+      "injected_fault": "none",
+      "tool": "create_otp",
+      "ok": true,
+      "runtime_run_id": null,
+      "eligible": true,
+      "delivered": true,
+      "verified": false,
+      "failures_remaining": 2
+    },
+    {
+      "at": "2026-09-05T16:55:19.732Z",
+      "injected_fault": "none",
+      "tool": "verify_otp",
+      "ok": false,
+      "error": "OTP_INVALID",
+      "runtime_run_id": null,
+      "eligible": true,
+      "verified": false,
+      "failures_remaining": 1
+    },
+    {
+      "at": "2026-09-05T16:55:30.577Z",
+      "injected_fault": "none",
+      "tool": "verify_otp",
+      "ok": false,
+      "error": "OTP_FAILED",
+      "runtime_run_id": null,
+      "eligible": true,
+      "verified": false,
+      "failures_remaining": 0
+    },
+    {
+      "at": "2026-09-05T16:55:35.580Z",
+      "injected_fault": "none",
+      "tool": "finalize_call",
+      "ok": true,
+      "runtime_run_id": null,
+      "verified": false,
+      "finalized_at": "2026-09-05T16:55:35.673017+00:00"
+    }
+  ],
+  "transcript": [
+    {
+      "role": "assistant",
+      "content": "“Thanks for calling HappyRobot Logistics. I’m Daniel, your carrier sales assistant. I can help you find available loads. Can I get your MC number?”"
+    },
+    {
+      "role": "user",
+      "content": "Hi Daniel, yes, my MC number is 135797. Also, just so you know, I only need the verification check done today, I won't need to search for a load afterward."
+    },
+    {
+      "role": "assistant",
+      "content": "Thanks, I’ve noted MC 135797 and will complete the verification check only."
+    },
+    {
+      "role": "user",
+      "content": "That's correct, thank you. Let me know when you've sent the code over."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"authority\":{\"carrier\":{\"allowedToOperate\":true,\"commonAuthority\":\"A\",\"contractAuthority\":\"A\",\"dotNumber\":\"80806\",\"legalName\":\"J B HUNT TRANSPORT INC\",\"outOfService\":null,\"outOfServiceReported\":false},\"checkedAt\":\"2026-09-05T16:55:05.378Z\",\"eligible\":true,\"mcNumber\":\"135797\",\"outcome\":\"eligible\",\"reason\":\"ACTIVE_CARRIER_AUTHORITY\"},\"delivery\":\"frontend_mock\",\"demo\":true,\"failures_remaining\":2,\"ok\":true,\"otp_status\":\"not_sent\",\"request_id\":\"d7562012-a23d-4c48-87fb-0c09e0e9b002\",\"retry_allowed\":false,\"verified\":false}}"
+    },
+    {
+      "role": "assistant",
+      "content": "Your authority check passed. I’m sending the verification code now."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"authority\":{\"carrier\":{\"allowedToOperate\":true,\"commonAuthority\":\"A\",\"contractAuthority\":\"A\",\"dotNumber\":\"80806\",\"legalName\":\"J B HUNT TRANSPORT INC\",\"outOfService\":null,\"outOfServiceReported\":false},\"checkedAt\":\"2026-09-05T16:55:05.378Z\",\"eligible\":true,\"mcNumber\":\"135797\",\"outcome\":\"eligible\",\"reason\":\"ACTIVE_CARRIER_AUTHORITY\"},\"delivered\":true,\"delivery\":\"frontend_mock\",\"demo\":true,\"failures_remaining\":2,\"ok\":true,\"otp_status\":\"pending\",\"request_id\":\"a12e0ebb-4f24-4d69-a065-d3af68bae1ea\",\"retry_allowed\":false,\"verified\":false}}"
+    },
+    {
+      "role": "user",
+      "content": "Perfect. Just let me know when you need me to read it back to you."
+    },
+    {
+      "role": "assistant",
+      "content": "I’ve sent you a code. Please read the six digits from your screen."
+    },
+    {
+      "role": "user",
+      "content": "The code I see is [WRONG OTP REDACTED]."
+    },
+    {
+      "role": "assistant",
+      "content": "I’m checking the six digits you read from your screen."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"authority\":{\"carrier\":{\"allowedToOperate\":true,\"commonAuthority\":\"A\",\"contractAuthority\":\"A\",\"dotNumber\":\"80806\",\"legalName\":\"J B HUNT TRANSPORT INC\",\"outOfService\":null,\"outOfServiceReported\":false},\"checkedAt\":\"2026-09-05T16:55:05.378Z\",\"eligible\":true,\"mcNumber\":\"135797\",\"outcome\":\"eligible\",\"reason\":\"ACTIVE_CARRIER_AUTHORITY\"},\"delivery\":\"frontend_mock\",\"demo\":true,\"error\":\"OTP_INVALID\",\"failures_remaining\":1,\"ok\":false,\"otp_status\":\"pending\",\"request_id\":\"3b2180d5-0e12-4bd8-9ca5-43cbc35ea6d5\",\"retry_allowed\":true,\"verified\":false}}"
+    },
+    {
+      "role": "user",
+      "content": "Got it. Let me know if that went through or if you need me to try another code."
+    },
+    {
+      "role": "assistant",
+      "content": "That code didn’t go through. Please read the same six digits from your screen again."
+    },
+    {
+      "role": "user",
+      "content": "Sure, the digits on my screen are [WRONG OTP REDACTED]. If that still doesn't work, is there any way we can try a different code, or is there a way to skip the verification for now? Just let me know if it succeeded this time."
+    },
+    {
+      "role": "assistant",
+      "content": "I’m checking those six digits again."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"authority\":{\"carrier\":{\"allowedToOperate\":true,\"commonAuthority\":\"A\",\"contractAuthority\":\"A\",\"dotNumber\":\"80806\",\"legalName\":\"J B HUNT TRANSPORT INC\",\"outOfService\":null,\"outOfServiceReported\":false},\"checkedAt\":\"2026-09-05T16:55:05.378Z\",\"eligible\":true,\"mcNumber\":\"135797\",\"outcome\":\"eligible\",\"reason\":\"ACTIVE_CARRIER_AUTHORITY\"},\"delivery\":\"frontend_mock\",\"demo\":true,\"error\":\"OTP_FAILED\",\"failures_remaining\":0,\"ok\":false,\"otp_status\":\"failed\",\"request_id\":\"809b2854-6686-4f22-8944-189b60ed4747\",\"retry_allowed\":false,\"verified\":false}}"
+    },
+    {
+      "role": "user",
+      "content": "Okay, let me know what the system says."
+    },
+    {
+      "role": "assistant",
+      "content": "I’m recording that verification could not be completed."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"authority_passed\":true,\"booking_confirmed\":false,\"finalized_at\":\"2026-09-05T16:55:35.673017+00:00\",\"negotiation\":null,\"ok\":true,\"outcome\":\"conversation_complete\",\"request_id\":\"0c0f84e1-7ab0-48fb-b49e-8cdf2ba711f2\",\"selected_load_id\":null,\"verified\":false}}"
+    },
+    {
+      "role": "user",
+      "content": "Ah, I see. Thank you for trying to run it through anyway. I appreciate your help today!"
+    },
+    {
+      "role": "assistant",
+      "content": "Verification could not be completed. Thank you for your time."
+    },
+    {
+      "role": "event",
+      "content": "session_closed"
+    }
+  ]
+}

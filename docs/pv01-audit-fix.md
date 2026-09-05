@@ -1,5 +1,7 @@
 # PV01 audit correction — 2026-09-05
 
+Later update: the isolated native OTP test bridge and its execution evidence are documented in [adversarial E2E](adversarial-e2e.md). The blocker descriptions below record the earlier diagnostics.
+
 ## Change
 
 Draft Version 6 (`01a071ef-5b39-7f72-bb75-229ad2cee595`, slug `csggqbo6zd0q`, name `PV01 technical-error closure`) was forked from live Version 5. Only the conversation prompt was changed. The local source is `scripts/happyrobot/workflow-spec.ts`; its text matches the saved draft after whitespace normalization. Version 6 has not been published.

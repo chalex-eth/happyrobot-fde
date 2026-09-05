@@ -1,5 +1,7 @@
 # OTP simplification: validation and rollout
 
+Later update: the isolated native OTP test bridge and its execution evidence are documented in [adversarial E2E](adversarial-e2e.md). The blocker descriptions below record the earlier diagnostics.
+
 2026-09-05. Implemented and active in development.
 
 Subsequent eval cleanup: **22 active definitions**. PV13, PV15 and PV18 were soft-deleted as unnecessary/redundant conversation cases. Existing IDs and historical results are preserved locally. No evals were run for this cleanup; further execution is deferred by user instruction. The execution evidence below predates that instruction.

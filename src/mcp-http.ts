@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from 'node:crypto';
+import { randomUUID } from 'node:crypto';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
 import { z } from 'zod';
@@ -15,11 +15,23 @@ const safeError = (error: unknown) => {
   return 'TOOL_UNAVAILABLE';
 };
 
-export async function handleMcp(request: Request) {
+export type McpAdapter = {
+  authenticate: (authorization: string | null) => void;
+  resolve: (request: Request) => Promise<{ hash: string; challengeId?: string }>;
+  execute?: typeof executeTool;
+  observe?: (name: ToolName, result: Record<string, unknown>) => Promise<void>;
+};
+const voiceAdapter: McpAdapter = {
+  authenticate: authenticateMcp,
+  resolve: async request => ({ hash: await resolveAgentSession(request.headers.get('authorization'), request.headers.get('x-happyrobot-run-id')) }),
+};
+
+// Adapters are supplied by server code only, never by request body/LLM fields.
+export async function handleMcp(request: Request, adapter: McpAdapter = voiceAdapter) {
   const requestId = randomUUID();
   let server: McpServer | undefined;
   try {
-    authenticateMcp(request.headers.get('authorization'));
+    adapter.authenticate(request.headers.get('authorization'));
     // Server-to-server only. No cross-origin browser access or CORS credentials.
     if (request.headers.has('origin')) throw new SessionError('ORIGIN_NOT_ALLOWED', 403);
     // No server-initiated events or transport sessions in this adapter. A 405
@@ -36,15 +48,21 @@ export async function handleMcp(request: Request) {
         const started = Date.now();
         let result: Record<string, unknown>;
         try {
-          const hash = await resolveAgentSession(request.headers.get('authorization'), request.headers.get('x-happyrobot-run-id'));
-          result = await executeTool(name, args, hash, AbortSignal.any([request.signal, AbortSignal.timeout(25_000)]), createHash('sha256').update(JSON.stringify([request.headers.get('x-happyrobot-run-id'), parsedBody?.id ?? requestId, name])).digest('hex'));
+          const context = await adapter.resolve(request);
+          // JSON-RPC IDs correlate responses and may restart on each connection.
+          // Each HTTP invocation owns a fresh receipt; Twin recovery within that
+          // invocation continues using this same operation ID.
+          result = await (adapter.execute ?? executeTool)(name, args, context.hash, AbortSignal.any([request.signal, AbortSignal.timeout(25_000)]), requestId, context.challengeId);
         } catch (error) { result = { ok: false, error: safeError(error), retryable:
           error instanceof FmcsaError || error instanceof TmsError ? error.retryable : false }; }
-        const isError = result.ok === false;
+        await adapter.observe?.(name, result);
+        // A completed OTP check can reject the supplied code. Return that
+        // business outcome as data; it is not a failed MCP execution.
+        const isError = result.ok === false && !['OTP_INVALID', 'OTP_FAILED'].includes(String(result.error));
         // Never log arguments, headers, upstream exceptions, OTP or full outputs.
-        console.info(JSON.stringify({ event: 'mcp_tool', tool: name, requestId, ok: !isError,
+        console.info(JSON.stringify({ event: 'mcp_tool', tool: name, requestId, ok: result.ok !== false,
           runtime_run_id_valid: /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/.test(request.headers.get('x-happyrobot-run-id') ?? ''),
-          error: isError ? result.error : undefined, elapsed_ms: Date.now() - started }));
+          error: result.ok === false ? result.error : undefined, elapsed_ms: Date.now() - started }));
         return { isError, content: [{ type: 'text' as const, text: JSON.stringify({ ...result, request_id: requestId }) }] };
       });
     }

@@ -89,3 +89,7 @@ The UI now follows the voice conversation: the agent checks the MC number, calls
 ## M3.5 negotiation (active in development)
 
 The approved Twin migration is applied, NEGOTIATION_ENABLED=true locally, and Version 5 is live in development. Backend negotiation enforces private pricing, call-wide three-round limits and duplicate-response protection. Live acceptance and three-round failure checks pass. See [implementation and activation](docs/negotiation.md) and [all milestone 3 validation scenarios](docs/milestone-3-validation.md). Start a fresh call for spoken acceptance. No load booking or transfer is implemented yet.
+
+## Native adversarial OTP checks
+
+Eight core tests use unpublished Version 9 with fresh backend sessions and private caller-only codes where required. Run all eight sequentially with `npm run test:adversarial -- run --all`, or select one with `--test PV01`. PV07 and PV17 inject scoped authority and demo-delivery failures; the other six use no service fault injection. The 14 approved secondary definitions were soft-deleted, preserving their original records locally. The resulting conversations and audits appear in HappyRobot. See [setup, limitations and evidence](docs/adversarial-e2e.md).

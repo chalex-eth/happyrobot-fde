@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { loadsForCall, verifyCarrierForCall, verifyOtpForCall } from './call-services';
 import { resultStatus, SessionError, twinRpc, type TwinResult } from './call-session';
 import { getNegotiableLoad, negotiateForCall } from './negotiation';
+import type { lookupCarrier } from './fmcsa';
 import { createOtpForCall } from './demo-otp';
 
 const city = z.string().trim().min(1).max(80).regex(/^[A-Za-z .'-]+$/);
@@ -64,10 +65,10 @@ function publicVerification(result: TwinResult) {
       demo: true, delivery: 'frontend_mock' } : {}) };
 }
 
-export async function executeTool(name: ToolName, input: unknown, hash: string, signal?: AbortSignal, operationId = randomUUID() as string): Promise<Record<string, unknown>> {
+export async function executeTool(name: ToolName, input: unknown, hash: string, signal?: AbortSignal, operationId = randomUUID() as string, preparedChallenge?: string, dependencies: { authorityLookup?: typeof lookupCarrier; deliverOtp?: () => Promise<boolean> } = {}): Promise<Record<string, unknown>> {
   if (name === 'verify_carrier') {
     const args = toolSpecs[name].schema.parse(input);
-    return publicVerification(await verifyCarrierForCall(hash, args.mc_number, signal));
+    return publicVerification(await verifyCarrierForCall(hash, args.mc_number, signal, dependencies.authorityLookup));
   }
   if (name === 'verify_otp') {
     const args = toolSpecs[name].schema.parse(input);
@@ -75,7 +76,7 @@ export async function executeTool(name: ToolName, input: unknown, hash: string, 
   }
   if (name === 'create_otp') {
     toolSpecs[name].schema.parse(input);
-    const result = await createOtpForCall(hash, operationId);
+    const result = await createOtpForCall(hash, operationId, preparedChallenge, dependencies.deliverOtp);
     return { ...publicVerification(result), delivered: result.ok && result.session?.otpState === 'pending' };
   }
   if (name === 'search_loads') {

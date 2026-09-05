@@ -11,6 +11,14 @@ function displayCode(hash: string, challenge: string) {
   return String(bytes.readUIntBE(0, 6) % 1_000_000).padStart(6, '0');
 }
 
+// A native adversarial caller has no mid-conversation inbox API. Reserve a
+// random challenge privately before its run; issuance still happens only when
+// the sales agent calls create_otp and Twin approves the authority prerequisite.
+export function prepareDemoChallenge(hash: string) {
+  const challengeId = randomUUID();
+  return { challengeId, code: displayCode(hash, challengeId) };
+}
+
 // Only the same-origin, cookie-authenticated local UI may call this reader.
 // Checking the stored digest also avoids showing a guessed value for challenges
 // created by the older manual frontend generator.
@@ -24,8 +32,9 @@ export async function readDemoOtp(hash: string, session: CallSession) {
   return { code, challengeId: session.challengeId, failuresRemaining: session.otpFailuresRemaining };
 }
 
-export async function createOtpForCall(hash: string, operationId = randomUUID() as string) {
+export async function createOtpForCall(hash: string, operationId = randomUUID() as string, preparedChallenge?: string, deliver: () => Promise<boolean> = async () => true) {
   if (!mockOtpEnabled()) throw new SessionError('OTP_MOCK_DISABLED', 403);
+  if (preparedChallenge && !/^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/.test(preparedChallenge)) throw new SessionError('INVALID_REQUEST', 400);
   return otpOperation(hash, operationId, async () => {
     const current = await callAction(hash, 'status');
     if (!current.ok) return current;
@@ -34,7 +43,7 @@ export async function createOtpForCall(hash: string, operationId = randomUUID() 
     if (await readDemoOtp(hash, current.session!)) return current;
     // A legacy manual challenge may not be recoverable on screen. Do not claim delivery.
     if (current.session?.otpState === 'pending') throw new SessionError('OTP_RESULT_UNCERTAIN');
-    const challenge = randomUUID();
+    const challenge = preparedChallenge ?? randomUUID();
     const code = displayCode(hash, challenge);
     const issue = await callAction(hash, 'issue', { p_challenge: challenge,
       p_digest: otpDigest(hash, challenge, code), p_recipient: `mock-frontend:${hash}`, p_metadata: { operationId } });
@@ -44,6 +53,7 @@ export async function createOtpForCall(hash: string, operationId = randomUUID() 
       return issue;
     }
     // A deterministic demo code can safely finish an interrupted local dispatch.
-    return otpCommit(hash, 'sent', { p_challenge: issue.session!.challengeId, p_metadata: { operationId } });
+    const delivered = await deliver();
+    return otpCommit(hash, delivered ? 'sent' : 'failed', { p_challenge: issue.session!.challengeId, p_metadata: { operationId } });
   });
 }

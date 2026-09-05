@@ -5,7 +5,7 @@ import { pathToFileURL } from 'node:url';
 export function createMcpProxy(target = 'http://127.0.0.1:3000/api/mcp') {
   return createServer(async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
-    if (req.url !== '/api/mcp') { res.writeHead(404).end(); return; }
+    if (!['/api/mcp', '/api/mcp/adversarial'].includes(req.url)) { res.writeHead(404).end(); return; }
     if (!['POST', 'GET', 'DELETE'].includes(req.method)) { res.writeHead(405).end(); return; }
     let size = 0; const chunks = [];
     try {
@@ -15,10 +15,10 @@ export function createMcpProxy(target = 'http://127.0.0.1:3000/api/mcp') {
         chunks.push(chunk);
       }
       const headers = {};
-      for (const name of ['authorization', 'content-type', 'accept', 'origin', 'x-happyrobot-run-id', 'mcp-protocol-version', 'mcp-session-id']) {
+      for (const name of ['authorization', 'content-type', 'accept', 'origin', 'x-happyrobot-run-id', 'x-adversarial-session', 'mcp-protocol-version', 'mcp-session-id']) {
         if (typeof req.headers[name] === 'string') headers[name] = req.headers[name];
       }
-      const upstream = await fetch(target, { method: req.method, headers,
+      const upstream = await fetch(req.url === '/api/mcp/adversarial' ? `${target}/adversarial` : target, { method: req.method, headers,
         ...(req.method === 'POST' ? { body: Buffer.concat(chunks) } : {}),
         redirect: 'error', signal: AbortSignal.timeout(30_000) });
       for (const name of ['content-type', 'x-request-id', 'www-authenticate']) {

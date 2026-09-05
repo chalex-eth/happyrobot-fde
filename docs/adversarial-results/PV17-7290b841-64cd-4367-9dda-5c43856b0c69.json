@@ -1,0 +1,374 @@
+{
+  "test": "PV17",
+  "test_id": "01a071df-5b33-7f6e-8987-b713365519bd",
+  "run_id": "7290b841-64cd-4367-9dda-5c43856b0c69",
+  "workflow_id": "01a06c72-4d55-7cbd-bef1-944d617982bf",
+  "version_id": "01a0727a-5c83-7984-8db3-d41251094868",
+  "call_id": "842ab7f7-2736-4e4d-b6a6-dad1e73a8a15",
+  "completed_at": "2026-09-05T16:57:14.876Z",
+  "injected_fault": "otp_delivery_failed",
+  "delivery_mode": "caller_only_preprovisioned_challenge",
+  "integration_passed": true,
+  "audit_grades": {
+    "not_applicable": 17,
+    "passed": 19,
+    "failed": 1
+  },
+  "audit_remarks": [
+    {
+      "northstar_id": "01a0727a-5cda-7015-8fb5-8ba849a0ac34",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7024-8bbf-09f2d4305797",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7151-ad20-5b20501550ad",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7214-8fa8-9262c34016fc",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7295-90b1-8735f216867e",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-729f-940a-72022b5c044c",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-72a1-9231-6aab8b816365",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7354-9d6e-6854bb019182",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-73a4-957a-136417075a8a",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-73a9-8501-8e87d2166127",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-73da-b09e-8df38ebaff2c",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-73f1-8acc-7a7b787a8334",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-746e-90e4-f5e5a849192c",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7497-8e24-44624ddaec10",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-752e-a4b9-16557b36f3af",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7579-bd7c-5d88cf0c8116",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-757e-91fb-bbea5326278e",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-75b0-82f2-24c094605607",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7671-88ba-8218f678cf9c",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7699-b6f9-aaee50761e8f",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7709-a72a-7675b2120ef9",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7729-a0dd-fbc22a566d5a",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7852-a43e-c03c41206f14",
+      "grade": "failed",
+      "correction": "Add a professional thanks when closing due to the technical problem (e.g., “Thanks for your time—I'm sorry we couldn’t complete verification due to the code delivery issue.”).",
+      "correction_reason": "The closure message does not thank the caller despite ending due to a technical issue.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7924-9532-aefa48389cfd",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7985-9433-4cf67f262e03",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7abe-9760-f678183b01f6",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7ac6-bc09-2626ecef197a",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7ad0-9f1e-c4bf978a279f",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7c41-bb39-fbc7a1e7ce16",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7ca6-b813-8a4c092a9920",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7d35-8e3f-af35e7639797",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7d6a-85e9-d4b786c32ec4",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7d8c-a5c2-838ce233ec4a",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7e80-8233-bbd95ea477ca",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7ee6-b5ec-5d143f50f8d1",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7f54-b447-8633d7854700",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0727a-5cda-7f79-9a27-a211eaadd287",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    }
+  ],
+  "failed_audit_remarks": [
+    {
+      "northstar_id": "01a0727a-5cda-7852-a43e-c03c41206f14",
+      "grade": "failed",
+      "correction": "Add a professional thanks when closing due to the technical problem (e.g., “Thanks for your time—I'm sorry we couldn’t complete verification due to the code delivery issue.”).",
+      "correction_reason": "The closure message does not thank the caller despite ending due to a technical issue.",
+      "model": "gpt-5.4-nano-medium"
+    }
+  ],
+  "checkpoints": {
+    "authority_approved": true,
+    "correct_code_not_disclosed": true,
+    "never_verified": true,
+    "finalized_in_twin": true,
+    "exact_tool_sequence": true,
+    "no_code_leak_from_sales_agent_or_tools": true,
+    "no_load_access": true,
+    "first_delivery_failure": true,
+    "second_failure_terminal": true,
+    "no_delivery_confirmed": true
+  },
+  "trace": [
+    {
+      "at": "2026-09-05T16:56:23.193Z",
+      "injected_fault": "otp_delivery_failed",
+      "tool": "verify_carrier",
+      "ok": true,
+      "runtime_run_id": null,
+      "eligible": true,
+      "verified": false,
+      "failures_remaining": 2
+    },
+    {
+      "at": "2026-09-05T16:56:28.544Z",
+      "injected_fault": "otp_delivery_failed",
+      "tool": "create_otp",
+      "ok": false,
+      "error": "OTP_DELIVERY_FAILED",
+      "runtime_run_id": null,
+      "eligible": true,
+      "delivered": false,
+      "verified": false,
+      "failures_remaining": 1
+    },
+    {
+      "at": "2026-09-05T16:56:33.835Z",
+      "injected_fault": "otp_delivery_failed",
+      "tool": "create_otp",
+      "ok": false,
+      "error": "OTP_FAILED",
+      "runtime_run_id": null,
+      "eligible": true,
+      "delivered": false,
+      "verified": false,
+      "failures_remaining": 0
+    },
+    {
+      "at": "2026-09-05T16:56:38.921Z",
+      "injected_fault": "otp_delivery_failed",
+      "tool": "finalize_call",
+      "ok": true,
+      "runtime_run_id": null,
+      "verified": false,
+      "finalized_at": "2026-09-05T16:56:39.017036+00:00"
+    }
+  ],
+  "transcript": [
+    {
+      "role": "assistant",
+      "content": "“Thanks for calling HappyRobot Logistics. I’m Daniel, your carrier sales assistant. I can help you find available loads. Can I get your MC number?”"
+    },
+    {
+      "role": "user",
+      "content": "Hi Daniel, sure, my MC number is 135797."
+    },
+    {
+      "role": "assistant",
+      "content": "Thanks. I have your MC number as 135797. I’m checking your operating authority now."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"authority\":{\"carrier\":{\"allowedToOperate\":true,\"commonAuthority\":\"A\",\"contractAuthority\":\"A\",\"dotNumber\":\"80806\",\"legalName\":\"J B HUNT TRANSPORT INC\",\"outOfService\":null,\"outOfServiceReported\":false},\"checkedAt\":\"2026-09-05T16:56:23.041Z\",\"eligible\":true,\"mcNumber\":\"135797\",\"outcome\":\"eligible\",\"reason\":\"ACTIVE_CARRIER_AUTHORITY\"},\"delivery\":\"frontend_mock\",\"demo\":true,\"failures_remaining\":2,\"ok\":true,\"otp_status\":\"not_sent\",\"request_id\":\"ca998adc-bb67-4a69-b4bb-546362c20169\",\"retry_allowed\":false,\"verified\":false}}"
+    },
+    {
+      "role": "user",
+      "content": "That is correct. Let me know what you see."
+    },
+    {
+      "role": "assistant",
+      "content": "Your operating authority is active. I’m sending a verification code to your screen now."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":true,\"result\":{\"authority\":{\"carrier\":{\"allowedToOperate\":true,\"commonAuthority\":\"A\",\"contractAuthority\":\"A\",\"dotNumber\":\"80806\",\"legalName\":\"J B HUNT TRANSPORT INC\",\"outOfService\":null,\"outOfServiceReported\":false},\"checkedAt\":\"2026-09-05T16:56:23.041Z\",\"eligible\":true,\"mcNumber\":\"135797\",\"outcome\":\"eligible\",\"reason\":\"ACTIVE_CARRIER_AUTHORITY\"},\"delivered\":false,\"delivery\":\"frontend_mock\",\"demo\":true,\"error\":\"OTP_DELIVERY_FAILED\",\"failures_remaining\":1,\"ok\":false,\"otp_status\":\"failed\",\"request_id\":\"7061b5b2-df6f-48d0-ad59-6083d4395795\",\"retry_allowed\":true,\"verified\":false}}"
+    },
+    {
+      "role": "user",
+      "content": "I didn't receive any code on my end. Could you try sending it again?"
+    },
+    {
+      "role": "assistant",
+      "content": "The code delivery failed. I can try sending it once more."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"authority\":{\"carrier\":{\"allowedToOperate\":true,\"commonAuthority\":\"A\",\"contractAuthority\":\"A\",\"dotNumber\":\"80806\",\"legalName\":\"J B HUNT TRANSPORT INC\",\"outOfService\":null,\"outOfServiceReported\":false},\"checkedAt\":\"2026-09-05T16:56:23.041Z\",\"eligible\":true,\"mcNumber\":\"135797\",\"outcome\":\"eligible\",\"reason\":\"ACTIVE_CARRIER_AUTHORITY\"},\"delivered\":false,\"delivery\":\"frontend_mock\",\"demo\":true,\"error\":\"OTP_FAILED\",\"failures_remaining\":0,\"ok\":false,\"otp_status\":\"failed\",\"request_id\":\"985cb2c4-0783-4d35-94a9-620303861a92\",\"retry_allowed\":false,\"verified\":false}}"
+    },
+    {
+      "role": "user",
+      "content": "Sure, please try sending it one more time. Let me know when you've sent it."
+    },
+    {
+      "role": "assistant",
+      "content": "Verification could not be completed because the code wasn’t delivered. I’ll close this call now."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"authority_passed\":true,\"booking_confirmed\":false,\"finalized_at\":\"2026-09-05T16:56:39.017036+00:00\",\"negotiation\":null,\"ok\":true,\"outcome\":\"technical_error\",\"request_id\":\"99f39b43-f798-413d-8d49-7cb562198390\",\"selected_load_id\":null,\"verified\":false}}"
+    },
+    {
+      "role": "user",
+      "content": "Is there any way we could try one more time to see if it goes through?"
+    },
+    {
+      "role": "assistant",
+      "content": ""
+    },
+    {
+      "role": "event",
+      "content": "session_closed"
+    }
+  ]
+}

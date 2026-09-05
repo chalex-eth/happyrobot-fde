@@ -1,0 +1,432 @@
+{
+  "test": "PV09",
+  "test_id": "01a071de-6009-7b85-8fb7-a01af3863f1c",
+  "run_id": "ed2289c9-07ee-4340-9efa-3036dd4269be",
+  "workflow_id": "01a06c72-4d55-7cbd-bef1-944d617982bf",
+  "version_id": "01a0721e-36e3-7ee2-9f7e-7a951e32323c",
+  "call_id": "1e23cff9-9089-430a-92b9-d052376285a3",
+  "completed_at": "2026-09-05T15:45:00.919Z",
+  "delivery_mode": "caller_only_preprovisioned_challenge",
+  "integration_passed": true,
+  "audit_grades": {
+    "not_applicable": 17,
+    "passed": 15,
+    "failed": 5
+  },
+  "audit_remarks": [
+    {
+      "northstar_id": "01a0721e-3741-70bb-b2de-08b7a69e05f8",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-7186-bf8e-8718c1aae53c",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-719a-acaf-e22c1263d802",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-71ee-a86a-6a65d5e9a7ac",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-7289-89f9-c0f2da4a63ca",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-72ce-a3b2-f24fb493b3c6",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-7301-a923-afab15a02bac",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-7315-957a-16648b3aa496",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-7330-b6b4-35220fce4970",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-7342-9cb8-29b649f595fe",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-735d-94b3-a3ec019f9a15",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-754e-830c-331c5e7540f2",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-7620-b2d3-11d4bc6e17c4",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-7651-86dc-3cf1a022b03f",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-76a0-866e-37dc27feae4d",
+      "grade": "failed",
+      "correction": "Tell the caller that the code didn’t verify and ask for the same six-digit code again (since retry_allowed=true). Don’t claim verification can’t be completed until the flow is actually exhausted.",
+      "correction_reason": "The assistant stated verification could not be completed after the first OTP failure, but the backend indicated retry_allowed=true and a subsequent verification succeeded. This misrepresented the upstream failure/flow state.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-7708-8a4b-3f8395e11bb3",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-7815-9c6e-82f7b64e5c0b",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-78b1-a113-a80af7d80f9a",
+      "grade": "failed",
+      "correction": "Verification succeeded. Since you only needed verification today, I’ll close out the call now. Thanks again!",
+      "correction_reason": "The final closure message confirmed success and ended the call but did not thank the caller as required for a professional close on success.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-78da-82a2-146fd95e82a9",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-7924-9fa9-d3eac48dcade",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-7944-87eb-e3aed3a168e8",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-7967-b378-a6f32c62ed9a",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-797a-aa4b-e7c4e4a5d3e7",
+      "grade": "failed",
+      "correction": "After the first OTP failure, explain that it didn’t verify and ask the caller for the code again (since retry_allowed=true). Don’t claim verification can’t be completed if the flow can still succeed.",
+      "correction_reason": "The assistant said verification could not be completed, but the backend later verified successfully. That statement misrepresented the operational outcome.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-799e-bd86-db3ad5c20808",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-79d7-a261-f78f45041dcb",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-7aad-a7dd-05b8d401a3af",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-7ab1-b8a3-1f49794a9ce9",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-7b19-a2a4-9e49b3514375",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-7b58-8814-ac7592878105",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-7b70-a9ef-edbb38dca8b2",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-7bd2-9028-b1e7bfc75e3f",
+      "grade": "failed",
+      "correction": "After the first OTP_INVALID with retry_allowed=true, don’t end/close the verification flow. Ask the caller to read the same six-digit code again and continue verification based on their next input.",
+      "correction_reason": "The first OTP failure was recoverable (retry_allowed=true), but the assistant told the caller verification could not be completed even though the caller continued with a new code. This is premature closure while the caller was still participating.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-7c17-9912-fd1fe14200a0",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-7ca7-bb5f-b18f0ce3997f",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-7db2-bfa5-32660baefd0a",
+      "grade": "failed",
+      "correction": "I've sent you a code. Please read the six digits from your screen.",
+      "correction_reason": "The assistant’s prompt used “I’ve” (typographic apostrophe) instead of the exact required phrase “I've …”. Northstar N6 requires the exact wording.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-7e1e-ad14-5df1d3443631",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-7f54-9eb8-2e88827be6ea",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-7fe5-83e6-ae4af1e894fd",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    }
+  ],
+  "failed_audit_remarks": [
+    {
+      "northstar_id": "01a0721e-3741-76a0-866e-37dc27feae4d",
+      "grade": "failed",
+      "correction": "Tell the caller that the code didn’t verify and ask for the same six-digit code again (since retry_allowed=true). Don’t claim verification can’t be completed until the flow is actually exhausted.",
+      "correction_reason": "The assistant stated verification could not be completed after the first OTP failure, but the backend indicated retry_allowed=true and a subsequent verification succeeded. This misrepresented the upstream failure/flow state.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-78b1-a113-a80af7d80f9a",
+      "grade": "failed",
+      "correction": "Verification succeeded. Since you only needed verification today, I’ll close out the call now. Thanks again!",
+      "correction_reason": "The final closure message confirmed success and ended the call but did not thank the caller as required for a professional close on success.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-797a-aa4b-e7c4e4a5d3e7",
+      "grade": "failed",
+      "correction": "After the first OTP failure, explain that it didn’t verify and ask the caller for the code again (since retry_allowed=true). Don’t claim verification can’t be completed if the flow can still succeed.",
+      "correction_reason": "The assistant said verification could not be completed, but the backend later verified successfully. That statement misrepresented the operational outcome.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-7bd2-9028-b1e7bfc75e3f",
+      "grade": "failed",
+      "correction": "After the first OTP_INVALID with retry_allowed=true, don’t end/close the verification flow. Ask the caller to read the same six-digit code again and continue verification based on their next input.",
+      "correction_reason": "The first OTP failure was recoverable (retry_allowed=true), but the assistant told the caller verification could not be completed even though the caller continued with a new code. This is premature closure while the caller was still participating.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0721e-3741-7db2-bfa5-32660baefd0a",
+      "grade": "failed",
+      "correction": "I've sent you a code. Please read the six digits from your screen.",
+      "correction_reason": "The assistant’s prompt used “I’ve” (typographic apostrophe) instead of the exact required phrase “I've …”. Northstar N6 requires the exact wording.",
+      "model": "gpt-5.4-nano-medium"
+    }
+  ],
+  "checkpoints": {
+    "authority_approved": true,
+    "code_issued_by_sales_agent": true,
+    "caller_read_correct_code_after_delivery": true,
+    "verified_in_twin": true,
+    "finalized_in_twin": true,
+    "exact_tool_sequence": true,
+    "no_code_leak_from_sales_agent_or_tools": true,
+    "no_load_access": true,
+    "wrong_code_rejected": true,
+    "retry_verified": true
+  },
+  "trace": [
+    {
+      "at": "2026-09-05T15:43:49.430Z",
+      "tool": "verify_carrier",
+      "ok": true,
+      "runtime_run_id": null,
+      "eligible": true,
+      "verified": false,
+      "failures_remaining": 2
+    },
+    {
+      "at": "2026-09-05T15:43:53.288Z",
+      "tool": "create_otp",
+      "ok": true,
+      "runtime_run_id": null,
+      "eligible": true,
+      "delivered": true,
+      "verified": false,
+      "failures_remaining": 2
+    },
+    {
+      "at": "2026-09-05T15:44:06.759Z",
+      "tool": "verify_otp",
+      "ok": false,
+      "error": "OTP_INVALID",
+      "runtime_run_id": null,
+      "eligible": true,
+      "verified": false,
+      "failures_remaining": 1
+    },
+    {
+      "at": "2026-09-05T15:44:17.629Z",
+      "tool": "verify_otp",
+      "ok": true,
+      "runtime_run_id": null,
+      "eligible": true,
+      "verified": true,
+      "failures_remaining": 1
+    },
+    {
+      "at": "2026-09-05T15:44:21.653Z",
+      "tool": "finalize_call",
+      "ok": true,
+      "runtime_run_id": null,
+      "verified": true,
+      "finalized_at": "2026-09-05T15:44:21.764605+00:00"
+    }
+  ],
+  "transcript": [
+    {
+      "role": "assistant",
+      "content": "“Thanks for calling HappyRobot Logistics. I’m Daniel, your carrier sales assistant. I can help you find available loads. Can I get your MC number?”"
+    },
+    {
+      "role": "user",
+      "content": "Hi Daniel, sure, my MC number is 135797. Also, just so you know, I only need to do the verification check today and won't need to search for a load afterward."
+    },
+    {
+      "role": "assistant",
+      "content": "I'll check that MC number now."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"authority\":{\"carrier\":{\"allowedToOperate\":true,\"commonAuthority\":\"A\",\"contractAuthority\":\"A\",\"dotNumber\":\"80806\",\"legalName\":\"J B HUNT TRANSPORT INC\",\"outOfService\":null,\"outOfServiceReported\":false},\"checkedAt\":\"2026-09-05T15:43:49.282Z\",\"eligible\":true,\"mcNumber\":\"135797\",\"outcome\":\"eligible\",\"reason\":\"ACTIVE_CARRIER_AUTHORITY\"},\"delivery\":\"frontend_mock\",\"demo\":true,\"failures_remaining\":2,\"ok\":true,\"otp_status\":\"not_sent\",\"request_id\":\"4d8cdb8f-33ba-4ce6-9b8a-825d737c32d4\",\"retry_allowed\":false,\"verified\":false}}"
+    },
+    {
+      "role": "user",
+      "content": "Sounds good, let me know what you see."
+    },
+    {
+      "role": "assistant",
+      "content": "Your operating authority is active. I’ll send the verification code to your screen now."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"authority\":{\"carrier\":{\"allowedToOperate\":true,\"commonAuthority\":\"A\",\"contractAuthority\":\"A\",\"dotNumber\":\"80806\",\"legalName\":\"J B HUNT TRANSPORT INC\",\"outOfService\":null,\"outOfServiceReported\":false},\"checkedAt\":\"2026-09-05T15:43:49.282Z\",\"eligible\":true,\"mcNumber\":\"135797\",\"outcome\":\"eligible\",\"reason\":\"ACTIVE_CARRIER_AUTHORITY\"},\"delivered\":true,\"delivery\":\"frontend_mock\",\"demo\":true,\"failures_remaining\":2,\"ok\":true,\"otp_status\":\"pending\",\"request_id\":\"e34797d3-8d93-4902-b38b-3b714cf0f721\",\"retry_allowed\":false,\"verified\":false}}"
+    },
+    {
+      "role": "user",
+      "content": "Got it, I'll keep an eye out for it. Let me know when you're ready for me to read it to you."
+    },
+    {
+      "role": "assistant",
+      "content": "I’ve sent you a code. Please read the six digits from your screen."
+    },
+    {
+      "role": "user",
+      "content": "Alright, I see it. The code is [WRONG OTP REDACTED]."
+    },
+    {
+      "role": "assistant",
+      "content": "I’ll verify the six-digit code you provided."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":true,\"result\":{\"authority\":{\"carrier\":{\"allowedToOperate\":true,\"commonAuthority\":\"A\",\"contractAuthority\":\"A\",\"dotNumber\":\"80806\",\"legalName\":\"J B HUNT TRANSPORT INC\",\"outOfService\":null,\"outOfServiceReported\":false},\"checkedAt\":\"2026-09-05T15:43:49.282Z\",\"eligible\":true,\"mcNumber\":\"135797\",\"outcome\":\"eligible\",\"reason\":\"ACTIVE_CARRIER_AUTHORITY\"},\"delivery\":\"frontend_mock\",\"demo\":true,\"error\":\"OTP_INVALID\",\"failures_remaining\":1,\"ok\":false,\"otp_status\":\"pending\",\"request_id\":\"38b243a9-5ac0-4a16-a953-f04184907a04\",\"retry_allowed\":true,\"verified\":false}}"
+    },
+    {
+      "role": "user",
+      "content": "Okay, let me know if that works."
+    },
+    {
+      "role": "assistant",
+      "content": "That code didn’t verify. Please read the same six-digit code from your screen again."
+    },
+    {
+      "role": "assistant",
+      "content": "I’m sorry, but verification could not be completed. Thank you for your time."
+    },
+    {
+      "role": "user",
+      "content": "Ah, sorry about that, I might have misread a digit. The correct code on my screen is actually [OTP REDACTED]. Can you let me know if that verification succeeds?"
+    },
+    {
+      "role": "assistant",
+      "content": "I’ll verify the six-digit code you just provided."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"authority\":{\"carrier\":{\"allowedToOperate\":true,\"commonAuthority\":\"A\",\"contractAuthority\":\"A\",\"dotNumber\":\"80806\",\"legalName\":\"J B HUNT TRANSPORT INC\",\"outOfService\":null,\"outOfServiceReported\":false},\"checkedAt\":\"2026-09-05T15:43:49.282Z\",\"eligible\":true,\"mcNumber\":\"135797\",\"outcome\":\"eligible\",\"reason\":\"ACTIVE_CARRIER_AUTHORITY\"},\"delivery\":\"frontend_mock\",\"demo\":true,\"failures_remaining\":1,\"ok\":true,\"otp_status\":\"verified\",\"request_id\":\"c8ef908d-ea2a-4bba-9aaa-21471168c57c\",\"retry_allowed\":false,\"verified\":true}}"
+    },
+    {
+      "role": "user",
+      "content": "Great, let me know if that one goes through."
+    },
+    {
+      "role": "assistant",
+      "content": "Verification succeeded. Since you only needed verification today, I’ll close out the call now."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"authority_passed\":true,\"booking_confirmed\":false,\"finalized_at\":\"2026-09-05T15:44:21.764605+00:00\",\"negotiation\":null,\"ok\":true,\"outcome\":\"conversation_complete\",\"request_id\":\"faa4e87d-2ded-45e1-b6ef-021c2c2a2221\",\"selected_load_id\":null,\"verified\":true}}"
+    },
+    {
+      "role": "event",
+      "content": "session_closed"
+    }
+  ]
+}
