@@ -75,7 +75,7 @@ async function main() {
       assert.ok(load, 'Need an actual OPEN load; do not substitute synthetic inventory');
       const detail = await invoke('get_load', { load_id: load.LOAD_ID });
       assert.equal(detail.negotiation?.status, 'offered');
-      const agreed = await invoke('negotiate_offer', { load_id: load.LOAD_ID, offer_id: detail.negotiation.offer_id, response: 'accept', amount: null });
+      const agreed = await invoke('accept_offer', { load_id: load.LOAD_ID, offer_id: detail.negotiation.offer_id });
       assert.equal(agreed.negotiation?.status, 'agreed');
       const args = { load_id: load.LOAD_ID, offer_id: agreed.negotiation.offer_id };
       const saved = await invoke('book_load', args);
@@ -164,24 +164,24 @@ async function main() {
       if(counterLimit) {
         let negotiation=detail.negotiation;
         for(let round=1;round<=3;round++) {
-          const offer={load_id:loadId,offer_id:negotiation.offer_id,response:'counter',amount:1_000_000};
-          const result=await invoke('negotiate_offer',offer);
+          const offer={load_id:loadId,offer_id:negotiation.offer_id,amount:1_000_000};
+          const result=await invoke(counterLimit ? 'counter_offer' : 'accept_offer',offer);
           assert.equal(result.ok,true);assert.equal(result.negotiation.counter_rounds,round);
           assert.equal(result.negotiation.status,round===3?'failed':'offered');
           assert.equal(result.negotiation.booking_confirmed,false);
-          const duplicate=await invoke('negotiate_offer',offer);
+          const duplicate=await invoke(counterLimit ? 'counter_offer' : 'accept_offer',offer);
           assert.deepEqual(duplicate.negotiation,result.negotiation);
           negotiation=result.negotiation;
         }
         assert.equal((await invoke('search_loads',{origin_state:'TX'})).error,'NEGOTIATION_FAILED');
-        assert.equal((await invoke('negotiate_offer',{load_id:loadId,offer_id:negotiation.offer_id,response:'counter',amount:1_000_000})).error,'NEGOTIATION_COMPLETE');
+        assert.equal((await invoke('counter_offer',{load_id:loadId,offer_id:negotiation.offer_id,amount:1_000_000})).error,'NEGOTIATION_COMPLETE');
       } else {
-      const offer={load_id:loadId,offer_id:detail.negotiation.offer_id,response:'accept'};
-      const agreement=await invoke('negotiate_offer',offer);
+      const offer={load_id:loadId,offer_id:detail.negotiation.offer_id,};
+      const agreement=await invoke(counterLimit ? 'counter_offer' : 'accept_offer',offer);
       assert.equal(agreement.negotiation?.status,'agreed');
       assert.equal(agreement.negotiation.agreed_rate,detail.negotiation.offered_rate);
       assert.equal(agreement.negotiation.counter_rounds,0);
-      const duplicate=await invoke('negotiate_offer',offer);
+      const duplicate=await invoke(counterLimit ? 'counter_offer' : 'accept_offer',offer);
       assert.deepEqual(duplicate.negotiation,agreement.negotiation);
       assert.equal((await invoke('search_loads',{origin_state:'TX'})).error,'NEGOTIATION_COMPLETE');
       }

@@ -149,6 +149,12 @@ async function main() {
     return;
   }
   const integrations=await client.integrations.list({search:'MCP',include_events:'true',include_config_schema:'true'});
+  // Only remove the retired negotiation tool from this explicitly selected draft.
+  // Keep unrelated workflow nodes intact.
+  for (const retired of nodes.filter(n => n.type === 'tool' && n.name === 'negotiate_offer' && n.parent_id === promptNode.id)) {
+    for (const action of nodes.filter(n => n.parent_id === retired.id)) await client.nodes.delete(versionId, action.id);
+    await client.nodes.delete(versionId, retired.id);
+  }
   const integration=integrations.data.find((i:{name:string})=>i.name==='MCP Server');
   const event=integration?.events?.find((e:{name:string})=>e.name==='MCP Call');
   if(!integration?.id || !event?.id) throw Error('MCP Call integration unavailable');

@@ -37,6 +37,13 @@ export function validateLocalWiring(nodes: WiringNode[], credentialId: string) {
     requireCheck(runRefs.length === 1 && runRefs[0].group_id === 'current' && runRefs[0].variable_id === 'run_id',
       `${name}: run header must reference Current > Run ID.`);
     const parameters = toolParameters(name);
+    const storedParameters = tool.function?.parameters;
+    requireCheck(Array.isArray(storedParameters) && storedParameters.length === parameters.length, `${name}: stale parameter definitions.`);
+    for (const parameter of parameters) {
+      const stored = storedParameters.find((p: { name: string }) => p.name === parameter.name);
+      requireCheck(stored && stored.required === parameter.required
+        && JSON.stringify(stored.description) === JSON.stringify(parameter.description), `${name}.${parameter.name}: parameter contract differs from local source.`);
+    }
     requireCheck(Array.isArray(config.tool_args) && config.tool_args.length === parameters.length, `${name}: incomplete argument mappings.`);
     for (const parameter of parameters) {
       const mapped = config.tool_args.filter((arg: { key: string }) => arg.key === parameter.name);

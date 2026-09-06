@@ -23,48 +23,44 @@ async function connect(t: TestContext, run?: string) {
 }
 const value = (result: Record<string, unknown>) => JSON.parse((result.content as {text:string}[])[0].text);
 
-test('MCP accepts HappyRobot textual null on acceptance, but never converts it to a counter rate', async t => {
+test('MCP normalizes the actual string counter failure and routes accept/reject without an amount', async t => {
   configure(t);
-  const old = process.env.NEGOTIATION_ENABLED;
-  process.env.NEGOTIATION_ENABLED = 'true';
+  const old = process.env.NEGOTIATION_ENABLED; process.env.NEGOTIATION_ENABLED = 'true';
   t.after(() => { if (old === undefined) delete process.env.NEGOTIATION_ENABLED; else process.env.NEGOTIATION_ENABLED = old; });
   const decisions: Record<string, unknown>[] = [];
   t.mock.method(globalThis, 'fetch', async (url: URL, init: RequestInit) => {
     const body = JSON.parse(String(init.body));
     if (String(url).endsWith('poc_resolve_voice')) return Response.json({ ok: true, sessionHash: 'a'.repeat(64) });
-    assert.ok(String(url).endsWith('poc_negotiate'));
-    decisions.push(body);
-    return Response.json({ ok: true, negotiation: { status: body.p_action === 'accept' ? 'agreed' : 'offered',
-      load_id: 'LD00761', offer_id: id, offered_rate: 3428, agreed_rate: body.p_action === 'accept' ? 3428 : null,
+    assert.ok(String(url).endsWith('poc_negotiate')); decisions.push(body);
+    return Response.json({ ok: true, negotiation: { status: body.p_action === 'accept' ? 'agreed' : body.p_action === 'reject' ? 'rejected' : 'offered',
+      load_id: 'LD00731', offer_id: id, offered_rate: 3428, agreed_rate: body.p_action === 'accept' ? 3428 : null,
       counter_rounds: 1, rounds_remaining: 2, booking_confirmed: false } });
   });
-  const client = await connect(t, id);
-  const base = { load_id: 'LD00761', offer_id: id };
-  await client.callTool({ name: 'negotiate_offer', arguments: { ...base, response: 'counter', amount: 6856 } });
-  for (const amount of ['null', null]) {
-    const result = await client.callTool({ name: 'negotiate_offer', arguments: { ...base, response: 'accept', amount } });
-    assert.equal(result.isError, false, JSON.stringify(result));
-    assert.equal(value(result).negotiation.agreed_rate, 3428);
-    assert.equal(decisions.at(-1)?.p_amount_cents, null);
+  const client = await connect(t, id), base = { load_id: 'LD00731', offer_id: id };
+  for (const amount of ['4000', 4000, '3496.56']) {
+    assert.equal((await client.callTool({ name: 'counter_offer', arguments: { ...base, amount } })).isError, false);
   }
-  assert.deepEqual(decisions.map(d => d.p_amount_cents), [685600, null, null]);
-  for (const response of ['accept', 'reject']) {
-    const invalid = await client.callTool({ name: 'negotiate_offer', arguments: { ...base, response, amount: 6856 } });
-    assert.equal(value(invalid).error, 'INVALID_OFFER');
+  for (const name of ['accept_offer', 'reject_offer']) {
+    const result = await client.callTool({ name, arguments: base });
+    assert.equal(result.isError, false); assert.equal(decisions.at(-1)?.p_amount_cents, null);
+    for (const amount of [6856, 'null', null]) {
+      const invalid = value(await client.callTool({ name, arguments: { ...base, amount } }));
+      assert.equal(invalid.error, 'INVALID_TOOL_ARGUMENTS'); assert.equal(invalid.side_effects, false);
+    }
   }
-  const invalidCounter = await client.callTool({ name: 'negotiate_offer', arguments: { ...base, response: 'counter', amount: 'null' } });
-  assert.equal(value(invalidCounter).error, 'INVALID_OFFER');
-  for (const amount of ['3428', '', 'undefined', 'NULL']) {
-    assert.equal((await client.callTool({ name: 'negotiate_offer', arguments: { ...base, response: 'accept', amount } })).isError, true);
+  for (const amount of ['', 'null', '4,000', '$4000', '4e3', ' 4000 ', '4000.001', 0, -1, null, true]) {
+    const invalid = value(await client.callTool({ name: 'counter_offer', arguments: { ...base, amount } }));
+    assert.equal(invalid.error, 'INVALID_TOOL_ARGUMENTS'); assert.equal(invalid.validation[0].field, 'amount');
   }
-  assert.equal(decisions.length, 3, 'Invalid inputs must never reach negotiation state');
+  assert.equal(decisions.length, 5, 'Invalid requests must never reach Twin');
+  assert.deepEqual(decisions.map(d => d.p_amount_cents), [400000,400000,349656,null,null]);
 });
 
-test('real MCP client initializes and discovers nine strict schemas without a call binding', async t => {
+test('real MCP client initializes and discovers eleven strict schemas without a call binding', async t => {
   configure(t);
   const client = await connect(t);
   const { tools } = await client.listTools();
-  assert.deepEqual(tools.map(t => t.name), ['verify_carrier','create_otp','verify_otp','search_loads','get_load','negotiate_offer','book_load','record_load_interest','finalize_call']);
+  assert.deepEqual(tools.map(t => t.name), ['verify_carrier','create_otp','verify_otp','search_loads','get_load','accept_offer','counter_offer','reject_offer','book_load','record_load_interest','finalize_call']);
   for(const tool of tools) {
     assert.equal(tool.inputSchema.additionalProperties,false);
     assert.ok(!JSON.stringify(tool.inputSchema).includes('run_id'));

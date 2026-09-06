@@ -112,7 +112,7 @@ async function run(test: any) {
       search_after_verification: verifiedIndex >= 0 && searchIndex > verifiedIndex,
       ...(test.fault === 'tms_unavailable' ? { search_outage_observed: trace.some((x: any) => x.tool === 'search_loads' && x.error === 'TMS_CONNECTION_ERROR') } : { search_succeeded: trace.some((x: any) => x.tool === 'search_loads' && x.ok === true) }),
       ...(test.select ? { detail_after_search: detailsIndex > searchIndex } : {}),
-      finalized: Boolean(state.session?.finalizedAt), no_negotiation: trace.every((x: any) => x.tool !== 'negotiate_offer') };
+      finalized: Boolean(state.session?.finalizedAt), no_negotiation: trace.every((x: any) => !['accept_offer','counter_offer','reject_offer'].includes(x.tool)) };
     const evidence = { test: test.id, prompt_sha256: createHash('sha256').update(prompt).digest('hex'), test_id: test.happyrobot_test_id, run_id: runId, version_id: config.version_id,
       call_id: prepared.plan.callId, injected_fault: prepared.plan.fault, completed_at: result.completed_at, checks,
       automated_checks_passed: Object.values(checks).every(Boolean), conversation_review: 'pending',

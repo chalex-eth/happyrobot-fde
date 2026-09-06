@@ -191,7 +191,7 @@ async function run(selectedCase?: string) {
       finalized_in_twin: Boolean(state.session?.finalizedAt),
       exact_tool_sequence: JSON.stringify(trace.map((x: any) => x.tool)) === JSON.stringify(expectedTools),
       no_code_leak_from_sales_agent_or_tools: !salesLeakedCode && !toolLeakedCode,
-      no_load_access: trace.every((x: any) => !['search_loads','get_load','negotiate_offer'].includes(x.tool)),
+      no_load_access: trace.every((x: any) => !['search_loads','get_load','accept_offer','counter_offer','reject_offer'].includes(x.tool)),
       ...(caseId === 'PV09' ? { wrong_code_rejected: trace[2]?.error === 'OTP_INVALID' && trace[2]?.failures_remaining === 1, retry_verified: trace[3]?.verified === true && trace[3]?.failures_remaining === 1 } : {}),
       ...(caseId === 'PV12' ? { second_failure_terminal: trace[3]?.error === 'OTP_FAILED' && trace[3]?.failures_remaining === 0 } : {}),
       ...(caseId === 'PV17' ? { first_delivery_failure: trace[1]?.error === 'OTP_DELIVERY_FAILED' && trace[1]?.failures_remaining === 1,

@@ -1,6 +1,7 @@
 import { bookForCall, publicBooking } from './booking';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
+import { normalizeToolArguments } from './tool-arguments';
 import { loadsForCall, verifyCarrierForCall, verifyOtpForCall } from './call-services';
 import { resultStatus, SessionError, twinRpc, type TwinResult } from './call-session';
 import { getNegotiableLoad, negotiateForCall } from './negotiation';
@@ -41,18 +42,21 @@ export const toolSpecs = {
     description: 'Fetch current public details for a load returned by this call\'s latest search. Rechecks authority and OTP. For OPEN loads returns a current negotiation offer reference. For PENDING loads returns public details and manager_review_available=true with no negotiation offer. Selecting a load does not book it.',
     schema: z.strictObject({ load_id: z.string().regex(/^[A-Za-z0-9_-]{1,64}$/).describe('Exact LOAD_ID from the latest successful search in this call.') }),
   },
-  negotiate_offer: {
-    description: 'Record the caller accepting, rejecting or countering the current offer from get_load or negotiate_offer. Always copy its offer_id and load_id. Only counter accepts an amount in USD. At most three distinct counter rounds per call across all loads. A rate agreement is not a booking. Repeat an uncertain request only with exactly the same arguments and offer_id.',
-    schema: z.strictObject({
-      load_id:z.string().regex(/^[A-Za-z0-9_-]{1,64}$/),
-      offer_id:z.string().uuid().describe('Copy the offer_id from the latest negotiation result for this load. Never invent it.'),
-      response:z.enum(['accept','counter','reject']),
-      amount:z.union([z.number().positive().max(1_000_000).multipleOf(0.01), z.null(), z.literal('null')])
-        .describe('For counter: caller requested total USD rate as a number, at most two decimal places. For accept/reject: explicitly send null (JSON null or the exact text "null") to clear any previous counter amount. Never reuse the previous number.').optional(),
-    }),
+  accept_offer: {
+    description: 'Accept the current saved offer at its exact offered rate after explicit caller acceptance. Copy the latest load_id and offer_id. No amount or response argument. Returns a saved agreement; continue to booking when authorized. Never interpret acceptance at a different price as acceptance: that is a counteroffer.',
+    schema: z.strictObject({ load_id: z.string().regex(/^[A-Za-z0-9_-]{1,64}$/), offer_id: z.string().uuid().describe('Latest offer_id returned for this load.') }),
+  },
+  counter_offer: {
+    description: 'Submit the caller requested total USD rate against the current offer. Copy the latest load_id and offer_id. A maximum of three counter rounds is enforced for the whole call. On agreed continue toward booking; on offered present the updated offer; on failed close without another counter. Replay only with the exact same offer_id and amount.',
+    schema: z.strictObject({ load_id: z.string().regex(/^[A-Za-z0-9_-]{1,64}$/), offer_id: z.string().uuid().describe('Latest offer_id returned for this load.'),
+      amount: z.number().positive().max(1_000_000).multipleOf(0.01).describe('Caller requested total USD rate. Positive number, at most two decimal places. Never invent a rate or reuse an earlier amount unless the caller explicitly repeats it.') }),
+  },
+  reject_offer: {
+    description: 'Record explicit rejection of the current offer, without a counter price. Copy the latest load_id and offer_id. No amount or response argument. Does not book or end the call: ask whether the caller wants another load. A different requested price is a counteroffer; asking a question is not rejection.',
+    schema: z.strictObject({ load_id: z.string().regex(/^[A-Za-z0-9_-]{1,64}$/), offer_id: z.string().uuid().describe('Latest offer_id returned for this load.') }),
   },
   book_load: {
-    description: 'Book the current saved agreement after the caller agrees to proceed. Copy its load_id and offer_id; carrier and rate come from Twin. One booking attempt per call. For booking.simulated=true, confirmed means a test booking saved in Twin only: say simulated booking saved, never TMS booked or reserved. booking_confirmed=true is required for a real TMS confirmation. A simulated handoff is then recorded. Pending or uncertain needs review, never another write. Changed terms require a new reviewed decision; do not silently change the rate.',
+    description: 'Book the current saved agreement after the caller agrees to proceed. Copy its load_id and offer_id; carrier and rate come from Twin. One booking attempt per call. When booking.status=confirmed and booking_saved=true, tell the caller their booking was successful. In this authorized test flow use that same success wording when booking.simulated=true; keep simulation flags and handoff implementation internal. Do not claim an actual transfer. Never announce success for a pending, uncertain or rejected result. Pending or uncertain needs review, never another write. Changed terms require a new reviewed decision; do not silently change the rate.',
     schema: z.strictObject({
       load_id: z.string().regex(/^[A-Za-z0-9_-]{1,64}$/),
       offer_id: z.string().uuid().describe('Exact offer_id of the saved agreed negotiation.'),
@@ -75,6 +79,9 @@ export const toolSpecs = {
   },
 };
 export type ToolName = keyof typeof toolSpecs;
+export function negotiationAction(name: string): 'accept' | 'counter' | 'reject' | undefined {
+  return ({ accept_offer: 'accept', counter_offer: 'counter', reject_offer: 'reject' } as const)[name as 'accept_offer' | 'counter_offer' | 'reject_offer'];
+}
 
 function publicVerification(result: TwinResult) {
   const session = result.session;
@@ -85,6 +92,7 @@ function publicVerification(result: TwinResult) {
 }
 
 export async function executeTool(name: ToolName, input: unknown, hash: string, signal?: AbortSignal, operationId = randomUUID() as string, preparedChallenge?: string, dependencies: { authorityLookup?: typeof lookupCarrier; deliverOtp?: () => Promise<boolean>; runTms?: typeof runTms } = {}): Promise<Record<string, unknown>> {
+  input = normalizeToolArguments(name, input);
   if (name === 'verify_carrier') {
     const args = toolSpecs[name].schema.parse(input);
     return publicVerification(await verifyCarrierForCall(hash, args.mc_number, signal, dependencies.authorityLookup));
@@ -115,15 +123,10 @@ export async function executeTool(name: ToolName, input: unknown, hash: string, 
     if (process.env.NEGOTIATION_ENABLED === 'true') return getNegotiableLoad(hash, args.load_id, signal);
     return loadsForCall(hash, {command:'LOAD_GET',fields:{LOAD_ID:args.load_id}}, signal);
   }
-  if (name === 'negotiate_offer') {
-    const parsed=toolSpecs[name].schema.parse(input);
-    // HappyRobot may render a null workflow variable as the exact text "null".
-    // Accept that spelling at the MCP boundary, then normalize before Twin.
-    // No numeric-string coercion; numeric accept/reject amounts still fail.
-    const args={...parsed, amount:parsed.amount === 'null' ? undefined : parsed.amount ?? undefined};
-    if ((args.response==='counter') !== (args.amount!==undefined)) throw new SessionError('INVALID_OFFER',400);
+  if (name === 'accept_offer' || name === 'counter_offer' || name === 'reject_offer') {
+    const args = toolSpecs[name].schema.parse(input);
     if (process.env.NEGOTIATION_ENABLED !== 'true') throw new SessionError('NEGOTIATION_NOT_READY',503);
-    return negotiateForCall(hash,args);
+    return negotiateForCall(hash, { ...args, response: negotiationAction(name)! });
   }
   if (name === 'book_load') {
     const args = toolSpecs.book_load.schema.parse(input);

@@ -9,7 +9,7 @@ function fixture(): WiringNode[] {
     ...Object.keys(toolSpecs).flatMap((name, index) => {
       const id = `forked-${index}`, stable = `stable-${index}`;
       return [{ id, persistent_id: stable, type: 'tool', parent_id: 'prompt', name,
-        function: { is_mcp: true, mcp_tool_name: name, mcp_server_credential_id: 'connection' } },
+        function: { parameters: toolParameters(name as ToolName), is_mcp: true, mcp_tool_name: name, mcp_server_credential_id: 'connection' } },
       { id: `action-${index}`, type: 'action', parent_id: id, configuration: {
         tool_name: name, credentialId: 'connection', credential: { type: 'static', static: { id: 'connection' } },
         dynamic_headers: [{ key: 'x-happyrobot-run-id', value: variable('current', 'run_id') }],

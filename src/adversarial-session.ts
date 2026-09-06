@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { z } from 'zod';
 import { callAction, mockOtpEnabled, SessionError, startCall } from './call-session';
 import { prepareDemoChallenge } from './demo-otp';
-import { executeTool, toolSpecs } from './mcp-tools';
+import { executeTool, negotiationAction, toolSpecs } from './mcp-tools';
 import { FmcsaError } from './fmcsa';
 import { handleMcp } from './mcp-http';
 import { publicBooking, type Booking } from './booking';
@@ -108,7 +108,7 @@ export async function handleAdversarialMcp(request: Request) {
       if (name === 'book_load' && !resolved?.bookingAllowed) throw new SessionError('BOOKING_DISABLED_IN_EVAL', 403);
       // Only validated, public search filters are retained for conversation QA.
       searchArguments = name === 'search_loads' ? toolSpecs.search_loads.schema.parse(args) : undefined;
-      negotiationArguments = name === 'negotiate_offer' ? toolSpecs.negotiate_offer.schema.parse(args) : undefined;
+      negotiationArguments = negotiationAction(name) ? { ...toolSpecs[name].schema.parse(args), response: negotiationAction(name) } : undefined;
       bookingArguments = name === 'book_load' ? toolSpecs.book_load.schema.parse(args) : undefined;
       return executeTool(name, args, hash, signal, operationId, challengeId, {
       ...(resolved?.fault === 'authority_unavailable' ? { authorityLookup: async () => { throw new FmcsaError('FMCSA_UNAVAILABLE', 503, true); } } : {}),

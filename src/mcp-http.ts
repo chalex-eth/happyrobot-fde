@@ -8,6 +8,7 @@ import { FmcsaError } from './fmcsa';
 import { TmsError } from './tms';
 import { resolveAgentSession } from './voice-session';
 import { executeTool, toolSpecs, type ToolName } from './mcp-tools';
+import { normalizeToolArguments } from './tool-arguments';
 
 const safeError = (error: unknown) => {
   if (error instanceof SessionError || error instanceof FmcsaError || error instanceof TmsError) return error.code;
@@ -39,6 +40,29 @@ export async function handleMcp(request: Request, adapter: McpAdapter = voiceAda
     if (request.method !== 'POST') return new Response(null, { status: 405,
       headers: { Allow: 'POST', 'Cache-Control': 'no-store' } });
     const parsedBody = request.method === 'POST' ? await readJson(request, 16_384) : undefined;
+    // HappyRobot renders some numeric/boolean workflow variables as strings.
+    // Normalize before the SDK validates; handler-level coercion is too late.
+    const call = parsedBody as { method?: string; id?: unknown; params?: { name?: unknown; arguments?: unknown } } | undefined;
+    if (call?.method === 'tools/call' && typeof call.params?.name === 'string' && Object.hasOwn(toolSpecs, call.params.name)) {
+      const name = call.params.name as ToolName;
+      const raw = call.params.arguments ?? {};
+      const canonical = normalizeToolArguments(name, raw);
+      const checked = toolSpecs[name].schema.safeParse(canonical);
+      if (!checked.success) {
+        const fields = Object.keys(toolSpecs[name].schema.shape);
+        const validation = checked.error.issues.map(issue => {
+          const key = String(issue.path[0] ?? '');
+          const field = fields.includes(key) ? key : '$';
+          const value = field === '$' ? raw : (raw as Record<string, unknown>)?.[field];
+          return { field, received_type: value === null ? 'null' : Array.isArray(value) ? 'array' : typeof value, reason: issue.code };
+        });
+        console.info(JSON.stringify({ event: 'mcp_validation', tool: name, requestId, validation }));
+        return Response.json({ jsonrpc: '2.0', id: call.id, result: { isError: true, content: [{ type: 'text',
+          text: JSON.stringify({ ok: false, error: 'INVALID_TOOL_ARGUMENTS', retryable: false, side_effects: false, validation, request_id: requestId }) }] } },
+          { headers: { 'Cache-Control': 'no-store', 'x-request-id': requestId } });
+      }
+      call.params.arguments = checked.data;
+    }
     server = new McpServer({ name: 'carrier-sales', version: '0.1.0' });
     for (const name of Object.keys(toolSpecs) as ToolName[]) {
       const spec = toolSpecs[name];

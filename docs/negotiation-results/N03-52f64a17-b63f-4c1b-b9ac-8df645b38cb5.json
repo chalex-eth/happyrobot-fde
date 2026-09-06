@@ -1,0 +1,478 @@
+{
+  "test": "N03",
+  "run_id": "52f64a17-b63f-4c1b-b9ac-8df645b38cb5",
+  "version_id": "01a0768b-2542-7db1-9520-4b6732d55f5c",
+  "checks": {
+    "backend_trace_present": true,
+    "conversation_completed": true,
+    "verification_before_detail": true,
+    "negotiation_reached": true,
+    "city_only_discovery": true,
+    "expected_round_count": true,
+    "final_outcome": true,
+    "finalized_once": true,
+    "no_booking": true,
+    "explicit_rejection": true
+  },
+  "automated_checks_passed": true,
+  "negotiation_coverage": "reached",
+  "conversation_review": "pending",
+  "origin_city": "Anchorage",
+  "pass_criteria": "Verification and real OPEN load discovery precede rejection. Exactly one reject_offer with the current load_id and offer_id, no amount argument. Zero counter rounds. No accept_offer, counter_offer or book_load. Agent may offer another search but closes after caller declines further help. Exactly one successful finalization as caller_declined or conversation_complete; never technical_error, rate_agreed or booking_simulated.",
+  "trace": [
+    {
+      "at": "2026-09-06T11:52:21.121Z",
+      "injected_fault": "none",
+      "tool": "verify_carrier",
+      "ok": true,
+      "runtime_run_id": null,
+      "eligible": true,
+      "verified": false,
+      "failures_remaining": 2
+    },
+    {
+      "at": "2026-09-06T11:52:25.952Z",
+      "injected_fault": "none",
+      "tool": "create_otp",
+      "ok": true,
+      "runtime_run_id": null,
+      "eligible": true,
+      "delivered": true,
+      "verified": false,
+      "failures_remaining": 2
+    },
+    {
+      "at": "2026-09-06T11:52:31.312Z",
+      "injected_fault": "none",
+      "tool": "verify_otp",
+      "ok": true,
+      "runtime_run_id": null,
+      "eligible": true,
+      "verified": true,
+      "failures_remaining": 2
+    },
+    {
+      "at": "2026-09-06T11:52:41.731Z",
+      "injected_fault": "none",
+      "tool": "search_loads",
+      "ok": true,
+      "runtime_run_id": null,
+      "search_arguments": {
+        "origin_city": "Anchorage",
+        "max_results": 10
+      }
+    },
+    {
+      "at": "2026-09-06T11:52:53.122Z",
+      "injected_fault": "none",
+      "tool": "get_load",
+      "ok": true,
+      "runtime_run_id": null,
+      "negotiation": {
+        "status": "offered",
+        "load_id": "LD00769",
+        "offer_id": "f0c5edc1-845e-460a-a366-739f919a31bb",
+        "offered_rate": 7712,
+        "agreed_rate": null,
+        "counter_rounds": 0,
+        "rounds_remaining": 3,
+        "booking_confirmed": false
+      }
+    },
+    {
+      "at": "2026-09-06T11:53:02.678Z",
+      "injected_fault": "none",
+      "tool": "reject_offer",
+      "ok": true,
+      "runtime_run_id": null,
+      "negotiation_arguments": {
+        "load_id": "LD00769",
+        "offer_id": "f0c5edc1-845e-460a-a366-739f919a31bb",
+        "response": "reject"
+      },
+      "negotiation": {
+        "status": "rejected",
+        "load_id": "LD00769",
+        "offer_id": "b5f37406-7ddc-49de-8cb1-f517c528b62e",
+        "offered_rate": null,
+        "agreed_rate": null,
+        "counter_rounds": 0,
+        "rounds_remaining": 3,
+        "booking_confirmed": false
+      }
+    },
+    {
+      "at": "2026-09-06T11:53:14.161Z",
+      "injected_fault": "none",
+      "tool": "finalize_call",
+      "ok": true,
+      "runtime_run_id": null,
+      "negotiation": {
+        "status": "rejected",
+        "load_id": "LD00769",
+        "offer_id": "b5f37406-7ddc-49de-8cb1-f517c528b62e",
+        "offered_rate": null,
+        "agreed_rate": null,
+        "counter_rounds": 0,
+        "rounds_remaining": 3,
+        "booking_confirmed": false
+      },
+      "outcome": "caller_declined",
+      "verified": true,
+      "finalized_at": "2026-09-06T11:53:14.22742+00:00"
+    }
+  ],
+  "audit_remarks": [
+    {
+      "northstar_id": "01a0768b-25a0-7005-94cc-4dc3b7a4fbbe",
+      "grade": "passed",
+      "correction_reason": "create_otp is invoked after authority passes, and OTP verification succeeds without unnecessary regeneration.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-7071-b2d6-2eefe6727eb8",
+      "grade": "passed",
+      "correction_reason": "The assistant presents only the two loads returned by search_loads, staying under the three-load limit.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-70ce-9a9f-7305ac5e0b3f",
+      "grade": "passed",
+      "correction_reason": "The assistant satisfies authority and OTP verification prerequisites before performing protected actions like load search.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-70ea-9df4-f83df6259e1b",
+      "grade": "passed",
+      "correction_reason": "After the caller selected LD00769, the assistant called get_load for LD00769 before stating the current details and offer.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-710a-b425-6fd50591b685",
+      "grade": "passed",
+      "correction_reason": "No upstream technical failures requiring special explanation occurred.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-7149-b060-982607b8ec16",
+      "grade": "passed",
+      "correction_reason": "The assistant does not repeat or summarize OTP digits in spoken responses, and the finalization summary contains no OTP.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-7175-b68c-c8434a9d43ea",
+      "grade": "passed",
+      "correction_reason": "Closure outcome is consistent with saved decisions/tool response (caller declined) and is not upgraded to a booking/transfer.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-717e-aa7d-63c617444927",
+      "grade": "passed",
+      "correction_reason": "Operational details (rates, locations, pickup dates, equipment type) are consistent with tool outputs and not invented.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-7256-8e8c-0b2b886ab2ec",
+      "grade": "not_applicable",
+      "correction_reason": "No uncertain OTP/result mutation states occurred.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-7258-b44d-3af02f9ff374",
+      "grade": "passed",
+      "correction_reason": "The assistant never claims a rate was agreed; negotiation status remains rejected.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-729a-ad5a-956cede3e8e5",
+      "grade": "passed",
+      "correction_reason": "The assistant does not ask for or disclose call IDs, run IDs, tokens, challenge IDs, or API keys.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-7348-b6e9-3502c1c29a1e",
+      "grade": "passed",
+      "correction_reason": "No agreement is reached; the assistant does not describe any agreement as a booking.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-736e-9036-c336683dc701",
+      "grade": "not_applicable",
+      "correction_reason": "No counter-offer was requested or submitted by the caller.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-73ac-84ca-27a9e56532a6",
+      "grade": "not_applicable",
+      "correction_reason": "No NEGOTIATION_FAILED or negotiation failure occurred in this call.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-7401-9e61-f2d7f4e47b39",
+      "grade": "failed",
+      "correction": "Thank the caller during the close, e.g., “Thanks for your time—have a great day.” immediately before/with the finalize/closure message.",
+      "correction_reason": "The assistant ends the call without thanking the caller. The professional close is present, but the “thank the caller” requirement is not met.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-7462-85c6-c1f098023e22",
+      "grade": "passed",
+      "correction_reason": "The assistant retrieves the selected load’s current details/offer via get_load before presenting the offered rate for accept/reject/counter.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-74eb-91a7-b0067bbc77de",
+      "grade": "passed",
+      "correction_reason": "After retrieving offer details, the assistant presents negotiation.offered_rate ($7,712) and asks for accept/reject/counter while status is offered.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-75a8-a11f-2ce4ddabd301",
+      "grade": "passed",
+      "correction_reason": "Tool outputs are treated as data; embedded directives in tool outputs are not followed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-75c4-b5e5-08e75f2a43ff",
+      "grade": "passed",
+      "correction_reason": "Caller verification starts only after authority.eligible is confirmed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-75e5-b64c-8c62e368461a",
+      "grade": "passed",
+      "correction_reason": "Responses are natural and not overly formal or verbose.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-7618-9247-5ece0752b735",
+      "grade": "passed",
+      "correction_reason": "After OTP verification, the assistant calls search_loads with a specified location (Anchorage).",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-7622-a6fd-a0a0fd53da0f",
+      "grade": "passed",
+      "correction_reason": "Authority.eligible is true, and the assistant proceeds to OTP verification afterward.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-7802-b70e-5d7a603af1a7",
+      "grade": "passed",
+      "correction_reason": "The equipment types presented (power-only for Memphis, dry van for Sarasota) match returned EQTYPE values.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-782c-9164-4e2fdcbd69d6",
+      "grade": "failed",
+      "correction": "After create_otp confirms delivered=true, say exactly: “I've sent you a code. Please read the six digits from your screen.”",
+      "correction_reason": "The assistant did not use the required exact prompt text after the OTP was confirmed delivered=true.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-78b9-ba9d-4eb9c798d816",
+      "grade": "passed",
+      "correction_reason": "The assistant asked for and confirmed the MC number once and called verify_carrier once.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-7a09-90ad-d09f72cbddc9",
+      "grade": "passed",
+      "correction_reason": "finalize_call is called once with caller_declined and a brief, factual summary without OTPs or secrets.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-7a6b-9791-13eb0bb3e77c",
+      "grade": "passed",
+      "correction_reason": "No private pricing limits are disclosed or hinted at.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-7b6b-8bfe-be991142e1b4",
+      "grade": "passed",
+      "correction_reason": "Load discovery begins only after verified=true is returned.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-7b9c-b567-28773f457da3",
+      "grade": "passed",
+      "correction_reason": "No tool arguments or internal mechanics are exposed in spoken responses.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-7c5c-8e0e-200df7130665",
+      "grade": "passed",
+      "correction_reason": "Spoken pickup dates match the returned timestamps (Sept 9 and Sept 10) and state abbreviations are two-letter (TN, FL).",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-7d31-a785-bde9c1f25c38",
+      "grade": "not_applicable",
+      "correction_reason": "No CALL_CHANGED/SESSION_REQUIRED/VOICE_BINDING_REQUIRED/CALL_FINALIZED condition was reached that would require starting a new demo call.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-7dbf-adc7-1b8e4c1327f9",
+      "grade": "passed",
+      "correction_reason": "verify_otp was called with the six-digit code as a string, and verification succeeded.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-7dda-9892-128e069a2fdc",
+      "grade": "passed",
+      "correction_reason": "The assistant identifies as Daniel, HappyRobot Logistics’ carrier sales assistant.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-7e4c-a3a6-6f841a5684df",
+      "grade": "passed",
+      "correction_reason": "Each assistant turn asks a single decision question (which load / accept-reject-counter / another load / origin).",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-7f29-a621-3f9bcfa47fe1",
+      "grade": "passed",
+      "correction_reason": "finalize_call is invoked before the session is closed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-7f71-a256-a59d1838bca3",
+      "grade": "failed",
+      "correction": "For the rejection, call the negotiate_offer tool (not reject_offer) using the latest load_id and offer_id from the current offered negotiation state.",
+      "correction_reason": "The assistant rejects the offer using a reject_offer tool call, but the northstar requires negotiate_offer to be called for acceptance/rejection/counter actions.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0768b-25a0-7f7d-bdaa-7cc4018d586f",
+      "grade": "passed",
+      "correction_reason": "After rejection, it asks whether the caller wants another load and does not treat the rejected rate as active.",
+      "model": "gpt-5.4-nano-medium"
+    }
+  ],
+  "messages": [
+    {
+      "role": "assistant",
+      "content": "“Thanks for calling HappyRobot Logistics. I’m Daniel, your carrier sales assistant. I can help you find available loads. Can I get your MC number?”"
+    },
+    {
+      "role": "user",
+      "content": "Yes, my MC number is 135797."
+    },
+    {
+      "role": "assistant",
+      "content": "Thanks, I’ll check the operating authority for MC 135797 now."
+    },
+    {
+      "role": "user",
+      "content": "Great, let me know when you've confirmed it."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"authority\":{\"carrier\":{\"allowedToOperate\":true,\"commonAuthority\":\"A\",\"contractAuthority\":\"A\",\"dotNumber\":\"80806\",\"legalName\":\"J B HUNT TRANSPORT INC\",\"outOfService\":null,\"outOfServiceReported\":false},\"checkedAt\":\"2026-09-06T11:52:20.971Z\",\"eligible\":true,\"mcNumber\":\"135797\",\"outcome\":\"eligible\",\"reason\":\"ACTIVE_CARRIER_AUTHORITY\"},\"delivery\":\"frontend_mock\",\"demo\":true,\"failures_remaining\":2,\"ok\":true,\"otp_status\":\"not_sent\",\"request_id\":\"81d75d45-8db9-428e-978f-f3f6472022e1\",\"retry_allowed\":false,\"verified\":false}}"
+    },
+    {
+      "role": "assistant",
+      "content": "Your operating authority is confirmed. I’m sending a verification code to your screen now."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"authority\":{\"carrier\":{\"allowedToOperate\":true,\"commonAuthority\":\"A\",\"contractAuthority\":\"A\",\"dotNumber\":\"80806\",\"legalName\":\"J B HUNT TRANSPORT INC\",\"outOfService\":null,\"outOfServiceReported\":false},\"checkedAt\":\"2026-09-06T11:52:20.971Z\",\"eligible\":true,\"mcNumber\":\"135797\",\"outcome\":\"eligible\",\"reason\":\"ACTIVE_CARRIER_AUTHORITY\"},\"delivered\":true,\"delivery\":\"frontend_mock\",\"demo\":true,\"failures_remaining\":2,\"ok\":true,\"otp_status\":\"pending\",\"request_id\":\"15ddfc2b-09c8-47a3-b8a5-a65d5538ab4c\",\"retry_allowed\":false,\"verified\":false}}"
+    },
+    {
+      "role": "user",
+      "content": "The verification code is [OTP REDACTED]."
+    },
+    {
+      "role": "assistant",
+      "content": "Please hold while I verify that code."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"authority\":{\"carrier\":{\"allowedToOperate\":true,\"commonAuthority\":\"A\",\"contractAuthority\":\"A\",\"dotNumber\":\"80806\",\"legalName\":\"J B HUNT TRANSPORT INC\",\"outOfService\":null,\"outOfServiceReported\":false},\"checkedAt\":\"2026-09-06T11:52:20.971Z\",\"eligible\":true,\"mcNumber\":\"135797\",\"outcome\":\"eligible\",\"reason\":\"ACTIVE_CARRIER_AUTHORITY\"},\"delivery\":\"frontend_mock\",\"demo\":true,\"failures_remaining\":2,\"ok\":true,\"otp_status\":\"verified\",\"request_id\":\"431ecdd6-49ee-40c7-8ee2-e9fc07f82cdb\",\"retry_allowed\":false,\"verified\":true}}"
+    },
+    {
+      "role": "user",
+      "content": "No problem, I will hold."
+    },
+    {
+      "role": "assistant",
+      "content": "Verification succeeded. Where are you starting from?"
+    },
+    {
+      "role": "user",
+      "content": "I'm in Anchorage. What loads do you have?"
+    },
+    {
+      "role": "assistant",
+      "content": "I’ll search for available loads departing from Anchorage."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"attempts\":1,\"command\":\"LOAD_QUERY\",\"complete\":true,\"elapsed_ms\":294,\"failures\":[],\"ok\":true,\"record_count\":2,\"records\":[{\"DEST_CITY\":\"Sarasota\",\"DEST_STATE\":\"FL\",\"DEST_ZIP\":\"34236\",\"EQTYPE\":\"DRY_VAN\",\"LOAD_ID\":\"LD00719\",\"MILES\":\"3832\",\"ORIG_CITY\":\"Anchorage\",\"ORIG_STATE\":\"AK\",\"ORIG_ZIP\":\"99501\",\"PICKUP_DT\":\"20260910030300\",\"RATE\":\"10422\",\"STATUS\":\"OPEN\"},{\"DEST_CITY\":\"Memphis\",\"DEST_STATE\":\"TN\",\"DEST_ZIP\":\"38103\",\"EQTYPE\":\"POWER_ONLY\",\"LOAD_ID\":\"LD00769\",\"MILES\":\"3136\",\"ORIG_CITY\":\"Anchorage\",\"ORIG_STATE\":\"AK\",\"ORIG_ZIP\":\"99501\",\"PICKUP_DT\":\"20260909104700\",\"RATE\":\"7712\",\"STATUS\":\"OPEN\"}],\"request_id\":\"4740f1b4-c7b9-4e9b-bbf3-ea88c48a4658\"}}"
+    },
+    {
+      "role": "user",
+      "content": "Okay, let me know what available loads you find."
+    },
+    {
+      "role": "assistant",
+      "content": "I found two open options from Anchorage:\n\n- Memphis, TN — September 9, power-only\n- Sarasota, FL — September 10, dry van\n\nWhich one interests you?"
+    },
+    {
+      "role": "user",
+      "content": "I'm interested in the Memphis, TN load. We can definitely provide the power-only equipment for that."
+    },
+    {
+      "role": "assistant",
+      "content": "I’ll refresh the Memphis load details and current offer now."
+    },
+    {
+      "role": "user",
+      "content": "Thank you, I will wait for the details and the current offer."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"attempts\":1,\"command\":\"LOAD_GET\",\"complete\":true,\"elapsed_ms\":272,\"failures\":[],\"negotiation\":{\"agreed_rate\":null,\"booking_confirmed\":false,\"counter_rounds\":0,\"expires_at\":\"2026-09-06T11:54:53.046649+00:00\",\"load_id\":\"LD00769\",\"offer_id\":\"f0c5edc1-845e-460a-a366-739f919a31bb\",\"offered_rate\":7712,\"rounds_remaining\":3,\"status\":\"offered\"},\"ok\":true,\"record_count\":1,\"records\":[{\"DELIVERY_DT\":\"20260910034700\",\"DEST_CITY\":\"Memphis\",\"DEST_STATE\":\"TN\",\"DEST_ZIP\":\"38103\",\"EQTYPE\":\"POWER_ONLY\",\"LOAD_ID\":\"LD00769\",\"MILES\":\"3136\",\"ORIG_CITY\":\"Anchorage\",\"ORIG_STATE\":\"AK\",\"ORIG_ZIP\":\"99501\",\"PICKUP_DT\":\"20260909104700\",\"PIECES\":\"9\",\"RATE\":\"7712\",\"STATUS\":\"OPEN\",\"WEIGHT\":\"9131\"}],\"request_id\":\"6a02db8a-4283-4e67-af3e-d6054498697d\"}}"
+    },
+    {
+      "role": "assistant",
+      "content": "The Memphis load is open, pickup September 9, and requires power-only equipment. The current offer is $7,712 total. Do you accept it, reject it, or want to counter?"
+    },
+    {
+      "role": "user",
+      "content": "No, I reject that offer."
+    },
+    {
+      "role": "assistant",
+      "content": "I’ll record your rejection of the current offer."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"negotiation\":{\"agreed_rate\":null,\"booking_confirmed\":false,\"counter_rounds\":0,\"expires_at\":\"2026-09-06T11:54:53.046649+00:00\",\"load_id\":\"LD00769\",\"offer_id\":\"b5f37406-7ddc-49de-8cb1-f517c528b62e\",\"offered_rate\":null,\"rounds_remaining\":3,\"status\":\"rejected\"},\"ok\":true,\"request_id\":\"9e9818fc-9086-4194-8755-04af1c23d914\"}}"
+    },
+    {
+      "role": "user",
+      "content": "Thank you, I appreciate it."
+    },
+    {
+      "role": "assistant",
+      "content": "Would you like to consider another load from Anchorage?"
+    },
+    {
+      "role": "user",
+      "content": "No thank you, I do not need another load today."
+    },
+    {
+      "role": "assistant",
+      "content": "I’ll close out our conversation now."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"authority_passed\":true,\"booking\":null,\"booking_confirmed\":false,\"booking_saved\":false,\"finalized_at\":\"2026-09-06T11:53:14.22742+00:00\",\"interest\":null,\"negotiation\":{\"agreed_rate\":null,\"booking_confirmed\":false,\"counter_rounds\":0,\"expires_at\":\"2026-09-06T11:54:53.046649+00:00\",\"load_id\":\"LD00769\",\"offer_id\":\"b5f37406-7ddc-49de-8cb1-f517c528b62e\",\"offered_rate\":null,\"rounds_remaining\":3,\"status\":\"rejected\"},\"ok\":true,\"outcome\":\"caller_declined\",\"request_id\":\"b252d09a-22d8-4cfc-b93e-967d053a3c3b\",\"selected_load_id\":\"LD00769\",\"verified\":true}}"
+    },
+    {
+      "role": "event",
+      "content": "session_closed"
+    }
+  ]
+}

@@ -1,36 +1,36 @@
 {
-  "checked_at": "2026-09-06T11:17:47.851Z",
+  "checked_at": "2026-09-06T11:46:29.666Z",
   "scope": "Real bound MCP and Twin persistence with simulated booking; no audio conversation or TMS write",
-  "call_id": "59f8556e-380f-4a94-8dd5-e43557d07695",
-  "run_id": "8027178d-647a-4163-a22a-7d0138a7db4a",
+  "call_id": "19c51bdf-edc1-4a24-920d-36af6252e8ce",
+  "run_id": "4f66b4c5-7f14-4849-b2a1-0b362184fae4",
   "saved": {
     "ok": true,
     "booking": {
       "status": "confirmed",
-      "attempt_id": "6c19c664-7911-423a-bccf-a317f35a0d0c",
+      "attempt_id": "f8f885ae-3c4e-4810-bb32-e08ece534199",
       "load_id": "LD00719",
       "agreed_rate": 10422,
-      "attempted_at": "2026-09-06T11:17:46.008465+00:00",
-      "reference": "MOCK-6c19c664-7911-423a-bccf-a317f35a0d0c",
+      "attempted_at": "2026-09-06T11:46:27.526062+00:00",
+      "reference": "MOCK-f8f885ae-3c4e-4810-bb32-e08ece534199",
       "handoff_mock": true,
       "simulated": true
     },
     "booking_saved": true,
     "booking_confirmed": false,
-    "request_id": "8cc463ba-b9d9-41ed-95ea-15b14f304c42"
+    "request_id": "12d3cfd9-7e0a-4f16-b0d3-ffc11fd7b50b"
   },
   "final": {
     "ok": true,
     "outcome": "booking_simulated",
-    "finalized_at": "2026-09-06T11:17:47.418266+00:00",
+    "finalized_at": "2026-09-06T11:46:28.92576+00:00",
     "authority_passed": true,
     "verified": true,
     "selected_load_id": "LD00719",
     "negotiation": {
       "status": "agreed",
       "load_id": "LD00719",
-      "offer_id": "a1b0811a-d1ea-4016-972c-790d0660d18a",
-      "expires_at": "2026-09-06T11:19:44.232849+00:00",
+      "offer_id": "595480a8-4139-4cd6-89f4-60653dad4796",
+      "expires_at": "2026-09-06T11:48:25.471002+00:00",
       "agreed_rate": 10422,
       "offered_rate": 10422,
       "counter_rounds": 0,
@@ -40,17 +40,17 @@
     "interest": null,
     "booking": {
       "status": "confirmed",
-      "attempt_id": "6c19c664-7911-423a-bccf-a317f35a0d0c",
+      "attempt_id": "f8f885ae-3c4e-4810-bb32-e08ece534199",
       "load_id": "LD00719",
       "agreed_rate": 10422,
-      "attempted_at": "2026-09-06T11:17:46.008465+00:00",
-      "reference": "MOCK-6c19c664-7911-423a-bccf-a317f35a0d0c",
+      "attempted_at": "2026-09-06T11:46:27.526062+00:00",
+      "reference": "MOCK-f8f885ae-3c4e-4810-bb32-e08ece534199",
       "handoff_mock": true,
       "simulated": true
     },
     "booking_saved": true,
     "booking_confirmed": false,
-    "request_id": "db30a788-277d-478e-87b9-ab3d3715a179"
+    "request_id": "0fe6e764-4b47-4b11-b2a5-edd3a8fbc714"
   },
   "tms_status_before": "OPEN",
   "tms_status_after": "OPEN"

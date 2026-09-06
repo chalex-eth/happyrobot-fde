@@ -2,6 +2,10 @@
 
 Runbook updated: 6 September 2026. Use this to orient yourself and reproduce one iteration. Refresh remote versions and tunnel URLs before acting; dated IDs in saved reports are historical evidence.
 
+**Booking wording update:** Development Version 24 (`01a07694-1d5d-7e0e-8228-d67d3423156b`) replaces Version 22. At the owner's request, the agent uses ordinary successful-booking language after a confirmed saved test result and omits simulation/handoff implementation commentary. `BOOKING_TMS_MODE=mock`, persisted simulation flags, mock references and the operator UI remain unchanged. TypeScript, whitespace checks and workflow readback passed; no new booking was required to validate this wording edit.
+
+**Explicit negotiation tools rollout:** Version 22 (`01a07689-e6a5-740e-9b99-eacdee9613f5`) is live in development, replacing Version 21. Eleven tools include `accept_offer`, `counter_offer` and `reject_offer`; the old combined tool is removed from the new workflow. All 83 tests and the build passed. The original string counter `"4000"` is reproduced through MCP transport and safely normalized before validation. A real bound acceptance/simulated-booking/finalization check passed. Unpublished Version 23 (`01a0768b-2542-7db1-9520-4b6732d55f5c`) contains the four updated evals using user-approved Anchorage OPEN inventory; N03 now tests rejection. The queue was launched for manual review. Mock TMS booking remains enforced.
+
 **M4.2 simulated-booking rollout:** Version 21 (`01a07670-b587-72f4-8090-12dbc4ffd448`) replaces Version 20 in development. The rebuilt Docker app explicitly uses mock TMS booking; Twin M4.2 is applied. All 81 tests, the build, four disposable PostgreSQL transition suites and the real bound MCP/Twin simulated-booking smoke passed. The smoke saved one simulated attempt, replayed its reference, finalized as `booking_simulated`, and confirmed the load remained OPEN. No TMS booking request was sent. See [mock-booking evidence](mock-booking-mcp-evidence.json). Spoken behavior remains for manual review.
 
 **M4.1 pending-load rollout:** Version 20 (`01a0765b-a6ea-7169-8e1b-65898aa8dc99`) replaces Version 18 in development with nine tools, including `record_load_interest`. Twin M4.1 is applied and the local app rebuilt. All 78 tests, the production build, and three SQL transition suites passed. Real bound HTTPS MCP retrieved Dallas load LD00761 as PENDING with no offer and no booking permission; no interest submission or booking was performed in that smoke. See [pending-load MCP evidence](pending-load-mcp-evidence.json). Start a fresh browser call to review the spoken consent and callback flow.
@@ -30,7 +34,7 @@ The browser/model cannot choose another caller's session. Normal MCP requests ca
 | --- | --- |
 | `app/voice-call.tsx`, `app/api/local/*` | Local call UI, cookie-bound endpoints, screen-only demo OTP |
 | `src/voice-session.ts`, `src/call-session.ts` | Provider run binding, Twin RPC state, session lifecycle |
-| `src/mcp-tools.ts`, `src/mcp-http.ts` | Nine tool schemas/descriptions, dispatch, MCP auth and transport |
+| `src/mcp-tools.ts`, `src/mcp-http.ts` | Eleven canonical tool schemas, strict transport normalization, dispatch and MCP auth |
 | `src/call-services.ts`, `src/fmcsa.ts`, `src/demo-otp.ts` | Authority and OTP gates; shared business operations |
 | `src/tms.ts`, `src/negotiation.ts` | TCP load queries/details; private pricing and offers |
 | `src/adversarial-session.ts` | Development test isolation, capability binding and backend traces |
@@ -49,7 +53,9 @@ TMS uses line-oriented TCP: command first, authentication per request, pipe-deli
 | `verify_otp` | Six-digit `code` string, preserving leading zeroes. Honor returned retry permission. |
 | `search_loads` | City alone is sufficient; omit unspecified filters. At least one search filter is required. City-first discovery uses `origin_city` and `max_results: 10`. |
 | `get_load` | Exact `load_id` from the latest successful search. Refreshes details; OPEN receives an offer, PENDING receives manager-review availability with no offer. |
-| `negotiate_offer` | Returned `load_id` and `offer_id`, response, numeric amount only for counteroffers. HappyRobot always supplies `amount`: a number for counter, explicit `null` for accept/reject to clear the previous value. The MCP schema also accepts the exact text `"null"` produced by workflow rendering and normalizes it to no amount before Twin. Other strings and numeric acceptance amounts are rejected. Direct MCP clients may still omit it. Three counter rounds per call. |
+| `accept_offer` | Latest `load_id` and `offer_id` only. Accepts the saved offered rate; no amount or response field. |
+| `counter_offer` | Latest IDs and positive total USD `amount`, at most two decimals. Three counter rounds per call. |
+| `reject_offer` | Latest IDs only. Records rejection without booking or automatically ending the call. |
 | `book_load` | Exact agreed `load_id` and `offer_id`; enabled only after the M4 migration. One saved attempt; confirmed/rejected/uncertain. Confirmed booking records a mock handoff. |
 | `record_load_interest` | Pending load from the latest search, confirmed E.164 callback number and explicit consent. Refreshes status and saves one idempotent review request. Does not notify a manager or guarantee a callback. |
 | `finalize_call` | Outcome and summary. Records disposition derived from agreement and booking facts; does not initiate a booking. Do not finalize while awaiting an answer. |
@@ -64,7 +70,7 @@ Local validation: `npm test`, `npm run build`, and the negotiation, booking and 
 
 ## M4 booking
 
-**Current test behavior:** `BOOKING_TMS_MODE=mock` is the default and is explicitly pinned in the local Docker configuration. Booking still checks real OPEN inventory and the agreed terms, then saves a simulated attempt/result in Twin without sending `LOAD_BOOK`. It returns `booking.simulated=true`, `booking_saved=true`, `booking_confirmed=false` and a `MOCK-…` reference; finalization records `booking_simulated`. The agent and UI must describe a simulated booking, with no TMS reservation. Apply [M4.2](twin-m4.2.sql) after M4.1 before using this mode. Mock attempts do not consume the cross-call real-booking lock; repeated delivery within one call still returns the same saved result. Existing real uncertain attempts and TMS PENDING loads remain unchanged. Real writes require explicit `BOOKING_TMS_MODE=live`; the low-level transport also refuses writes unless that exact value is set.
+**Current test behavior:** `BOOKING_TMS_MODE=mock` is the default and is explicitly pinned in the local Docker configuration. Booking still checks real OPEN inventory and the agreed terms, then saves a simulated attempt/result in Twin without sending `LOAD_BOOK`. It returns `booking.simulated=true`, `booking_saved=true`, `booking_confirmed=false` and a `MOCK-…` reference; finalization records `booking_simulated`. The operator UI and persisted records retain simulation labels. At the owner's request, caller-facing speech treats a confirmed saved test booking as successful: ask "Would you like me to book this load?", then say "Your booking was successful" only after book_load confirms the saved result. Do not narrate simulation, mock handoff or TMS reservation disclaimers. Do not claim an actual transfer. Apply [M4.2](twin-m4.2.sql) after M4.1 before using this mode. Mock attempts do not consume the cross-call real-booking lock; repeated delivery within one call still returns the same saved result. Existing real uncertain attempts and TMS PENDING loads remain unchanged. Real writes require explicit `BOOKING_TMS_MODE=live`; the low-level transport also refuses writes unless that exact value is set.
 
 Run `npm run verify:mcp -- --mock-booking` for real MCP/Twin persistence with a simulated booking and a post-check that the real load remains OPEN. This is not real booking evidence. Negotiation eval scenarios remain unchanged; their expected test-mode disposition is now `booking_simulated`.
 
@@ -95,7 +101,7 @@ For normal browser-call development, prefer `npm run local:up` and open `http://
    npm run happyrobot:mcp -- connect
    ```
 
-   `connect` refreshes and verifies the exact nine tools. It refuses a named connection with mismatched URL/auth. For a changed tunnel, deliberately update the connection or set `HAPPYROBOT_MCP_SERVER_NAME` to a distinct name before connecting; this SDK cannot update an MCP URL. Preserve other workflows' connections.
+   `connect` refreshes and verifies the exact eleven tools. It refuses a named connection with mismatched URL/auth. For a changed tunnel, deliberately update the connection or set `HAPPYROBOT_MCP_SERVER_NAME` to a distinct name before connecting; this SDK cannot update an MCP URL. Preserve other workflows' connections.
 
 4. Read current versions with `client.workflows.listVersions(workflowId)` or the HappyRobot connector. Use explicit IDs below: `SOURCE_UUID` is the verified source, `DRAFT_UUID` is the returned fork ID.
 
@@ -153,6 +159,11 @@ Bindings: `scripts/happyrobot/city-search-config.json`; scenarios: `tests/happyr
 
 ### Negotiation evals
 
+Current regression paths are N01 immediate acceptance, N02 counter then agreement, N03 explicit rejection and N05 three unsuccessful counters. N03 replaces the earlier disclosure/manager-override conversation; earlier result files remain historical. Use `test:negotiation setup --origin-city CITY` to set a real, user-approved OPEN-load origin for all four cases; the caller still receives only the departure city and discovers destination/equipment/rate conversationally. Preflight checks actual OPEN inventory and blocks runs when none is suitable. Mock booking remains enforced. The controller recognizes all three negotiation tool names and retains one shared backend decision chain.
+
+The MCP transport normalizes canonical numeric strings for counter rates and result limits, exact boolean strings for consent, and empty/null optional search fields before strict validation. It never coerces MC numbers, OTPs or identifiers. Missing consent stays missing; false remains rejected. Accept/reject reject extra amounts rather than silently ignoring them. Validation failures return `INVALID_TOOL_ARGUMENTS`, `side_effects=false` and field/type diagnostics before business execution. Only argument-format correction is permitted; mutation retries remain governed by saved offer IDs and attempt records. Workflow publication checks argument references, required flags and descriptions; unsupported non-primitive parameter schemas fail generation.
+
+
 Latest N01-only sync: unpublished Version 19 (`01a07638-0da0-7c69-a134-2e787b4d5103`) forks the current normal development Version 18 and uses the current local tool schemas. All eight argument mappings, parameter metadata and full result visibility were read back. Only N01 was synced and queued for manual review; Version 18 remains the normal app version. The eval Docker override was enabled for app/proxy without restarting ngrok.
 
 6 September initial booking update: the same four test IDs targeted unpublished Version 15 (`01a07604-7372-7f37-b8f7-26dcd908e16f`), forked from normal development Version 14. All eight MCP argument mappings and complete result visibility were read back. Manual review found N01 closed after a successful agreement, N02 failed retrieval and invented a caller rate, N03 sent its previous counter amount with acceptance, and N05 passed the three-round backend checks. No booking was attempted. `session_closed` is a runtime event; its initiator was not identified by the available API metadata.
@@ -178,7 +189,7 @@ For evals with the Docker stack, explicitly enable the authenticated adversarial
 docker compose --env-file .env.local --env-file .env.docker.local -f compose.yaml -f docker/compose.evals.yaml up -d --build --wait
 ```
 
-The ordinary `npm run local:up` restores the default disabled eval route; do this only after the queue finishes. The eval draft must contain all nine current tools and the current prompt. Fork the current normal development version when upgrading an older draft, then run `test:adversarial setup --negotiation` and `test:negotiation setup` to preserve the existing test IDs and folder. Keep the new draft unpublished.
+The ordinary `npm run local:up` restores the default disabled eval route; do this only after the queue finishes. The eval draft must contain all eleven current tools and the current prompt. Fork the current normal development version when upgrading an older draft, then run `test:adversarial setup --negotiation` and `test:negotiation setup` to preserve the existing test IDs and folder. Keep the new draft unpublished.
 
 N01–N03 keep their original negotiation scenarios and add only a post-agreement booking continuation. Expect `book_load` with the exact agreed load/offer before finalization, a truthful booking result, and the corresponding `booked`, `booking_failed` or `booking_uncertain` disposition. Confirmed bookings require a reference and mock handoff. No automatic retry after uncertainty. N05 remains unchanged and must never book. Public booking arguments/results are recorded for manual review; preflight/review blocks do not count as completed booking coverage. Booking runs follow the server mode. The current mock mode saves simulated bookings without TMS writes. Real Dallas inventory is still required to reach negotiation; PENDING loads follow manager review instead. Never reset booking records or substitute invented inventory to obtain a pass.
 
