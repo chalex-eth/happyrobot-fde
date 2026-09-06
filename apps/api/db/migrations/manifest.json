@@ -1,12 +1,1 @@
-[
-  "twin-m3.sql",
-  "twin-m3.1.sql",
-  "twin-m3.2.sql",
-  "twin-m3.5.sql",
-  "twin-m3.6.sql",
-  "twin-m4.sql",
-  "twin-m4.1.sql",
-  "twin-m4.2.sql",
-  "twin-m5.sql",
-  "twin-m5.1.sql"
-]
+["0001_initial_schema.sql"]

@@ -1,3 +1,4 @@
+import { mockCommandsAndFetch } from './helpers/commands.js';
 import { test, type TestContext } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
@@ -50,7 +51,7 @@ function setup(t: TestContext) {
   };
   let digest = '',
     issues = 0;
-  t.mock.method(globalThis, 'fetch', async (_url: URL, init: RequestInit) => {
+  mockCommandsAndFetch(t, async (_url: URL, init: RequestInit) => {
     const b = JSON.parse(String(init.body));
     if (b.p_session_hash !== hash) return Response.json({ ok: false, error: 'SESSION_REQUIRED' });
     if (b.p_action === 'issue') {
@@ -123,7 +124,7 @@ test('no display after verification, terminal failure or finalization; no issuan
 test('route-only and equipment searches still require OTP', async (t) => {
   const s = setup(t);
   t.mock.restoreAll();
-  t.mock.method(globalThis, 'fetch', async (_url: URL, init: RequestInit) => {
+  mockCommandsAndFetch(t, async (_url: URL, init: RequestInit) => {
     const b = JSON.parse(String(init.body));
     assert.equal(b.p_action, 'authorize_load');
     assert.equal(b.p_metadata.command, 'LOAD_QUERY');
@@ -144,7 +145,7 @@ test('an unreadable legacy pending challenge is not reported as delivered or rep
   const s = setup(t);
   await createOtpForCall(s.hash);
   t.mock.restoreAll();
-  t.mock.method(globalThis, 'fetch', async (_url: URL, init: RequestInit) => {
+  mockCommandsAndFetch(t, async (_url: URL, init: RequestInit) => {
     const b = JSON.parse(String(init.body));
     if (b.p_action === 'status') return Response.json({ ok: true, session: s.session });
     assert.equal(b.p_action, 'prepare_verify');

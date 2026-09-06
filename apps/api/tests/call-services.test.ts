@@ -1,3 +1,4 @@
+import { mockCommandsAndFetch } from './helpers/commands.js';
 import { test, type TestContext } from 'node:test';
 import assert from 'node:assert/strict';
 import { loadsForCall } from '../src/modules/loads/index.js';
@@ -60,7 +61,7 @@ function configure(t: TestContext) {
 test('authority lookup runs only after call invalidation and uses the same identity and revision', async (t) => {
   configure(t);
   let invalidated = false;
-  t.mock.method(globalThis, 'fetch', async (_url: URL, init: RequestInit) => {
+  mockCommandsAndFetch(t, async (_url: URL, init: RequestInit) => {
     const b = JSON.parse(String(init.body));
     assert.equal(b.p_session_hash, hash);
     if (b.p_action === 'authority_begin') invalidated = true;
@@ -84,7 +85,7 @@ test('authority lookup runs only after call invalidation and uses the same ident
 test('failed FMCSA recheck records unverified evidence without copying upstream diagnostics', async (t) => {
   configure(t);
   const writes: string[] = [];
-  t.mock.method(globalThis, 'fetch', async (_url: URL, init: RequestInit) => {
+  mockCommandsAndFetch(t, async (_url: URL, init: RequestInit) => {
     writes.push(String(init.body));
     return Response.json({ ok: true, session });
   });
@@ -120,9 +121,7 @@ test('shared load service refuses diagnostics and denied sessions before TCP; su
     () => loadsForCall(hash, { command: 'DEBUG_ECHO' }, undefined, execute),
     SessionError,
   );
-  t.mock.method(globalThis, 'fetch', async () =>
-    Response.json({ ok: false, error: 'OTP_REQUIRED' }),
-  );
+  mockCommandsAndFetch(t, async () => Response.json({ ok: false, error: 'OTP_REQUIRED' }));
   await assert.rejects(
     () =>
       loadsForCall(
@@ -134,7 +133,7 @@ test('shared load service refuses diagnostics and denied sessions before TCP; su
     (e) => e instanceof SessionError && e.code === 'OTP_REQUIRED',
   );
   assert.equal(executions, 0);
-  t.mock.method(globalThis, 'fetch', async (_url: URL, init: RequestInit) => {
+  mockCommandsAndFetch(t, async (_url: URL, init: RequestInit) => {
     const b = JSON.parse(String(init.body));
     if (b.p_action === 'authorize_load') return Response.json({ ok: true, session });
     assert.equal(b.p_action, 'save_loads');
@@ -157,7 +156,7 @@ test('shared load service refuses diagnostics and denied sessions before TCP; su
 test('agent resolver rejects missing auth, invented IDs and unbound runs before returning internal state', async (t) => {
   configure(t);
   let calls = 0;
-  t.mock.method(globalThis, 'fetch', async () => {
+  mockCommandsAndFetch(t, async () => {
     calls++;
     return Response.json({ ok: true, sessionHash: hash });
   });
@@ -174,7 +173,7 @@ test('agent resolver rejects missing auth, invented IDs and unbound runs before 
   }
   assert.equal(calls, 0);
   assert.equal(await resolveAgentSession('Bearer test-only', id), hash);
-  t.mock.method(globalThis, 'fetch', async () =>
+  mockCommandsAndFetch(t, async () =>
     Response.json({ ok: false, error: 'VOICE_BINDING_REQUIRED' }),
   );
   await assert.rejects(() => resolveAgentSession('Bearer test-only', id), SessionError);
@@ -183,7 +182,7 @@ test('agent resolver rejects missing auth, invented IDs and unbound runs before 
 test('browser and agent verification use the bound call challenge, and another call cannot reuse its OTP digest', async (t) => {
   configure(t);
   const matched: boolean[] = [];
-  t.mock.method(globalThis, 'fetch', async (_url: URL, init: RequestInit) => {
+  mockCommandsAndFetch(t, async (_url: URL, init: RequestInit) => {
     const b = JSON.parse(String(init.body));
     if (b.p_action === 'status') return Response.json({ ok: true, session });
     if (b.p_action === 'prepare_verify')
@@ -214,7 +213,7 @@ test('voice startup binds the provider run before returning its token and never 
     },
     runs: { cancel: async () => {} },
   };
-  t.mock.method(globalThis, 'fetch', async (_url: URL, init: RequestInit) => {
+  mockCommandsAndFetch(t, async (_url: URL, init: RequestInit) => {
     const b = JSON.parse(String(init.body));
     if (b.p_action === 'voice_reserve' && bound)
       return Response.json({ ok: false, error: 'VOICE_ALREADY_STARTED' });
@@ -253,7 +252,7 @@ test('failed Twin binding cancels the orphan voice run and never returns its tok
       },
     },
   };
-  t.mock.method(globalThis, 'fetch', async (_url: URL, init: RequestInit) => {
+  mockCommandsAndFetch(t, async (_url: URL, init: RequestInit) => {
     const b = JSON.parse(String(init.body));
     if (b.p_action === 'voice_bind')
       return new Response('secret upstream diagnostic', { status: 500 });
@@ -280,7 +279,7 @@ test('ending voice resolves the run from the authenticated call and rejects a di
       },
     },
   };
-  t.mock.method(globalThis, 'fetch', async () =>
+  mockCommandsAndFetch(t, async () =>
     Response.json({ ok: true, session: { ...session, voiceRunId: runId } }),
   );
   await assert.rejects(
@@ -310,7 +309,7 @@ test('voice HTTP routes reject absent cookies, foreign origins and caller-select
       body: JSON.stringify(body),
     });
   let calls = 0;
-  t.mock.method(globalThis, 'fetch', async () => {
+  mockCommandsAndFetch(t, async () => {
     calls++;
     throw new Error('Should not make a provider request');
   });

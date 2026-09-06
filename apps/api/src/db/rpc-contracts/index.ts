@@ -8,7 +8,7 @@ import {
   CallDetailSchema,
   OkResponseSchema,
 } from '@carrier/contracts';
-import type { DatabaseRpc } from '../generated/database.js';
+import type { LegacyCommands as DatabaseRpc } from './legacy-commands.js';
 
 const metadata = z.record(z.string(), z.unknown());
 const text = z.string().min(1);
@@ -44,10 +44,10 @@ export const BookingActionSchema = z.enum([
 export type BookingAction = z.infer<typeof BookingActionSchema>;
 export const TrackActionSchema = z.enum(['source', 'loads', 'disconnected', 'ended', 'tool']);
 export type TrackAction = z.infer<typeof TrackActionSchema>;
-export type RpcName = Exclude<keyof DatabaseRpc, 'poc_create_call'>;
+export type RpcName = keyof DatabaseRpc;
 
-// SQL signatures are generated. These schemas refine JSON fields and action
-// strings that cannot be inferred from PostgreSQL's text/jsonb declarations.
+// Compatibility command contracts. Actual Twin persistence signatures are
+// generated separately and refined by persistenceInputs in persistence.ts.
 export const rpcInputs = {
   poc_start_call: z.strictObject({
     p_id: text,

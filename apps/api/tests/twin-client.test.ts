@@ -7,7 +7,7 @@ import {
   type RpcName,
   type RpcArgs,
 } from '../src/db/rpc-contracts/index.js';
-import type { DatabaseRpc } from '../src/db/generated/database.js';
+import type { LegacyCommands as DatabaseRpc } from '../src/db/rpc-contracts/legacy-commands.js';
 import type { CallSession } from '@carrier/contracts/calls';
 
 type Assert<T extends true> = T;
@@ -17,7 +17,7 @@ type KeyMatch<K extends RpcName> =
       ? true
       : false
     : false;
-export type GeneratedSignatureCheck = Assert<{ [K in RpcName]: KeyMatch<K> }[RpcName]>;
+export type CompatibilitySignatureCheck = Assert<{ [K in RpcName]: KeyMatch<K> }[RpcName]>;
 const session: CallSession = {
   callId: '11111111-1111-4111-8111-111111111111',
   check: null,
@@ -91,9 +91,9 @@ test('Twin rejects misspelled action names and unexpected arguments before HTTP'
     rpcInputs.poc_book_call.safeParse({ p_session_hash: 'hash', p_action: 'book' }).success,
     false,
   );
-  // Compile-time regression: names and arguments are tied to their SQL function.
+  // Compile-time regression: names and arguments remain tied to their compatibility command.
   await assert.rejects(
-    // @ts-expect-error p_session_hash is required by the generated start signature.
+    // @ts-expect-error p_session_hash is required by the start command.
     twinRpc('poc_start_call', { p_id: session.callId }),
     /TWIN_INVALID_ARGUMENTS/,
   );

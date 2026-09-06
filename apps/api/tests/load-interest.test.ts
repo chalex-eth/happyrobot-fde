@@ -1,3 +1,4 @@
+import { mockCommandsAndFetch } from './helpers/commands.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import net from 'node:net';
@@ -70,7 +71,7 @@ test('pending detail is readable without a quote; consented interest refreshes s
     callback_guaranteed: false,
   };
   const calls: string[] = [];
-  t.mock.method(globalThis, 'fetch', async (url: URL, init: RequestInit) => {
+  mockCommandsAndFetch(t, async (url: URL, init: RequestInit) => {
     const b = JSON.parse(String(init.body));
     if (String(url).endsWith('poc_record_load_interest')) {
       calls.push('record');

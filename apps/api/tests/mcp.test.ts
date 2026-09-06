@@ -1,3 +1,4 @@
+import { mockCommandsAndFetch } from './helpers/commands.js';
 import { test, type TestContext } from 'node:test';
 import assert from 'node:assert/strict';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
@@ -49,7 +50,7 @@ test('MCP normalizes the actual string counter failure and routes accept/reject 
     else process.env.NEGOTIATION_ENABLED = old;
   });
   const decisions: Record<string, unknown>[] = [];
-  t.mock.method(globalThis, 'fetch', async (url: URL, init: RequestInit) => {
+  mockCommandsAndFetch(t, async (url: URL, init: RequestInit) => {
     const body = JSON.parse(String(init.body));
     if (String(url).endsWith('poc_resolve_voice'))
       return Response.json({ ok: true, sessionHash: 'a'.repeat(64) });
@@ -185,7 +186,7 @@ test('HTTP authentication, origin, size and malformed input fail closed', async 
 test('tool schemas reject forged identity and numeric OTPs before service calls', async (t) => {
   configure(t);
   let calls = 0;
-  t.mock.method(globalThis, 'fetch', async () => {
+  mockCommandsAndFetch(t, async () => {
     calls++;
     throw Error('must not call Twin');
   });
@@ -203,7 +204,7 @@ test('tool schemas reject forged identity and numeric OTPs before service calls'
 test('bound tool requests resolve Twin identity and cannot search before OTP', async (t) => {
   configure(t);
   let gate = 0;
-  t.mock.method(globalThis, 'fetch', async (url: URL, init: RequestInit) => {
+  mockCommandsAndFetch(t, async (url: URL, init: RequestInit) => {
     const body = JSON.parse(String(init.body));
     if (String(url).endsWith('poc_resolve_voice')) {
       assert.equal(body.p_run_id, id);
@@ -225,7 +226,7 @@ test('unknown runs and raw dependency exceptions do not leak internal details', 
   configure(t);
   const client = await connect(t, id);
   let unavailable = false;
-  t.mock.method(globalThis, 'fetch', async () => {
+  mockCommandsAndFetch(t, async () => {
     if (unavailable) throw Error('secret upstream token');
     return Response.json({ ok: false, error: 'VOICE_BINDING_REQUIRED' });
   });
@@ -308,7 +309,7 @@ test('reused JSON-RPC IDs on separate invocations do not replay a previous OTP a
     }
   });
   const operations: string[] = [];
-  t.mock.method(globalThis, 'fetch', async (_url: URL, init: RequestInit) => {
+  mockCommandsAndFetch(t, async (_url: URL, init: RequestInit) => {
     const b = JSON.parse(String(init.body));
     if (b.p_action === 'status')
       return Response.json({

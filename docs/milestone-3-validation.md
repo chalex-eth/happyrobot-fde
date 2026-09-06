@@ -73,7 +73,7 @@ These should be run with the developer, not by manually editing Twin or revealin
 
 - `npm test` — 55 Node tests at implementation checkpoint; localhost sockets are needed for proxy/TMS fixture tests.
 - `npm run typecheck` and `npm run build`.
-- Apply `apps/api/db/migrations/twin-m3.sql`, `apps/api/db/migrations/twin-m3.1.sql`, `apps/api/db/migrations/twin-m3.2.sql`, then `apps/api/db/migrations/twin-m3.5.sql` to a **fresh disposable PostgreSQL database**. Never rerun base migrations on the existing Twin workspace.
+- Apply `apps/api/db/tests/fixtures/legacy/twin-m3.sql`, `apps/api/db/tests/fixtures/legacy/twin-m3.1.sql`, `apps/api/db/tests/fixtures/legacy/twin-m3.2.sql`, then `apps/api/db/tests/fixtures/legacy/twin-m3.5.sql` to a **fresh disposable PostgreSQL database**. Never rerun base migrations on the existing Twin workspace.
 - In that disposable database run `apps/api/db/tests/otp-transitions.sql`, `apps/api/db/tests/call-transitions.sql`, `apps/api/db/tests/finalize-transitions.sql`, `apps/api/db/tests/negotiation-transitions.sql` with psql ON_ERROR_STOP=1. Fixtures roll back.
 - `node scripts/verify-negotiation-db.mjs` uses only PostgreSQL at 127.0.0.1:55439 and a database named carrier_m35 by default. Override NEGOTIATION_TEST_DB / PSQL_BIN for a matching local setup. Temporary concurrency fixtures are removed afterward.
 - With migration/activation complete, `npm run verify:mcp` exercises the live tool path. It creates/cancels its own provider run and never invokes booking.

@@ -9,21 +9,26 @@ import {
 
 // Exercise the actual migrated functions and validate their returned JSON, not
 // TypeScript-shaped fixtures. This database is owned by schema.mjs and discarded.
-export async function verifyRpcContracts(sql: (source: string) => Promise<string>) {
+export async function verifyRpcContracts(
+  sql: (source: string) => Promise<string>,
+  invoke?: (name: string, args: Record<string, unknown>) => Promise<unknown>,
+) {
   const literal = (v: unknown): string =>
     v === null
       ? 'NULL'
       : typeof v === 'number' || typeof v === 'boolean'
         ? String(v)
         : `'${(typeof v === 'object' ? JSON.stringify(v) : String(v)).replaceAll("'", "''")}'${typeof v === 'object' ? '::jsonb' : ''}`;
-  const raw = async (name: string, args: Record<string, unknown>) =>
-    JSON.parse(
-      await sql(
-        `SELECT public.${name}(${Object.entries(args)
-          .map(([k, v]) => `${k}=>${literal(v)}`)
-          .join(',')});`,
-      ),
-    ) as unknown;
+  const raw =
+    invoke ??
+    (async (name: string, args: Record<string, unknown>) =>
+      JSON.parse(
+        await sql(
+          `SELECT public.${name}(${Object.entries(args)
+            .map(([k, v]) => `${k}=>${literal(v)}`)
+            .join(',')});`,
+        ),
+      ) as unknown);
   const rpc = async (...[name, args]: CallRpcRequest) => {
     rpcInputs[name].parse(args);
     const result = parseCallResult(name, args, await raw(name, args));

@@ -1,12 +1,9 @@
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 // This command creates its own isolated database. It never reads .env files,
 // accepts a database URL, or connects to Twin. Docker removes the DB on exit.
 import { execFile as execFileCallback, spawn } from 'node:child_process';
 import { promisify } from 'node:util';
-import { readFile, writeFile, mkdir, mkdtemp, rm } from 'node:fs/promises';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { createHash, randomUUID } from 'node:crypto';
-import { fileURLToPath } from 'node:url';
 import { setTimeout } from 'node:timers/promises';
 const execFile = promisify(execFileCallback);
 const dbRoot = new URL('../', import.meta.url);
@@ -119,7 +116,8 @@ try {
   await sql('CREATE EXTENSION IF NOT EXISTS pgcrypto;');
   const migrationHashes = [];
   for (const name of manifest) {
-    if (!/^twin-m[\d.]+\.sql$/.test(name)) throw Error('Invalid migration path');
+    if (!/^(?:twin-m[\d.]+|0001_initial_schema)\.sql$/.test(name))
+      throw Error('Invalid migration path');
     const source = await readFile(new URL(`migrations/${name}`, dbRoot), 'utf8');
     await sql(source);
     migrationHashes.push({ name, sha256: createHash('sha256').update(source).digest('hex') });
@@ -168,49 +166,8 @@ try {
     JSON.stringify({ migrations: migrationHashes, tables, functions }, null, 2) + '\n',
   );
   if (mode === 'test') {
-    for (const file of [
-      'otp-transitions.sql',
-      'call-transitions.sql',
-      'finalize-transitions.sql',
-      'negotiation-transitions.sql',
-      'booking-transitions.sql',
-      'load-interest-transitions.sql',
-      'mock-booking-transitions.sql',
-      'operator-transitions.sql',
-    ]) {
-      await sql(await readFile(new URL(`tests/${file}`, dbRoot), 'utf8'));
-      console.log(`Passed ${file}`);
-    }
-    const wrapperDir = await mkdtemp(join(tmpdir(), 'carrier-psql-'));
-    try {
-      const wrapper = join(wrapperDir, 'psql.mjs');
-      await writeFile(
-        wrapper,
-        `#!/usr/bin/env node\nimport {execFileSync} from 'node:child_process';\nexecFileSync('docker',['exec','-i',${JSON.stringify(container)},'psql','-U','postgres',...process.argv.slice(2)],{stdio:'inherit'});\n`,
-        { mode: 0o700 },
-      );
-      for (const name of ['otp', 'negotiation', 'booking']) {
-        const result = await execFile(
-          process.execPath,
-          [fileURLToPath(new URL(`../../../../scripts/verify-${name}-db.mjs`, import.meta.url))],
-          {
-            env: {
-              ...process.env,
-              PSQL_BIN: wrapper,
-              PGPORT: '5432',
-              OTP_TEST_DB: 'poc_test',
-              NEGOTIATION_TEST_DB: 'poc_test',
-              BOOKING_TEST_DB: 'poc_test',
-            },
-          },
-        );
-        console.log(result.stdout.trim());
-      }
-    } finally {
-      await rm(wrapperDir, { recursive: true, force: true });
-    }
-    const { verifyRpcContracts } = await import('./verify-contracts.ts');
-    await verifyRpcContracts(sql);
+    const { runParity } = await import('./parity.ts');
+    await runParity();
   }
   console.log(
     `${mode}: ${manifest.length} migrations, ${new Set(tables.map((t) => t.schema + '.' + t.name)).size} tables, ${functions.length} RPCs verified in disposable PostgreSQL.`,

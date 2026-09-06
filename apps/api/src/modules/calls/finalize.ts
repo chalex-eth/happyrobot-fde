@@ -13,7 +13,7 @@ export type FinalizeCall = {
   callback_consent?: boolean;
 };
 export async function finalizeCall(hash: string, args: FinalizeCall) {
-  // Summary is model-reported text; structured facts are derived in PostgreSQL.
+  // Summary is model-reported text; structured facts are derived by the backend decision module.
   // Avoid retaining standalone codes even if the model ignores its instructions.
   const summary = args.summary.replace(/\b\d{6}\b/g, '[redacted]');
   const review = args.review_reason

@@ -1,3 +1,4 @@
+import { mockCommandsAndFetch } from './helpers/commands.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import net from 'node:net';
@@ -45,7 +46,7 @@ test('city-only MCP search reaches TCP with no inferred filters and retains auth
   process.env.TMS_PORT = String((server.address() as net.AddressInfo).port);
   const actions: string[] = [];
   let verified = true;
-  t.mock.method(globalThis, 'fetch', async (_url: unknown, init: RequestInit) => {
+  mockCommandsAndFetch(t, async (_url: unknown, init: RequestInit) => {
     const input = JSON.parse(String(init.body));
     actions.push(input.p_action);
     if (!verified) return Response.json({ ok: false, error: 'OTP_REQUIRED' });

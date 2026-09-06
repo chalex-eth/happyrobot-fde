@@ -1,3 +1,4 @@
+import { mockCommandsAndFetch } from './helpers/commands.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
@@ -49,7 +50,7 @@ test('native test envelope remains private, authority-gated, isolated and revoca
     }
   });
   const sessions = new Map<string, { session: CallSession; digest?: string }>();
-  t.mock.method(globalThis, 'fetch', async (_url: URL, init: RequestInit) => {
+  mockCommandsAndFetch(t, async (_url: URL, init: RequestInit) => {
     const b = JSON.parse(String(init.body));
     if (b.p_id)
       sessions.set(b.p_session_hash, {

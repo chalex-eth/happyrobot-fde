@@ -12,7 +12,7 @@ Generation and verification share one retry per call. A second failure ends veri
 
 ## Rollout
 
-- Twin forward migration: `apps/api/db/migrations/twin-m3.6.sql`, validated on fresh disposable PostgreSQL and applied once to shared Twin. Historical call events remain preserved.
+- Twin forward migration: `apps/api/db/tests/fixtures/legacy/twin-m3.6.sql`, validated on fresh disposable PostgreSQL and applied once to shared Twin. Historical call events remain preserved.
 - Migration SHA-256: `1330d2ae6d96ead01c7501a5eb701c0e2b5bbb51455c4954bce36b371274640c`.
 - HappyRobot: Version 7, `01a07202-62df-7b5f-9dea-ee147a179a90`, published to development, replacing Version 6. Previous version retained.
 - Editor: https://platform.happyrobot.ai/fdealexandrechalard/workflow/1yju3ahyn1yb/editor/je70szro4yyb

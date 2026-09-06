@@ -53,7 +53,7 @@ Implemented:
 - The operator page restores and polls the saved call every five seconds and clears obsolete mock codes. Mock generation remains confined to the local operator endpoint.
 - `apps/api/src/modules/calls/voice.ts` and `POST /api/local/voice` reserve one voice startup per call, use the official SDK, and commit the provider-returned `run_id` before returning the browser voice credential. No automatic mutation retries. Failed persistence attempts cancel the newly created run where possible; ambiguous failures require a new call.
 - A server-only authenticated run resolver maps the saved run to the same session hash used by the shared services. Run IDs or MC numbers alone do not authenticate callers.
-- `apps/api/db/migrations/twin-m3.1.sql` was tested against disposable PostgreSQL and applied successfully to the real Twin workspace. Apply it once after `twin-m3.sql` for a fresh installation.
+- `apps/api/db/tests/fixtures/legacy/twin-m3.1.sql` was tested against disposable PostgreSQL and applied successfully to the real Twin workspace. Apply it once after `twin-m3.sql` for a fresh installation.
 
 Verified SDK contract: `@happyrobot-ai/sdk@0.1.45` accepts `voice.createToken({workflow_id, env, ttl_seconds})` and returns `{url, token, room_name, run_id}`. Startup binds `run_id` from that response, not model-supplied metadata. Do not send the browser session token or hash in workflow data or prompts.
 

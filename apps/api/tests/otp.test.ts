@@ -1,3 +1,4 @@
+import { mockCommandsAndFetch } from './helpers/commands.js';
 import { test, type TestContext } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
@@ -89,7 +90,7 @@ test('OTP HMAC binds purpose, call session and challenge; cookie value is opaque
 test('OTP endpoint rejects caller-controlled recipients, authorization flags, absent sessions and wrong origins before I/O', async (t) => {
   configure(t);
   let calls = 0;
-  t.mock.method(globalThis, 'fetch', async () => {
+  mockCommandsAndFetch(t, async () => {
     calls++;
     throw new Error('Must not call upstream');
   });
@@ -115,7 +116,7 @@ test('email dispatch uses only the server-mapped inbox and does not return code,
   configure(t);
   let outboundCode = '';
   const actions: string[] = [];
-  t.mock.method(globalThis, 'fetch', async (url: URL, init: RequestInit) => {
+  mockCommandsAndFetch(t, async (url: URL, init: RequestInit) => {
     const body = JSON.parse(String(init.body));
     if (String(url).includes('twin.example')) {
       assert.equal((init.headers as Record<string, string>)['x-org-id'], 'org-private');
@@ -155,7 +156,7 @@ test('ambiguous send fails closed and is attempted only once', async (t) => {
   configure(t);
   let sends = 0;
   const actions: string[] = [];
-  t.mock.method(globalThis, 'fetch', async (url: URL, init: RequestInit) => {
+  mockCommandsAndFetch(t, async (url: URL, init: RequestInit) => {
     if (String(url).includes('email.example')) {
       sends++;
       throw new Error('timeout with private data');
@@ -177,7 +178,7 @@ test('ambiguous send fails closed and is attempted only once', async (t) => {
 test('exhausted budget and Twin failure prevent any email send', async (t) => {
   configure(t);
   let calls = 0;
-  t.mock.method(globalThis, 'fetch', async (url: URL) => {
+  mockCommandsAndFetch(t, async (url: URL) => {
     calls++;
     assert.ok(String(url).includes('twin.example'));
     return Response.json({ ok: false, error: 'OTP_FAILED' });
@@ -198,7 +199,7 @@ test('exhausted budget and Twin failure prevent any email send', async (t) => {
 test('constant-time comparison stays in backend; atomic commit is bound to same challenge and verifier is never returned', async (t) => {
   configure(t);
   const matches: boolean[] = [];
-  t.mock.method(globalThis, 'fetch', async (_url: URL, init: RequestInit) => {
+  mockCommandsAndFetch(t, async (_url: URL, init: RequestInit) => {
     const body = JSON.parse(String(init.body));
     assert.equal(body.p_challenge, challenge);
     if (body.p_action === 'prepare_verify')
@@ -225,7 +226,7 @@ test('both search and detail require a verified saved session before TMS access'
     { command: 'LOAD_GET', fields: { LOAD_ID: 'LD00001' } },
   ];
   let gates = 0;
-  t.mock.method(globalThis, 'fetch', async (_url: URL, init: RequestInit) => {
+  mockCommandsAndFetch(t, async (_url: URL, init: RequestInit) => {
     gates++;
     assert.equal(JSON.parse(String(init.body)).p_action, 'authorize_load');
     return Response.json({ ok: false, error: 'OTP_REQUIRED', session });
@@ -244,7 +245,7 @@ test('mock registration stores the frontend code as a digest without contacting 
   delete process.env.OTP_WEBHOOK_URL;
   delete process.env.OTP_WEBHOOK_API_KEY;
   const actions: string[] = [];
-  t.mock.method(globalThis, 'fetch', async (url: URL, init: RequestInit) => {
+  mockCommandsAndFetch(t, async (url: URL, init: RequestInit) => {
     assert.ok(String(url).includes('twin.example'));
     const body = JSON.parse(String(init.body));
     actions.push(body.p_action);
@@ -271,7 +272,7 @@ test('mock registration stores the frontend code as a digest without contacting 
 test('mock cannot bypass authority or the shared retry budget and is explicitly disabled outside development mock mode', async (t) => {
   configure(t);
   let calls = 0;
-  t.mock.method(globalThis, 'fetch', async () => {
+  mockCommandsAndFetch(t, async () => {
     calls++;
     return Response.json({ ok: false, error: 'AUTHORITY_REQUIRED' });
   });
@@ -281,7 +282,7 @@ test('mock cannot bypass authority or the shared retry budget and is explicitly 
   assert.equal((await otpRoute(request('otp', { action: 'mock', code: '12345' }))).status, 400);
   assert.equal((await otpRoute(request('otp', { action: 'mock', code: '123456' }))).status, 403);
   assert.equal(calls, 1); // No simulated delivery transition after failed authority.
-  t.mock.method(globalThis, 'fetch', async () => Response.json({ ok: false, error: 'OTP_FAILED' }));
+  mockCommandsAndFetch(t, async () => Response.json({ ok: false, error: 'OTP_FAILED' }));
   assert.equal((await otpRoute(request('otp', { action: 'mock', code: '123456' }))).status, 409);
   (process.env as Record<string, string | undefined>).NODE_ENV = 'production';
   await assert.rejects(
@@ -293,7 +294,7 @@ test('mock cannot bypass authority or the shared retry budget and is explicitly 
 test('lost verification commit response is reconciled by receipt without another mutation', async (t) => {
   configure(t);
   const actions: string[] = [];
-  t.mock.method(globalThis, 'fetch', async (_url: URL, init: RequestInit) => {
+  mockCommandsAndFetch(t, async (_url: URL, init: RequestInit) => {
     const b = JSON.parse(String(init.body));
     actions.push(b.p_action);
     assert.equal(b.p_metadata.operationId, 'same-operation');
@@ -317,7 +318,7 @@ test('lost verification commit response is reconciled by receipt without another
 test('known verification read failure spends the shared allowance; unknown commit never retries blindly', async (t) => {
   configure(t);
   const actions: string[] = [];
-  t.mock.method(globalThis, 'fetch', async (_url: URL, init: RequestInit) => {
+  mockCommandsAndFetch(t, async (_url: URL, init: RequestInit) => {
     const b = JSON.parse(String(init.body));
     actions.push(b.p_action);
     if (b.p_action === 'prepare_verify') return new Response(null, { status: 503 });
@@ -330,7 +331,7 @@ test('known verification read failure spends the shared allowance; unknown commi
   });
   assert.equal((await verifyOtp(hash, challenge, '000123')).session?.otpFailuresRemaining, 1);
   assert.deepEqual(actions, ['prepare_verify', 'otp_failure']);
-  t.mock.method(globalThis, 'fetch', async (_url: URL, init: RequestInit) => {
+  mockCommandsAndFetch(t, async (_url: URL, init: RequestInit) => {
     const b = JSON.parse(String(init.body));
     if (b.p_action === 'prepare_verify')
       return Response.json({ ok: true, verifier: otpDigest(hash, challenge, '000123') });
@@ -347,7 +348,7 @@ test('known verification read failure spends the shared allowance; unknown commi
 test('pending email code is reused without another delivery and no expiry is sent to the webhook', async (t) => {
   configure(t);
   let calls = 0;
-  t.mock.method(globalThis, 'fetch', async (url: URL, init: RequestInit) => {
+  mockCommandsAndFetch(t, async (url: URL, init: RequestInit) => {
     calls++;
     assert.ok(String(url).includes('twin.example'));
     assert.equal(JSON.parse(String(init.body)).p_action, 'issue');

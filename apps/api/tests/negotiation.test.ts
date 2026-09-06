@@ -1,3 +1,4 @@
+import { mockCommandsAndFetch } from './helpers/commands.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import net from 'node:net';
@@ -95,7 +96,7 @@ test('selected detail stores pricing only in the negotiation RPC, exposes the pu
   };
   const events: string[] = [];
   let gate = true;
-  t.mock.method(globalThis, 'fetch', async (url: URL, init: RequestInit) => {
+  mockCommandsAndFetch(t, async (url: URL, init: RequestInit) => {
     const b = JSON.parse(String(init.body));
     assert.equal(b.p_session_hash, 'a'.repeat(64));
     events.push(b.p_action);
@@ -150,7 +151,7 @@ test('selected detail stores pricing only in the negotiation RPC, exposes the pu
 
 test('negotiation tool rejects forged ceilings, invalid amounts, invented offer IDs and accept amounts before Twin', async (t) => {
   let calls = 0;
-  t.mock.method(globalThis, 'fetch', async () => {
+  mockCommandsAndFetch(t, async () => {
     calls++;
     throw Error('should not call');
   });
@@ -176,7 +177,7 @@ test('negotiation stays unavailable until its migration-backed feature is activa
     if (old === undefined) delete process.env.NEGOTIATION_ENABLED;
     else process.env.NEGOTIATION_ENABLED = old;
   });
-  t.mock.method(globalThis, 'fetch', async () => {
+  mockCommandsAndFetch(t, async () => {
     throw Error('No database access before activation');
   });
   await assert.rejects(
@@ -207,7 +208,7 @@ test('counter then acceptance explicitly clears the previous amount without rela
   const first = '11111111-1111-4111-8111-111111111111',
     next = '22222222-2222-4222-8222-222222222222';
   const requests: Record<string, unknown>[] = [];
-  t.mock.method(globalThis, 'fetch', async (_url: unknown, init: RequestInit) => {
+  mockCommandsAndFetch(t, async (_url: unknown, init: RequestInit) => {
     const b = JSON.parse(String(init.body));
     requests.push(b);
     return Response.json({

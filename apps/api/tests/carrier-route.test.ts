@@ -1,3 +1,4 @@
+import { mockCommandsAndFetch } from './helpers/commands.js';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { POST } from '../src/transport/http/routes/local/carriers/route.js';
@@ -16,7 +17,7 @@ test('carrier HTTP boundary enforces local access, validates input and hides pro
       body,
     });
   let calls = 0;
-  t.mock.method(globalThis, 'fetch', async () => {
+  mockCommandsAndFetch(t, async () => {
     calls++;
     return new Response('private-key-response', { status: 403 });
   });

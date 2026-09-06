@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { SessionError } from '../errors.js';
-import { twinConfig } from '../config/env.js';
 import {
   rpcInputs,
   parseCallResult,
@@ -10,28 +9,12 @@ import {
   type TwinResult,
 } from './rpc-contracts/index.js';
 
-// Only this module knows the Twin gateway protocol. Runtime database access
-// always uses Twin; local PostgreSQL exists solely in db/scripts.
+// Compatibility facade: business commands execute in TypeScript. Only persistence.ts speaks to Twin.
+import { commandGateway } from '../application/commands.js';
 async function request<K extends RpcName>(name: K, args: RpcArgs<K>): Promise<unknown> {
   const parsed = rpcInputs[name].safeParse(args);
   if (!parsed.success) throw new SessionError('TWIN_INVALID_ARGUMENTS', 400);
-  const { TWIN_GATEWAY, TWIN_ORG_ID } = twinConfig();
-  try {
-    const response = await fetch(new URL(`/rpc/${name}`, TWIN_GATEWAY), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'x-org-id': TWIN_ORG_ID },
-      body: JSON.stringify(parsed.data),
-      signal: AbortSignal.timeout(6000),
-      redirect: 'error',
-      cache: 'no-store',
-    });
-    if (!response.ok)
-      throw new SessionError(response.status === 404 ? 'TWIN_SCHEMA_REQUIRED' : 'TWIN_UNAVAILABLE');
-    return await response.json();
-  } catch (error) {
-    if (error instanceof SessionError) throw error;
-    throw new SessionError('TWIN_UNAVAILABLE');
-  }
+  return commandGateway.execute(name, args);
 }
 export async function twinRpc(...[name, args]: CallRpcRequest): Promise<TwinResult> {
   const value = await request(name, args);

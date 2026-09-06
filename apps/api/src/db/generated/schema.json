@@ -1,47 +1,19 @@
 {
   "migrations": [
     {
-      "name": "twin-m3.sql",
-      "sha256": "54a89fd5c27094f705bfef8a378e2752660d0e05e658cd65d8f5f995db23be5a"
-    },
-    {
-      "name": "twin-m3.1.sql",
-      "sha256": "e616fd4aaea370bfd17da4f6d3e97e43fcf12a009be371f66a4fdcd8ea5384f0"
-    },
-    {
-      "name": "twin-m3.2.sql",
-      "sha256": "d24d56acb013e449f3194e55ae26ac0f0add9d78bd907d1155ed5b11692ffa54"
-    },
-    {
-      "name": "twin-m3.5.sql",
-      "sha256": "90e169b1b30090a1ece6bc73d4b3c991dd30f7da6130d748afb6c26e9f5bbe72"
-    },
-    {
-      "name": "twin-m3.6.sql",
-      "sha256": "1330d2ae6d96ead01c7501a5eb701c0e2b5bbb51455c4954bce36b371274640c"
-    },
-    {
-      "name": "twin-m4.sql",
-      "sha256": "cae6e3def430fc241644c313d6ceaeea6beb839f7a33443306807e9eccd44e6b"
-    },
-    {
-      "name": "twin-m4.1.sql",
-      "sha256": "8bc1b22e29d029d8ec205121f371aef36756ffbdd35491f2c95d1c4da7d8fa08"
-    },
-    {
-      "name": "twin-m4.2.sql",
-      "sha256": "f3d169ce8eb36432032cbd5c7edd75cb991c5f7c3bc6dfaff10e90ac2371a80a"
-    },
-    {
-      "name": "twin-m5.sql",
-      "sha256": "f5d976e8fb03b850913b73c2df08ffde207ea6c1ae3a8690fd5bc0f0f47be051"
-    },
-    {
-      "name": "twin-m5.1.sql",
-      "sha256": "1cdc54a739564b48e91f03e7b32828c1989a368b34e127f8996ba4ddddb48d88"
+      "name": "0001_initial_schema.sql",
+      "sha256": "cbd703785a5b0780b856041c94cf1ea2313280213cc8c1c335e535888eea9612"
     }
   ],
   "tables": [
+    {
+      "schema": "poc_private",
+      "name": "backend_access",
+      "column": "key_hash",
+      "type": "text",
+      "required": true,
+      "has_default": false
+    },
     {
       "schema": "poc_private",
       "name": "negotiations",
@@ -157,6 +129,46 @@
     {
       "schema": "poc_private",
       "name": "offer_receipts",
+      "column": "result",
+      "type": "jsonb",
+      "required": true,
+      "has_default": false
+    },
+    {
+      "schema": "poc_private",
+      "name": "operation_receipts",
+      "column": "call_id",
+      "type": "uuid",
+      "required": true,
+      "has_default": false
+    },
+    {
+      "schema": "poc_private",
+      "name": "operation_receipts",
+      "column": "operation_id",
+      "type": "text",
+      "required": true,
+      "has_default": false
+    },
+    {
+      "schema": "poc_private",
+      "name": "operation_receipts",
+      "column": "phase",
+      "type": "text",
+      "required": true,
+      "has_default": false
+    },
+    {
+      "schema": "poc_private",
+      "name": "operation_receipts",
+      "column": "fingerprint",
+      "type": "text",
+      "required": true,
+      "has_default": false
+    },
+    {
+      "schema": "poc_private",
+      "name": "operation_receipts",
       "column": "result",
       "type": "jsonb",
       "required": true,
@@ -429,6 +441,14 @@
     {
       "schema": "public",
       "name": "poc_calls",
+      "column": "revision",
+      "type": "int8",
+      "required": true,
+      "has_default": true
+    },
+    {
+      "schema": "public",
+      "name": "poc_calls",
       "column": "otp_failures",
       "type": "int4",
       "required": true,
@@ -613,167 +633,7 @@
   ],
   "functions": [
     {
-      "name": "poc_book_call",
-      "return_type": "jsonb",
-      "args": [
-        {
-          "name": "p_session_hash",
-          "type": "text",
-          "has_default": false
-        },
-        {
-          "name": "p_action",
-          "type": "text",
-          "has_default": false
-        },
-        {
-          "name": "p_metadata",
-          "type": "jsonb",
-          "has_default": true
-        }
-      ]
-    },
-    {
-      "name": "poc_call_action",
-      "return_type": "jsonb",
-      "args": [
-        {
-          "name": "p_session_hash",
-          "type": "text",
-          "has_default": false
-        },
-        {
-          "name": "p_action",
-          "type": "text",
-          "has_default": false
-        },
-        {
-          "name": "p_challenge",
-          "type": "uuid",
-          "has_default": true
-        },
-        {
-          "name": "p_digest",
-          "type": "text",
-          "has_default": true
-        },
-        {
-          "name": "p_recipient",
-          "type": "text",
-          "has_default": true
-        },
-        {
-          "name": "p_metadata",
-          "type": "jsonb",
-          "has_default": true
-        },
-        {
-          "name": "p_matches",
-          "type": "bool",
-          "has_default": true
-        }
-      ]
-    },
-    {
-      "name": "poc_create_call",
-      "return_type": "jsonb",
-      "args": [
-        {
-          "name": "p_id",
-          "type": "uuid",
-          "has_default": false
-        },
-        {
-          "name": "p_session_hash",
-          "type": "text",
-          "has_default": false
-        },
-        {
-          "name": "p_check",
-          "type": "jsonb",
-          "has_default": false
-        },
-        {
-          "name": "p_previous_hash",
-          "type": "text",
-          "has_default": true
-        }
-      ]
-    },
-    {
-      "name": "poc_finalize_call",
-      "return_type": "jsonb",
-      "args": [
-        {
-          "name": "p_session_hash",
-          "type": "text",
-          "has_default": false
-        },
-        {
-          "name": "p_outcome",
-          "type": "text",
-          "has_default": false
-        },
-        {
-          "name": "p_summary",
-          "type": "text",
-          "has_default": false
-        },
-        {
-          "name": "p_review",
-          "type": "jsonb",
-          "has_default": true
-        }
-      ]
-    },
-    {
-      "name": "poc_negotiate",
-      "return_type": "jsonb",
-      "args": [
-        {
-          "name": "p_session_hash",
-          "type": "text",
-          "has_default": false
-        },
-        {
-          "name": "p_action",
-          "type": "text",
-          "has_default": false
-        },
-        {
-          "name": "p_load_id",
-          "type": "text",
-          "has_default": false
-        },
-        {
-          "name": "p_revision",
-          "type": "int4",
-          "has_default": true
-        },
-        {
-          "name": "p_listed_cents",
-          "type": "int8",
-          "has_default": true
-        },
-        {
-          "name": "p_max_cents",
-          "type": "int8",
-          "has_default": true
-        },
-        {
-          "name": "p_offer_id",
-          "type": "uuid",
-          "has_default": true
-        },
-        {
-          "name": "p_amount_cents",
-          "type": "int8",
-          "has_default": true
-        }
-      ]
-    },
-    {
-      "name": "poc_operator",
+      "name": "poc_commit_call",
       "return_type": "jsonb",
       "args": [
         {
@@ -782,98 +642,98 @@
           "has_default": false
         },
         {
-          "name": "p_action",
-          "type": "text",
-          "has_default": false
-        },
-        {
-          "name": "p_metadata",
+          "name": "p_command",
           "type": "jsonb",
-          "has_default": true
-        }
-      ]
-    },
-    {
-      "name": "poc_record_load_interest",
-      "return_type": "jsonb",
-      "args": [
-        {
-          "name": "p_session_hash",
-          "type": "text",
-          "has_default": false
-        },
-        {
-          "name": "p_load_id",
-          "type": "text",
-          "has_default": false
-        },
-        {
-          "name": "p_callback_number",
-          "type": "text",
-          "has_default": false
-        },
-        {
-          "name": "p_consent",
-          "type": "bool",
-          "has_default": false
-        },
-        {
-          "name": "p_revision",
-          "type": "int4",
           "has_default": false
         }
       ]
     },
     {
-      "name": "poc_resolve_voice",
+      "name": "poc_insert_call",
       "return_type": "jsonb",
       "args": [
         {
-          "name": "p_run_id",
+          "name": "p_key",
           "type": "text",
-          "has_default": false
-        }
-      ]
-    },
-    {
-      "name": "poc_start_call",
-      "return_type": "jsonb",
-      "args": [
-        {
-          "name": "p_id",
-          "type": "uuid",
           "has_default": false
         },
         {
-          "name": "p_session_hash",
-          "type": "text",
+          "name": "p_call",
+          "type": "jsonb",
           "has_default": false
         },
         {
           "name": "p_previous_hash",
           "type": "text",
+          "has_default": false
+        },
+        {
+          "name": "p_event",
+          "type": "jsonb",
+          "has_default": false
+        }
+      ]
+    },
+    {
+      "name": "poc_query_calls",
+      "return_type": "jsonb",
+      "args": [
+        {
+          "name": "p_key",
+          "type": "text",
+          "has_default": false
+        },
+        {
+          "name": "p_operator_key",
+          "type": "text",
+          "has_default": false
+        },
+        {
+          "name": "p_offset",
+          "type": "int4",
           "has_default": true
         }
       ]
     },
     {
-      "name": "poc_track_call",
+      "name": "poc_read_call",
       "return_type": "jsonb",
       "args": [
         {
-          "name": "p_session_hash",
+          "name": "p_key",
           "type": "text",
           "has_default": false
         },
         {
-          "name": "p_action",
-          "type": "text",
-          "has_default": false
-        },
-        {
-          "name": "p_metadata",
+          "name": "p_selector",
           "type": "jsonb",
-          "has_default": true
+          "has_default": false
+        }
+      ]
+    },
+    {
+      "name": "poc_read_receipt",
+      "return_type": "jsonb",
+      "args": [
+        {
+          "name": "p_key",
+          "type": "text",
+          "has_default": false
+        },
+        {
+          "name": "p_call_id",
+          "type": "uuid",
+          "has_default": false
+        },
+        {
+          "name": "p_operation_id",
+          "type": "text",
+          "has_default": false
+        },
+        {
+          "name": "p_phase",
+          "type": "text",
+          "has_default": false
         }
       ]
     }
