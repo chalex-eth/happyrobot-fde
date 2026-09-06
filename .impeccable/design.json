@@ -1,0 +1,288 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-06T12:38:29.638393+00:00",
+  "title": "Design System: Carrier sales POC",
+  "extensions": {
+    "colorMeta": {
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "tonalRamp": [
+          "oklch(15.00% 0.0359 184.40)",
+          "oklch(26.43% 0.0359 184.40)",
+          "oklch(37.86% 0.0359 184.40)",
+          "oklch(49.29% 0.0359 184.40)",
+          "oklch(60.71% 0.0359 184.40)",
+          "oklch(72.14% 0.0359 184.40)",
+          "oklch(83.57% 0.0359 184.40)",
+          "oklch(95.00% 0.0359 184.40)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "tonalRamp": [
+          "oklch(15.00% 0.0276 172.85)",
+          "oklch(26.43% 0.0276 172.85)",
+          "oklch(37.86% 0.0276 172.85)",
+          "oklch(49.29% 0.0276 172.85)",
+          "oklch(60.71% 0.0276 172.85)",
+          "oklch(72.14% 0.0276 172.85)",
+          "oklch(83.57% 0.0276 172.85)",
+          "oklch(95.00% 0.0276 172.85)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Line",
+        "tonalRamp": [
+          "oklch(15.00% 0.0126 156.98)",
+          "oklch(26.43% 0.0126 156.98)",
+          "oklch(37.86% 0.0126 156.98)",
+          "oklch(49.29% 0.0126 156.98)",
+          "oklch(60.71% 0.0126 156.98)",
+          "oklch(72.14% 0.0126 156.98)",
+          "oklch(83.57% 0.0126 156.98)",
+          "oklch(95.00% 0.0126 156.98)"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "tonalRamp": [
+          "oklch(15.00% 0.0045 134.85)",
+          "oklch(26.43% 0.0045 134.85)",
+          "oklch(37.86% 0.0045 134.85)",
+          "oklch(49.29% 0.0045 134.85)",
+          "oklch(60.71% 0.0045 134.85)",
+          "oklch(72.14% 0.0045 134.85)",
+          "oklch(83.57% 0.0045 134.85)",
+          "oklch(95.00% 0.0045 134.85)"
+        ]
+      },
+      "teal": {
+        "role": "primary",
+        "displayName": "Teal",
+        "tonalRamp": [
+          "oklch(15.00% 0.0649 177.52)",
+          "oklch(26.43% 0.0649 177.52)",
+          "oklch(37.86% 0.0649 177.52)",
+          "oklch(49.29% 0.0649 177.52)",
+          "oklch(60.71% 0.0649 177.52)",
+          "oklch(72.14% 0.0649 177.52)",
+          "oklch(83.57% 0.0649 177.52)",
+          "oklch(95.00% 0.0649 177.52)"
+        ]
+      },
+      "teal-hover": {
+        "role": "primary",
+        "displayName": "Teal hover",
+        "tonalRamp": [
+          "oklch(15.00% 0.0559 177.32)",
+          "oklch(26.43% 0.0559 177.32)",
+          "oklch(37.86% 0.0559 177.32)",
+          "oklch(49.29% 0.0559 177.32)",
+          "oklch(60.71% 0.0559 177.32)",
+          "oklch(72.14% 0.0559 177.32)",
+          "oklch(83.57% 0.0559 177.32)",
+          "oklch(95.00% 0.0559 177.32)"
+        ]
+      },
+      "white": {
+        "role": "neutral",
+        "displayName": "White",
+        "tonalRamp": [
+          "oklch(15.00% 0.0000 89.88)",
+          "oklch(26.43% 0.0000 89.88)",
+          "oklch(37.86% 0.0000 89.88)",
+          "oklch(49.29% 0.0000 89.88)",
+          "oklch(60.71% 0.0000 89.88)",
+          "oklch(72.14% 0.0000 89.88)",
+          "oklch(83.57% 0.0000 89.88)",
+          "oklch(95.00% 0.0000 89.88)"
+        ]
+      },
+      "focus": {
+        "role": "semantic",
+        "displayName": "Focus",
+        "tonalRamp": [
+          "oklch(15.00% 0.0821 180.82)",
+          "oklch(26.43% 0.0821 180.82)",
+          "oklch(37.86% 0.0821 180.82)",
+          "oklch(49.29% 0.0821 180.82)",
+          "oklch(60.71% 0.0821 180.82)",
+          "oklch(72.14% 0.0821 180.82)",
+          "oklch(83.57% 0.0821 180.82)",
+          "oklch(95.00% 0.0821 180.82)"
+        ]
+      },
+      "route-open": {
+        "role": "semantic",
+        "displayName": "Route open",
+        "tonalRamp": [
+          "oklch(15.00% 0.0838 173.43)",
+          "oklch(26.43% 0.0838 173.43)",
+          "oklch(37.86% 0.0838 173.43)",
+          "oklch(49.29% 0.0838 173.43)",
+          "oklch(60.71% 0.0838 173.43)",
+          "oklch(72.14% 0.0838 173.43)",
+          "oklch(83.57% 0.0838 173.43)",
+          "oklch(95.00% 0.0838 173.43)"
+        ]
+      },
+      "route-pending": {
+        "role": "semantic",
+        "displayName": "Route pending",
+        "tonalRamp": [
+          "oklch(15.00% 0.1098 65.56)",
+          "oklch(26.43% 0.1098 65.56)",
+          "oklch(37.86% 0.1098 65.56)",
+          "oklch(49.29% 0.1098 65.56)",
+          "oklch(60.71% 0.1098 65.56)",
+          "oklch(72.14% 0.1098 65.56)",
+          "oklch(83.57% 0.1098 65.56)",
+          "oklch(95.00% 0.1098 65.56)"
+        ]
+      },
+      "route-selected": {
+        "role": "semantic",
+        "displayName": "Route selected",
+        "tonalRamp": [
+          "oklch(15.00% 0.1385 262.77)",
+          "oklch(26.43% 0.1385 262.77)",
+          "oklch(37.86% 0.1385 262.77)",
+          "oklch(49.29% 0.1385 262.77)",
+          "oklch(60.71% 0.1385 262.77)",
+          "oklch(72.14% 0.1385 262.77)",
+          "oklch(83.57% 0.1385 262.77)",
+          "oklch(95.00% 0.1385 262.77)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Call-banner headline."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Main section title; 26px on mobile."
+      }
+    },
+    "shadows": [
+      {
+        "name": "selected-lane-inset",
+        "value": "inset 0 0 0 2px #377b68",
+        "purpose": "Load selection indicator; no ambient elevation."
+      }
+    ],
+    "motion": [
+      {
+        "name": "control-feedback",
+        "value": "background .15s, border-color .15s",
+        "purpose": "Button state transitions; disabled under prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "wide",
+        "value": "1500px"
+      },
+      {
+        "name": "compact-desktop",
+        "value": "1100px"
+      },
+      {
+        "name": "mobile",
+        "value": "760px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary button",
+      "kind": "button",
+      "description": "Main call and operator actions.",
+      "html": "<button class=\"ds-primary\">Start call</button>",
+      "css": ".ds-primary{font-family:Arial,Helvetica,sans-serif;cursor:pointer;min-height:44px;border:1px solid var(--teal,#205c50);border-radius:8px;padding:11px 18px;font-size:14px;font-weight:600;transition:background .15s,border-color .15s;background:var(--teal,#205c50);color:white}.ds-primary:hover{background:#16483e}.ds-primary:focus-visible{outline:3px solid #297d70;outline-offset:3px}.ds-primary:disabled{opacity:.5;cursor:not-allowed}@media(prefers-reduced-motion:reduce){.ds-primary{transition:none}}",
+      "refersTo": "button-primary"
+    },
+    {
+      "name": "Secondary button",
+      "kind": "button",
+      "description": "Refresh, review and supporting actions.",
+      "html": "<button class=\"ds-secondary\">Refresh calls</button>",
+      "css": ".ds-secondary{font-family:Arial,Helvetica,sans-serif;cursor:pointer;min-height:44px;border:1px solid var(--teal,#205c50);border-radius:8px;padding:11px 18px;font-size:14px;font-weight:600;transition:background .15s,border-color .15s;background:white;color:var(--ink,#203d39);border-color:var(--line,#d9e2dc)}.ds-secondary:hover{background:#eaf0ec;border-color:#859d94}.ds-secondary:focus-visible{outline:3px solid #297d70;outline-offset:3px}.ds-secondary:disabled{opacity:.5;cursor:not-allowed}@media(prefers-reduced-motion:reduce){.ds-secondary{transition:none}}",
+      "refersTo": "button-secondary"
+    },
+    {
+      "name": "Text action",
+      "kind": "button",
+      "description": "Low-emphasis sign-out action.",
+      "html": "<button class=\"ds-text\">Sign out</button>",
+      "css": ".ds-text{font-family:Arial,Helvetica,sans-serif;cursor:pointer;min-height:44px;border:1px solid var(--teal,#205c50);border-radius:8px;padding:11px 18px;font-size:14px;font-weight:600;transition:background .15s,border-color .15s;background:none;color:var(--muted,#526760);border:0;padding:8px;text-decoration:underline;text-underline-offset:4px}.ds-text:hover{background:none}.ds-text:focus-visible{outline:3px solid #297d70;outline-offset:3px}",
+      "refersTo": "button-text"
+    },
+    {
+      "name": "Labeled field",
+      "kind": "input",
+      "description": "Visible labels and a clear field boundary.",
+      "html": "<label class=\"ds-label\">MC or load ID<input class=\"ds-field\" value=\"135797\" /></label>",
+      "css": ".ds-label{font-family:Arial,Helvetica,sans-serif;display:grid;gap:7px;font-size:12px;font-weight:600;color:var(--ink,#203d39)}.ds-field{font-family:Arial,Helvetica,sans-serif;border:1px solid #a7b9b0;border-radius:7px;background:white;color:var(--ink,#203d39);padding:11px 12px;min-height:44px;max-width:100%;font-size:14px;caret-color:var(--teal,#205c50)}.ds-field:focus-visible{outline:3px solid #297d70;outline-offset:3px}",
+      "refersTo": "field"
+    },
+    {
+      "name": "Call tabs",
+      "kind": "nav",
+      "description": "Pale active fill and an attached review count.",
+      "html": "<div class=\"ds-tabs\" role=\"tablist\" aria-label=\"Call view\"><button class=\"ds-tab ds-active\" role=\"tab\" aria-selected=\"true\">Recent calls</button><button class=\"ds-tab\" role=\"tab\" aria-selected=\"false\">Needs review <span class=\"ds-count\">2</span></button></div>",
+      "css": ".ds-tabs{display:flex;gap:4px}.ds-tab{font-family:Arial,Helvetica,sans-serif;cursor:pointer;min-height:44px;border:1px solid var(--teal,#205c50);border-radius:8px;padding:11px 18px;font-size:14px;font-weight:600;transition:background .15s,border-color .15s;background:transparent;color:var(--muted,#526760);border-color:transparent;padding:9px 12px;font-size:13px}.ds-tab:hover{background:transparent}.ds-tab.ds-active{background:#e8f0e9;color:var(--ink,#203d39)}.ds-tab:focus-visible{outline:3px solid #297d70;outline-offset:3px}.ds-count{margin-left:5px;padding:2px 6px;background:#d9e7dc;border-radius:4px;font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Status badges",
+      "kind": "chip",
+      "description": "Keep explicit labels for outcome and simulation.",
+      "html": "<span class=\"ds-badge\">Open</span> <span class=\"ds-badge ds-success\">Booked</span> <span class=\"ds-badge ds-danger\">Technical error</span> <span class=\"ds-badge ds-simulation\">Simulated</span>",
+      "css": ".ds-badge{font-family:Arial,Helvetica,sans-serif;display:inline-block;width:fit-content;font-size:11px;font-weight:600;border-radius:4px;padding:4px 7px;line-height:1.2;background:#edf1ed;color:#465b50;white-space:normal}.ds-success{color:#1c6146;background:#e1f0e6}.ds-danger{color:#953c2a;background:#fbeae4}.ds-simulation{color:#534380;background:#efebf7}",
+      "refersTo": "badge"
+    },
+    {
+      "name": "Operational panel",
+      "kind": "card",
+      "description": "Flat container with a separated heading.",
+      "html": "<section class=\"ds-panel\"><div class=\"ds-panel-heading\"><h3>Calls &amp; follow-up</h3><p>Review the reason, inspect the facts, record the next step.</p></div></section>",
+      "css": ".ds-panel{font-family:Arial,Helvetica,sans-serif;border:1px solid var(--line,#d9e2dc);background:white;border-radius:14px;overflow:hidden;color:var(--ink,#203d39)}.ds-panel-heading{padding:24px;border-bottom:1px solid var(--line,#d9e2dc)}.ds-panel-heading h3{margin:0;font-size:20px;font-weight:600;letter-spacing:-.025em}.ds-panel-heading p{color:var(--muted,#526760);font-size:14px;line-height:1.55;margin:8px 0 0}",
+      "refersTo": "panel"
+    },
+    {
+      "name": "Selected lane row",
+      "kind": "custom",
+      "description": "Coordinated map/list selection, shown with neutral example labels.",
+      "html": "<button class=\"ds-lane\" aria-pressed=\"true\"><span class=\"ds-lane-name\">Origin \u2192 Destination</span><span class=\"ds-lane-meta\">Load ID \u00b7 Equipment \u00b7 Rate</span></button>",
+      "css": ".ds-lane{font-family:Arial,Helvetica,sans-serif;cursor:pointer;min-height:44px;border:1px solid var(--teal,#205c50);border-radius:8px;padding:11px 18px;font-size:14px;font-weight:600;transition:background .15s,border-color .15s;display:flex;flex-direction:column;align-items:stretch;text-align:left;width:100%;color:var(--ink,#203d39);background:#e9f2ee;border:0;border-bottom:1px solid var(--line,#d9e2dc);border-radius:0;padding:18px 20px;gap:7px;min-height:118px;box-shadow:inset 0 0 0 2px #377b68}.ds-lane:hover{background:#e9f2ee}.ds-lane:focus-visible{outline:3px solid #297d70;outline-offset:3px}.ds-lane-name{font-weight:600;font-size:15px}.ds-lane-meta{font-size:12px;font-weight:400;color:var(--muted,#526760)}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The operations desk",
+    "overview": "The existing interface pairs light paper and white surfaces with dark green ink and a restrained teal action color. Serif page headings separate major groups; compact sans-serif controls and records support operational reading. The north star uses the implemented section title, rather than introducing a new brand concept.\n\nThis is a source-derived record of the incumbent POC, grounded in `app/globals.css` and the call, map and operator components. Surface-specific composition remains in `docs/m5-design.md`; product scope remains in `PRODUCT.md`.",
+    "keyCharacteristics": [
+      "Light surfaces, green ink and restrained borders.",
+      "Serif section headings with practical sans-serif data and controls.",
+      "Spacious groups around compact operational records.",
+      "Explicit state labels and visible keyboard focus."
+    ],
+    "rules": [],
+    "dos": [
+      "Do extend the incumbent light ink-and-teal system.",
+      "Do preserve visible text labels alongside status colors.",
+      "Do keep OTP adjacent to call controls as the layout stacks.",
+      "Do retain geographic attribution, unmapped states and simulation labels.",
+      "Do preserve readable records and keyboard focus at narrow widths."
+    ],
+    "donts": [
+      "Don't imply vehicle tracking or fabricate geographic positions.",
+      "Don't hide review reasons until the call is expanded.",
+      "Don't add raised-card shadows to the flat operational panels."
+    ]
+  }
+}

@@ -34,7 +34,7 @@ jobs:
       - name: Verify transactional OTP policy in disposable PostgreSQL
         env:
           PGPASSWORD: test_only
-        run: psql -h localhost -U poc_test -d poc_test -v ON_ERROR_STOP=1 -f docs/twin-m3.sql -f docs/twin-m3.1.sql -f docs/twin-m3.2.sql -f docs/twin-m3.5.sql -f docs/twin-m3.6.sql -f docs/twin-m4.sql -f tests/otp-transitions.sql -f tests/call-transitions.sql -f tests/finalize-transitions.sql -f tests/negotiation-transitions.sql -f tests/booking-transitions.sql
+        run: psql -h localhost -U poc_test -d poc_test -v ON_ERROR_STOP=1 -f docs/twin-m3.sql -f docs/twin-m3.1.sql -f docs/twin-m3.2.sql -f docs/twin-m3.5.sql -f docs/twin-m3.6.sql -f docs/twin-m4.sql -f docs/twin-m4.1.sql -f docs/twin-m4.2.sql -f docs/twin-m5.sql -f docs/twin-m5.1.sql -f tests/otp-transitions.sql -f tests/call-transitions.sql -f tests/finalize-transitions.sql -f tests/negotiation-transitions.sql -f tests/booking-transitions.sql -f tests/load-interest-transitions.sql -f tests/mock-booking-transitions.sql -f tests/operator-transitions.sql
       - name: Verify concurrent OTP and negotiation requests
         env:
           PGPASSWORD: test_only

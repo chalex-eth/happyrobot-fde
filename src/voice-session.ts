@@ -1,3 +1,4 @@
+import { trackCall } from './operator';
 import { authenticateMcp } from './mcp-auth';
 import { ApiError, HappyRobotClient } from '@happyrobot-ai/sdk';
 import { callAction, resultStatus, SessionError, twinRpc } from './call-session';
@@ -22,6 +23,7 @@ export async function endVoiceSession(hash: string, expectedCallId: string, sdk?
   catch (error) {
     if (!(error instanceof ApiError && error.status === 404)) throw new SessionError('HAPPYROBOT_END_UNCONFIRMED');
   }
+  await trackCall(hash,'ended');
   return { ok: true };
 }
 

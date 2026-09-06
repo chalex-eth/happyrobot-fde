@@ -1,3 +1,4 @@
+import { trackCall } from './operator';
 import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 import { appendFile, mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -32,6 +33,7 @@ function authenticate(authorization: string | null) {
 export async function prepareAdversarialSession(fault: AdversarialSession['fault'] = 'none', bookingAllowed = false) {
   secret();
   const call = await startCall();
+  await trackCall(call.hash,'source',{source:'evaluation'});
   const prepared = prepareDemoChallenge(call.hash);
   const plan: AdversarialSession = { fault, bookingAllowed, id: randomUUID(), hash: call.hash, callId: call.session.callId,
     challengeId: prepared.challengeId, expiresAt: Date.now() + 10 * 60_000 };

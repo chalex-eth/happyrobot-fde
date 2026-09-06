@@ -1,5 +1,7 @@
 # HappyRobot agent runbook
 
+**M5 operator rollout, 6 September:** Normal Version 25 (`01a076af-0f9c-7b51-8127-f12fc0025da1`) replaces Version 24 in development. Twin M5 and M5.1 are applied; all 115 existing calls and 1,119 events were retained. The local dashboard uses direct operator access without a password, all-US TMS lanes and equipment filters, safe Twin call projections and audited review actions. The same eleven tools remain; `finalize_call` adds optional callback/human/other review fields. Real bound MCP callback/error persistence and replay passed; no audio conversation or outbound callback was performed. See [operations guide](operations.md), [integration evidence](m5-mcp-evidence.json) and [validation](m5-validation.json). Older snapshots below are historical.
+
 Runbook updated: 6 September 2026. Use this to orient yourself and reproduce one iteration. Refresh remote versions and tunnel URLs before acting; dated IDs in saved reports are historical evidence.
 
 **Booking wording update:** Development Version 24 (`01a07694-1d5d-7e0e-8228-d67d3423156b`) replaces Version 22. At the owner's request, the agent uses ordinary successful-booking language after a confirmed saved test result and omits simulation/handoff implementation commentary. `BOOKING_TMS_MODE=mock`, persisted simulation flags, mock references and the operator UI remain unchanged. TypeScript, whitespace checks and workflow readback passed; no new booking was required to validate this wording edit.
@@ -37,6 +39,7 @@ The browser/model cannot choose another caller's session. Normal MCP requests ca
 | `src/mcp-tools.ts`, `src/mcp-http.ts` | Eleven canonical tool schemas, strict transport normalization, dispatch and MCP auth |
 | `src/call-services.ts`, `src/fmcsa.ts`, `src/demo-otp.ts` | Authority and OTP gates; shared business operations |
 | `src/tms.ts`, `src/negotiation.ts` | TCP load queries/details; private pricing and offers |
+| `src/tms-inventory.ts`, `src/operator*.ts`, `app/api/operator/*`, `docs/twin-m5.sql` | Direct operator access, real TMS inventory, safe call projections, review queue and audit notes |
 | `src/adversarial-session.ts` | Development test isolation, capability binding and backend traces |
 | `scripts/happyrobot/workflow-spec.ts` | Canonical agent prompt, parameter metadata, prompt compatibility helpers |
 | `scripts/happyrobot/mcp-connect.ts` | Normal connection, draft sync, inspection and development publication |
@@ -58,7 +61,7 @@ TMS uses line-oriented TCP: command first, authentication per request, pipe-deli
 | `reject_offer` | Latest IDs only. Records rejection without booking or automatically ending the call. |
 | `book_load` | Exact agreed `load_id` and `offer_id`; enabled only after the M4 migration. One saved attempt; confirmed/rejected/uncertain. Confirmed booking records a mock handoff. |
 | `record_load_interest` | Pending load from the latest search, confirmed E.164 callback number and explicit consent. Refreshes status and saves one idempotent review request. Does not notify a manager or guarantee a callback. |
-| `finalize_call` | Outcome and summary. Records disposition derived from agreement and booking facts; does not initiate a booking. Do not finalize while awaiting an answer. |
+| `finalize_call` | Outcome and summary, plus optional `review_reason`, `review_note`, `callback_number`, `callback_consent`. Callback requests require a confirmed E.164 number and explicit consent. Human/other requests require a note. Records review without notification and preserves the booking-derived business outcome separately from reported ending. Do not finalize while awaiting an answer. |
 
 Authority and OTP must pass before load access. Retain caller preferences mentioned before verification. Do not require state, destination, date or equipment for the initial city search. Results, dates and equipment must come from actual records. Confirm equipment before negotiation. Older search selections require searching that lane again. See [city-first behavior and acceptance](city-first-discovery.md).
 

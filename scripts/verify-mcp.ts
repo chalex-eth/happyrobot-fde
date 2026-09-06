@@ -1,3 +1,5 @@
+import { trackCall, operatorRpc } from '../src/operator';
+import type { OperatorCall } from '../src/operator-types';
 import assert from 'node:assert/strict';
 import { writeFile } from 'node:fs/promises';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
@@ -16,6 +18,7 @@ async function main() {
   const counterLimit = process.argv.includes('--counter-limit');
   if(counterLimit && process.env.NEGOTIATION_ENABLED!=='true') throw Error('Negotiation must be enabled');
   const call = await startCall();
+  await trackCall(call.hash,'source',{source:'integration_test'});
   const client = new Client({ name: 'carrier-sales-smoke', version: '1' });
   let voiceStarted = false;
   try {
@@ -63,6 +66,23 @@ async function main() {
     }
     const verified = await invoke('verify_otp',{code}); assert.equal(verified.verified,true);
     assert.ok(!JSON.stringify(verified).includes(code),'Expected OTP must never be returned');
+    if (process.argv.includes('--operator-review')) {
+      const search=await invoke('search_loads',{origin_city:'Salt Lake City',max_results:10});
+      assert.equal(search.ok,true);
+      const args={outcome:'technical_error',summary:'Integration test: callback review and technical ending; no booking or actual callback.',review_reason:'callback_requested',review_note:'M5 QA only. Do not place a callback.',callback_number:'+12025550123',callback_consent:true};
+      const final=await invoke('finalize_call',args);
+      assert.equal(final.ok,true);assert.equal(final.review_recorded,true);
+      assert.equal((await invoke('finalize_call',args)).finalized_at,final.finalized_at);
+      const detail=await operatorRpc<{ok:boolean;call:OperatorCall;events:unknown[]}>('detail',{call_id:call.session.callId});
+      assert.equal(detail.call.source,'integration_test');
+      assert.ok(detail.call.reviews.some(r=>r.reason==='callback_requested'&&r.callback_number===args.callback_number));
+      assert.ok(detail.call.reviews.some(r=>r.reason==='technical_error'));
+      assert.ok(!JSON.stringify(detail).match(/session_hash|otp_hash|MAX_BUY|max_cents/));
+      assert.ok(detail.events.length>0);
+      await writeFile('docs/m5-mcp-evidence.json',JSON.stringify({checked_at:new Date().toISOString(),scope:'Real bound MCP, FMCSA, OTP, TMS and Twin operator review. No audio, booking or outbound callback.',call_id:call.session.callId,run_id:voice.voice.run_id,final,review_reasons:detail.call.reviews.map(r=>r.reason),event_count:detail.events.length},null,2)+'\n');
+      console.log(JSON.stringify({passed:true,scenario:'operator_review',call_id:call.session.callId,run_id:voice.voice.run_id}));
+      return;
+    }
     if (process.argv.includes('--mock-booking')) {
       assert.equal(process.env.BOOKING_TMS_MODE, 'mock', 'This smoke must explicitly use mock booking');
       let load: any;

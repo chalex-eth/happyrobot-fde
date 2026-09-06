@@ -1,3 +1,4 @@
+import { trackCall } from './operator';
 import { randomUUID } from 'node:crypto';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
@@ -57,6 +58,7 @@ export async function handleMcp(request: Request, adapter: McpAdapter = voiceAda
           return { field, received_type: value === null ? 'null' : Array.isArray(value) ? 'array' : typeof value, reason: issue.code };
         });
         console.info(JSON.stringify({ event: 'mcp_validation', tool: name, requestId, validation }));
+        if (adapter === voiceAdapter && process.env.OPERATIONS_ENABLED === 'true') try { const context=await adapter.resolve(request); await trackCall(context.hash,'tool',{tool:name,ok:false,error:'INVALID_TOOL_ARGUMENTS',requestId}); } catch { /* No trusted call binding or activity service unavailable. */ }
         return Response.json({ jsonrpc: '2.0', id: call.id, result: { isError: true, content: [{ type: 'text',
           text: JSON.stringify({ ok: false, error: 'INVALID_TOOL_ARGUMENTS', retryable: false, side_effects: false, validation, request_id: requestId }) }] } },
           { headers: { 'Cache-Control': 'no-store', 'x-request-id': requestId } });
@@ -71,8 +73,10 @@ export async function handleMcp(request: Request, adapter: McpAdapter = voiceAda
       async (args: unknown) => {
         const started = Date.now();
         let result: Record<string, unknown>;
+        let activityHash: string | undefined;
         try {
           const context = await adapter.resolve(request);
+          activityHash = context.hash;
           // JSON-RPC IDs correlate responses and may restart on each connection.
           // Each HTTP invocation owns a fresh receipt; Twin recovery within that
           // invocation continues using this same operation ID.
@@ -80,6 +84,10 @@ export async function handleMcp(request: Request, adapter: McpAdapter = voiceAda
         } catch (error) { result = { ok: false, error: safeError(error), retryable:
           error instanceof FmcsaError || error instanceof TmsError ? error.retryable : false }; }
         await adapter.observe?.(name, result);
+        if (adapter === voiceAdapter && activityHash) {
+          try { await trackCall(activityHash,'tool',{tool:name,ok:result.ok!==false,error:result.ok===false?result.error:null,requestId}); }
+          catch { console.warn(JSON.stringify({event:'activity_save_failed',requestId,tool:name})); }
+        }
         // A completed OTP check can reject the supplied code. Return that
         // business outcome as data; it is not a failed MCP execution.
         const isError = result.ok === false && !['OTP_INVALID', 'OTP_FAILED'].includes(String(result.error));

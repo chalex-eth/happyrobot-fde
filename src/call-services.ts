@@ -1,3 +1,4 @@
+import { trackCall } from './operator';
 import { callAction, SessionError, resultStatus, verifyOtp } from './call-session';
 import { lookupCarrier, normalizeMc } from './fmcsa';
 import { runTms, validateRequest } from './tms';
@@ -58,5 +59,6 @@ export async function loadsForCall(hash: string, input: unknown, signal?: AbortS
     loadStatuses: result.ok ? Object.fromEntries(result.records.map(load => [load.LOAD_ID, load.STATUS])) : {},
   } });
   if (!saved.ok) throw new SessionError(saved.error ?? 'CALL_CHANGED', resultStatus(saved));
+  if (result.ok) await trackCall(hash,'loads',{records:result.records});
   return result;
 }

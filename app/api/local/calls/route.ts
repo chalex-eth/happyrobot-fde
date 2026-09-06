@@ -1,3 +1,4 @@
+import { trackCall } from '../../../../src/operator';
 import { randomUUID } from 'node:crypto';
 import { callAction, readJson, resultStatus, sessionCookie, sessionHash, SessionError, startCall } from '../../../../src/call-session';
 import { rejectNonLocalRequest } from '../../../../src/local-console';
@@ -24,6 +25,7 @@ export async function POST(request: Request) {
     let previous: string | null = null;
     try { previous = sessionHash(request); } catch { /* First browser call. */ }
     const call = await startCall(previous);
+    await trackCall(call.hash,'source',{source:'browser_demo'});
     const response = respond({ ok: true, session: call.session });
     response.headers.set('Set-Cookie', sessionCookie(call.token));
     return response;

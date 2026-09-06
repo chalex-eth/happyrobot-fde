@@ -1,0 +1,26 @@
+{
+  "checked_at": "2026-09-06T12:36:03.112Z",
+  "scope": "Real bound MCP, FMCSA, OTP, TMS and Twin operator review. No audio, booking or outbound callback.",
+  "call_id": "1885fca3-9ce7-4045-96fe-61d1f8ee6a46",
+  "run_id": "e1aa650a-d899-42c4-b2b8-5539c25f7adf",
+  "final": {
+    "ok": true,
+    "review_recorded": true,
+    "outcome": "technical_error",
+    "finalized_at": "2026-09-06T12:36:01.724484+00:00",
+    "authority_passed": true,
+    "verified": true,
+    "selected_load_id": null,
+    "negotiation": null,
+    "interest": null,
+    "booking": null,
+    "booking_saved": false,
+    "booking_confirmed": false,
+    "request_id": "16432f59-72e6-41c9-bdba-e0c9dfafe8eb"
+  },
+  "review_reasons": [
+    "technical_error",
+    "callback_requested"
+  ],
+  "event_count": 27
+}

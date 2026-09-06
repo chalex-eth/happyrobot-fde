@@ -75,6 +75,10 @@ export const toolSpecs = {
     schema: z.strictObject({
       outcome: z.enum(['conversation_complete', 'caller_declined', 'technical_error']).describe('Conversation outcome; never a booking status.'),
       summary: z.string().trim().min(1).max(1000).describe('Brief factual conversation summary. Exclude OTP digits and secrets; claim booking only after a confirmed book_load result.'),
+      review_reason: z.enum(['callback_requested','human_requested','other']).describe('Optional operator review: explicit callback, human request, or another unresolved issue. Omit when no review is needed.').optional(),
+      review_note: z.string().trim().min(1).max(500).describe('Factual reason for review. Required with review_reason. No secrets or OTP.').optional(),
+      callback_number: z.string().regex(/^\+[1-9]\d{6,14}$/).describe('For callback_requested only: caller-confirmed number including country code.').optional(),
+      callback_consent: z.boolean().describe('For callback_requested: true only after explicit consent to save their number and callback request.').optional(),
     }),
   },
 };
@@ -138,11 +142,16 @@ export async function executeTool(name: ToolName, input: unknown, hash: string, 
   // Summary is model-reported text; structured facts are derived in PostgreSQL.
   // Avoid retaining standalone codes even if the model ignores its instructions.
   const summary = args.summary.replace(/\b\d{6}\b/g, '[redacted]');
-  const result = await twinRpc('poc_finalize_call', { p_session_hash: hash, p_outcome: args.outcome, p_summary: summary });
+  const review = args.review_reason ? {reason:args.review_reason,note:args.review_note?.replace(/\b\d{6}\b/g,'[redacted]'),
+    ...(args.review_reason==='callback_requested'?{callback_number:args.callback_number,consent:args.callback_consent}:{})} : {};
+  if ((!args.review_reason && (args.review_note || args.callback_number || args.callback_consent!==undefined))
+    || (args.review_reason && !args.review_note) || (args.review_reason==='callback_requested' && (!args.callback_number || args.callback_consent!==true))) throw new SessionError('INVALID_REVIEW',400);
+  const result = await twinRpc('poc_finalize_call', { p_session_hash: hash, p_outcome: args.outcome, p_summary: summary,
+    ...(process.env.OPERATIONS_ENABLED==='true'?{p_review:review}:{}) });
   if (!result.ok) throw new SessionError(result.error ?? 'FINALIZATION_FAILED', resultStatus(result));
   const s = result.session;
   if (!s?.finalizedAt || !s.finalOutcome || typeof s.verified !== 'boolean') throw new SessionError('TWIN_INVALID_RESPONSE');
-  return { ok: true, outcome: s.finalOutcome, finalized_at: s.finalizedAt,
+  return { ok: true, review_recorded: (result as TwinResult & {review_recorded?:boolean}).review_recorded ?? false, outcome: s.finalOutcome, finalized_at: s.finalizedAt,
     authority_passed: s.check?.eligible === true, verified: s.verified,
     selected_load_id: s.selectedLoadId, negotiation:s.negotiation,
     interest: s.loadInterest ? publicLoadInterest(s.loadInterest) : null,

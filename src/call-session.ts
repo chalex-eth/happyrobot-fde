@@ -34,6 +34,9 @@ export const clearSessionCookie = () => `${COOKIE}=; HttpOnly; SameSite=Strict; 
 // Twin reflects PostgreSQL functions as RPC endpoints. No database credentials,
 // raw provider responses, session hashes or OTP digests cross the browser boundary.
 export async function twinRpc(name: 'poc_start_call' | 'poc_call_action' | 'poc_resolve_voice' | 'poc_finalize_call' | 'poc_negotiate' | 'poc_book_call' | 'poc_record_load_interest', args: Record<string, unknown>): Promise<TwinResult> {
+  return twinRequest<TwinResult>(name,args);
+}
+export async function twinRequest<T extends {ok:boolean}>(name:string,args:Record<string,unknown>):Promise<T> {
   const gateway = process.env.TWIN_GATEWAY; const org = process.env.TWIN_ORG_ID;
   if (!gateway || !org) throw new SessionError('TWIN_NOT_CONFIGURED');
   let url: URL;
@@ -47,7 +50,7 @@ export async function twinRpc(name: 'poc_start_call' | 'poc_call_action' | 'poc_
     if (!response.ok) throw new SessionError(response.status === 404 ? 'TWIN_SCHEMA_REQUIRED' : 'TWIN_UNAVAILABLE');
     const result: unknown = await response.json();
     if (!result || typeof result !== 'object' || typeof (result as TwinResult).ok !== 'boolean') throw new SessionError('TWIN_INVALID_RESPONSE');
-    return result as TwinResult;
+    return result as T;
   } catch (error) { if (error instanceof SessionError) throw error; throw new SessionError('TWIN_UNAVAILABLE'); }
 }
 

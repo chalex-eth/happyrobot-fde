@@ -65,6 +65,7 @@ export function VoiceCall({ session, disabled, ensureCall, onSession, onActive }
       stream.getTracks().forEach(track => track.stop());
       if (!mounted.current) return;
       setPhase('starting');
+      if (boundCall.current && session && Date.parse(session.expiresAt)>Date.now()) await stopRun(boundCall.current);
       const call = await ensureCall(); callId = call.callId; boundCall.current = callId;
       const response = await fetch('/api/local/voice', { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ callId }), signal: AbortSignal.timeout(30000), cache: 'no-store' });
@@ -77,6 +78,8 @@ export function VoiceCall({ session, disabled, ensureCall, onSession, onActive }
       const connected = await voice.connect({
         onAgentConnected: () => { if (mounted.current) setAgentJoined(true); },
         onDisconnected: () => {
+          if (boundCall.current !== callId) return;
+          void fetch('/api/local/voice/disconnected', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({callId}),keepalive:true}).catch(()=>{});
           connection.current = null;
           if (mounted.current) { setPhase('ended'); if (!starting.current) onActive(false); setNeedsPlayback(false); }
         },
@@ -118,11 +121,9 @@ export function VoiceCall({ session, disabled, ensureCall, onSession, onActive }
   const live = phase === 'connected' || phase === 'reconnecting';
   const working = ['permission','starting','connecting','ending'].includes(phase);
   const alreadyUsed = !!session && session.voiceState !== 'idle';
-  return <section className="panel" aria-labelledby="voice-title">
-    <h2 id="voice-title">Speak with the agent</h2>
-    <p>Start a voice call and keep this page open. Your verification code and call progress will appear here.</p>
+  return <section className="voice-controls" aria-label="Demo call controls">
     <div className="connection">
-      <button onClick={() => void start()} disabled={disabled || working || live || alreadyUsed}>Start voice call</button>
+      <button onClick={() => void start()} disabled={disabled || working || live}>{alreadyUsed ? 'Start another demo call' : 'Start demo call'}</button>
       {live && <button className="secondary" disabled={muteBusy} aria-pressed={muted} onClick={async () => {
         const current = connection.current; if (!current) return;
         setMuteBusy(true);
@@ -138,8 +139,6 @@ export function VoiceCall({ session, disabled, ensureCall, onSession, onActive }
     </div>
     <p role="status" aria-live="polite">{labels[phase]}{phase === 'connected' ? agentJoined ? ' · Agent joined' : ' · Waiting for agent' : ''}{live && muted ? ' · Microphone muted' : ''}</p>
     {notice && <p role="alert" className="notice error">{notice}</p>}
-    {alreadyUsed && !live && !working && <p>Use <strong>Start new call</strong> below for another conversation. Reloading ends browser audio; a previous voice session cannot be resumed here.</p>}
-    <p className="hint">The agent handles carrier checks, sends your code and searches for loads. You only need to speak.</p>
   </section>;
 }
 
