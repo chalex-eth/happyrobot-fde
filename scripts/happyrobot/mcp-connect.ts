@@ -1,8 +1,8 @@
 import { HappyRobotClient, ApiError } from '@happyrobot-ai/sdk';
 import { readFile } from 'node:fs/promises';
-import { toolSpecs, type ToolName } from '../../src/mcp-tools';
-import { mcpServerName, paragraph, variable, toolParameters, prompt, loadFormattingRule } from './workflow-spec';
-import { validateLocalWiring } from './local-wiring';
+import { toolSpecs, type ToolName } from '../../apps/api/src/transport/mcp/tools.js';
+import { mcpServerName, paragraph, variable, toolParameters, prompt, loadFormattingRule } from './workflow-spec.js';
+import { validateLocalWiring } from './local-wiring.js';
 
 type Node = { id: string; persistent_id?: string; type: string; name?: string; parent_id?: string;
   configuration?: Record<string, unknown>; function?: Record<string, unknown>; event_id?: string };

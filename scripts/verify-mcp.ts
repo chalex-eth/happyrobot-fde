@@ -1,12 +1,13 @@
-import { trackCall, operatorRpc } from '../src/operator';
-import type { OperatorCall } from '../src/operator-types';
+import { trackCall } from '../apps/api/src/modules/calls/index.js';
+import { operatorRpc } from '../apps/api/src/modules/operations/index.js';
+import type { OperatorCall } from '@carrier/contracts/operations';
 import assert from 'node:assert/strict';
 import { writeFile } from 'node:fs/promises';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import { startCall } from '../src/call-session';
-import { createVoiceSession, endVoiceSession } from '../src/voice-session';
-import { getLoadAvailability } from '../src/tms';
+import { startCall } from '../apps/api/src/modules/calls/index.js';
+import { createVoiceSession, endVoiceSession } from '../apps/api/src/modules/calls/index.js';
+import { getLoadAvailability } from '../apps/api/src/integrations/tms/client.js';
 
 // Real integration smoke test: creates its own Twin call and provider run,
 // requests an agent-created demo code, reads the local UI delivery, and cancels its own run.
@@ -73,7 +74,8 @@ async function main() {
       const final=await invoke('finalize_call',args);
       assert.equal(final.ok,true);assert.equal(final.review_recorded,true);
       assert.equal((await invoke('finalize_call',args)).finalized_at,final.finalized_at);
-      const detail=await operatorRpc<{ok:boolean;call:OperatorCall;events:unknown[]}>('detail',{call_id:call.session.callId});
+      const detail=await operatorRpc('detail',{call_id:call.session.callId});
+      assert.ok(detail.call, 'Operator call must exist');
       assert.equal(detail.call.source,'integration_test');
       assert.ok(detail.call.reviews.some(r=>r.reason==='callback_requested'&&r.callback_number===args.callback_number));
       assert.ok(detail.call.reviews.some(r=>r.reason==='technical_error'));

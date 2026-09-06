@@ -44,11 +44,12 @@ As checked on 6 September, development uses **Version 18: Local app — normal M
 ## Services and boundaries
 
 ```text
-Browser → localhost:3000 → app
-HappyRobot → stable HTTPS domain → ngrok → mcp-proxy:3002 → app:3000/api/mcp
+Browser → localhost:3000 → app (web) → api:3001
+HappyRobot → stable HTTPS domain → ngrok → mcp-proxy:3002 → api:3001/api/mcp
 ```
 
 - `app`: Node 22 / Next development server; host port 3000 is bound only to `127.0.0.1`. Development mode is required by the local console and screen OTP. This is a local demo, not a production deployment.
+- `api`: independent Node HTTP/MCP server; owns all integration credentials and Twin calls, with no published host port.
 - `mcp-proxy`: private container port 3002, reachable by ngrok through Docker service DNS. Only exact `/api/mcp` is exposed in this stack; cookies and unrelated headers are stripped. The proxy itself has no application credentials.
 - `ngrok`: fixed account domain, inspection disabled, diagnostic API bound to host `127.0.0.1:4040`. The image is pinned by digest. The endpoint requires `MCP_AUTH_TOKEN` independently of ngrok authentication.
 - HappyRobot, Twin, FMCSA and the TMS remain external dependencies. This Compose project does not start or migrate a database. Any VPN/network access those services require must also work from Docker Desktop.
@@ -62,11 +63,11 @@ The normal stack explicitly disables adversarial sessions and the proxy's advers
 For an explicit real backend smoke test, run:
 
 ```sh
-docker compose --env-file .env.local --env-file .env.docker.local exec -T app \
+docker compose --env-file .env.local --env-file .env.docker.local exec -T api \
   node --import tsx scripts/verify-mcp.ts --city-first
 ```
 
-This creates and finalizes its own Twin call, creates/cancels its own provider run, and exercises real FMCSA, OTP and TMS queries through ngrok. It does not negotiate or book. Evidence is written inside the app container at `/app/docs/city-first-mcp-evidence.json`; copy it out before recreating the container if needed.
+This creates and finalizes its own Twin call, creates/cancels its own provider run, and exercises real FMCSA, OTP and TMS queries through ngrok. It does not negotiate or book. Evidence is written inside the API container at `/app/docs/city-first-mcp-evidence.json`; copy it out before recreating the container if needed.
 
 For a production-build compatibility check, use an isolated container so build files do not interfere with the running dev server:
 
@@ -78,4 +79,4 @@ If the startup check fails, read the specific error and inspect `local:status` /
 
 ## Simulated booking in local tests
 
-The app service pins `BOOKING_TMS_MODE=mock`. `book_load` saves a simulated booking in Twin and never sends `LOAD_BOOK`; real TMS searches and OPEN-load checks continue. Mock confirmation uses a `MOCK-…` reference and the final disposition `booking_simulated`. Restart with `npm run app:restart` after changing application code. Existing PENDING inventory is not reset.
+The API service pins `BOOKING_TMS_MODE=mock`. `book_load` saves a simulated booking in Twin and never sends `LOAD_BOOK`; real TMS searches and OPEN-load checks continue. Mock confirmation uses a `MOCK-…` reference and the final disposition `booking_simulated`. Restart with `npm run app:restart` after changing application code. Existing PENDING inventory is not reset.

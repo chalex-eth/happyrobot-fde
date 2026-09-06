@@ -46,14 +46,14 @@ Acceptance: two simultaneous calls cannot verify each other's OTPs or use each o
 ### M3.1 implementation checkpoint — 2026-09-05
 
 Implemented:
-- `src/call-services.ts` owns carrier verification, bound-call OTP verification and gated TMS access; browser routes call these directly.
+- `apps/api/src/modules/verification/service.ts` owns carrier verification, bound-call OTP verification and gated TMS access; browser routes call these directly.
 - `POST /api/local/calls` starts a pending call or reads saved state. An explicit new call expires the preceding browser session. Carrier checks require that session and keep the call ID.
 - Every authority recheck, including the same MC, resets OTP and selected loads. A monotonically increasing authority revision rejects late provider results.
 - Twin stores searched load IDs and the selected load per call. A load must belong to that call's search before detail access; completion rechecks authority, OTP, call-session expiry, revision and membership.
 - The operator page restores and polls the saved call every five seconds and clears obsolete mock codes. Mock generation remains confined to the local operator endpoint.
-- `src/voice-session.ts` and `POST /api/local/voice` reserve one voice startup per call, use the official SDK, and commit the provider-returned `run_id` before returning the browser voice credential. No automatic mutation retries. Failed persistence attempts cancel the newly created run where possible; ambiguous failures require a new call.
+- `apps/api/src/modules/calls/voice.ts` and `POST /api/local/voice` reserve one voice startup per call, use the official SDK, and commit the provider-returned `run_id` before returning the browser voice credential. No automatic mutation retries. Failed persistence attempts cancel the newly created run where possible; ambiguous failures require a new call.
 - A server-only authenticated run resolver maps the saved run to the same session hash used by the shared services. Run IDs or MC numbers alone do not authenticate callers.
-- `docs/twin-m3.1.sql` was tested against disposable PostgreSQL and applied successfully to the real Twin workspace. Apply it once after `twin-m3.sql` for a fresh installation.
+- `apps/api/db/migrations/twin-m3.1.sql` was tested against disposable PostgreSQL and applied successfully to the real Twin workspace. Apply it once after `twin-m3.sql` for a fresh installation.
 
 Verified SDK contract: `@happyrobot-ai/sdk@0.1.45` accepts `voice.createToken({workflow_id, env, ttl_seconds})` and returns `{url, token, room_name, run_id}`. Startup binds `run_id` from that response, not model-supplied metadata. Do not send the browser session token or hash in workflow data or prompts.
 
@@ -67,7 +67,7 @@ Remaining integration acceptance: configure and publish the development workflow
 
 The publication blocker above was resolved by the user. API inspection confirms Version 1 (`01a06c72-4d5e-75c4-8d30-4c141134bd4a`) is live in `development` for the existing FDE Challenge workflow. No workflow edits or publication were performed by this implementation.
 
-`app/voice-call.tsx` uses the official browser SDK and a compatible pinned LiveKit peer (`2.17.2`). It requests microphone permission before creating a remote run, then creates/reuses the pending Twin call, obtains the bound voice credential, and connects. The SDK is imported only on use. Controls cover mute/unmute, hangup, reconnect status, browser autoplay recovery and safe user-facing failures. The API key remains server-only; voice credentials are kept in memory. Local call replacement is disabled while audio starts or runs. Unmount and stale startup cleanup disconnect audio.
+`apps/web/src/features/voice-call/voice-call.tsx` uses the official browser SDK and a compatible pinned LiveKit peer (`2.17.2`). It requests microphone permission before creating a remote run, then creates/reuses the pending Twin call, obtains the bound voice credential, and connects. The SDK is imported only on use. Controls cover mute/unmute, hangup, reconnect status, browser autoplay recovery and safe user-facing failures. The API key remains server-only; voice credentials are kept in memory. Local call replacement is disabled while audio starts or runs. Unmount and stale startup cleanup disconnect audio.
 
 `POST /api/local/voice` accepts `{callId}` as a consistency check against the authenticated cookie, never as authentication. `POST /api/local/voice/end` also checks that call and resolves the run server-side before cancelling it. Ready in Twin means a run binding exists; it is not an active-audio indicator. A bound/failed call cannot create another voice run automatically. Start a new call after ending, refreshing or an ambiguous startup failure.
 

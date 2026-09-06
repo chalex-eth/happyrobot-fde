@@ -1,5 +1,7 @@
 # HappyRobot agent runbook
 
+**Workspace refactor, 6 September:** Web UI is in `apps/web`, the independent API is in `apps/api`, and public contracts are in `packages/contracts`. Twin remains the runtime database connection. See [architecture](architecture.md) for module ownership and local schema generation. Run tests, typecheck, build and database checks locally; no CI workflow is installed. Historical rollout notes below do not describe a deployment of this refactor.
+
 **M5 operator rollout, 6 September:** Normal Version 25 (`01a076af-0f9c-7b51-8127-f12fc0025da1`) replaces Version 24 in development. Twin M5 and M5.1 are applied; all 115 existing calls and 1,119 events were retained. The local dashboard uses direct operator access without a password, all-US TMS lanes and equipment filters, safe Twin call projections and audited review actions. The same eleven tools remain; `finalize_call` adds optional callback/human/other review fields. Real bound MCP callback/error persistence and replay passed; no audio conversation or outbound callback was performed. See [operations guide](operations.md), [integration evidence](m5-mcp-evidence.json) and [validation](m5-validation.json). Older snapshots below are historical.
 
 Runbook updated: 6 September 2026. Use this to orient yourself and reproduce one iteration. Refresh remote versions and tunnel URLs before acting; dated IDs in saved reports are historical evidence.
@@ -20,27 +22,27 @@ Runbook updated: 6 September 2026. Use this to orient yourself and reproduce one
 
 ## Start here
 
-Normal Docker lifecycle: `npm run local:up` starts app/proxy/ngrok and checks the live development wiring. `npm run app:stop` and `npm run app:restart` operate only on the app, preserving the tunnel/proxy; tool calls are unavailable while the app is stopped. `npm run local:down` explicitly stops the whole stack. See [Docker commands](local-docker.md).
+Normal Docker lifecycle: `npm run local:up` starts app/proxy/ngrok and checks the live development wiring. `npm run app:stop` and `npm run app:restart` operate on web and API, preserving the tunnel/proxy; tool calls are unavailable while the app is stopped. `npm run local:down` explicitly stops the whole stack. See [Docker commands](local-docker.md).
 
-Run commands from this repository root (the directory containing `package.json` and `AGENTS.md`). This is the local Next.js carrier-sales POC, not another checkout of the GitHub challenge. Inspect `git status` first: the city-first implementation currently has uncommitted changes and evidence files.
+Run commands from this repository root (the directory containing `package.json` and `AGENTS.md`). This is the local Next.js carrier-sales POC, not another checkout of the GitHub challenge. Inspect `git status` first: preserve any unrelated uncommitted changes and evidence files.
 
 Read `AGENTS.md`. Before changing Next.js code, read the relevant installed guide under `node_modules/next/dist/docs/`. Runtime: Node 22, Next 16, HappyRobot SDK 0.1.45. Use existing `.env.local`; never print credentials or OTPs, and keep `.env.example` placeholder-only. Do not rerun base Twin SQL migrations on shared state.
 
 ## How a call works
 
-Browser → local cookie/session in Twin → HappyRobot voice token and provider run → run bound in Twin → voice agent → workflow Tool → MCP Call action → HTTPS tunnel → MCP proxy → Next `/api/mcp` → authenticated dispatcher → Twin verification gates → real FMCSA/TMS → safe tool result.
+Browser → local cookie/session in Twin → HappyRobot voice token and provider run → run bound in Twin → voice agent → workflow Tool → MCP Call action → HTTPS tunnel → MCP proxy → Node API `/api/mcp` → authenticated dispatcher → Twin verification gates → real FMCSA/TMS → safe tool result.
 
 The browser/model cannot choose another caller's session. Normal MCP requests carry server authentication and `x-happyrobot-run-id`; the backend resolves the bound call. `/api/tms` is an operator diagnostic, not a carrier-facing tool.
 
 | Source | Responsibility |
 | --- | --- |
-| `app/voice-call.tsx`, `app/api/local/*` | Local call UI, cookie-bound endpoints, screen-only demo OTP |
-| `src/voice-session.ts`, `src/call-session.ts` | Provider run binding, Twin RPC state, session lifecycle |
-| `src/mcp-tools.ts`, `src/mcp-http.ts` | Eleven canonical tool schemas, strict transport normalization, dispatch and MCP auth |
-| `src/call-services.ts`, `src/fmcsa.ts`, `src/demo-otp.ts` | Authority and OTP gates; shared business operations |
-| `src/tms.ts`, `src/negotiation.ts` | TCP load queries/details; private pricing and offers |
-| `src/tms-inventory.ts`, `src/operator*.ts`, `app/api/operator/*`, `docs/twin-m5.sql` | Direct operator access, real TMS inventory, safe call projections, review queue and audit notes |
-| `src/adversarial-session.ts` | Development test isolation, capability binding and backend traces |
+| `apps/web/src/features/voice-call/voice-call.tsx`, `app/api/local/*` | Local call UI, cookie-bound endpoints, screen-only demo OTP |
+| `apps/api/src/modules/calls/voice.ts`, `apps/api/src/modules/calls/repository.ts` | Provider run binding, Twin RPC state, session lifecycle |
+| `apps/api/src/transport/mcp/tools.ts`, `apps/api/src/transport/mcp/server.ts` | Eleven canonical tool schemas, strict transport normalization, dispatch and MCP auth |
+| `apps/api/src/modules/verification/service.ts`, `apps/api/src/integrations/fmcsa/client.ts`, `apps/api/src/modules/verification/demo-otp.ts` | Authority and OTP gates; shared business operations |
+| `apps/api/src/integrations/tms/client.ts`, `apps/api/src/modules/negotiation/service.ts` | TCP load queries/details; private pricing and offers |
+| `apps/api/src/integrations/tms/inventory.ts`, `src/operator*.ts`, `app/api/operator/*`, `apps/api/db/migrations/twin-m5.sql` | Direct operator access, real TMS inventory, safe call projections, review queue and audit notes |
+| `apps/api/src/transport/mcp/adversarial.ts` | Development test isolation, capability binding and backend traces |
 | `scripts/happyrobot/workflow-spec.ts` | Canonical agent prompt, parameter metadata, prompt compatibility helpers |
 | `scripts/happyrobot/mcp-connect.ts` | Normal connection, draft sync, inspection and development publication |
 | `scripts/happyrobot/run-adversarial.ts`, `run-city-search.ts` | Isolated native conversation tests and evidence |
@@ -67,13 +69,13 @@ Authority and OTP must pass before load access. Retain caller preferences mentio
 
 ## Pending-load interest
 
-Apply the additive [M4.1 migration](twin-m4.1.sql) once after M4. Search retains PENDING inventory. The agent labels it pending, offers OPEN alternatives or asks whether to record interest, then obtains consent and confirms a callback number before calling `record_load_interest`. The request is stored on the call and in its event history, returned by finalization, and shown in the local call UI. There is no notification delivery, manager assignment or callback guarantee. A pending load receives no offer and cannot be negotiated or booked; observed status changes also block acceptance of an old offer. An identical request replays the saved reference without creating another event.
+Apply the additive [M4.1 migration](../apps/api/db/migrations/twin-m4.1.sql) once after M4. Search retains PENDING inventory. The agent labels it pending, offers OPEN alternatives or asks whether to record interest, then obtains consent and confirms a callback number before calling `record_load_interest`. The request is stored on the call and in its event history, returned by finalization, and shown in the local call UI. There is no notification delivery, manager assignment or callback guarantee. A pending load receives no offer and cannot be negotiated or booked; observed status changes also block acceptance of an old offer. An identical request replays the saved reference without creating another event.
 
 Local validation: `npm test`, `npm run build`, and the negotiation, booking and load-interest SQL transition suites against a disposable PostgreSQL instance. `npm run verify:mcp -- --pending-load` verifies real Dallas PENDING discovery and detail over bound HTTPS MCP without submitting interest or booking. The consent, callback readback and spoken follow-up wording still require manual conversation review.
 
 ## M4 booking
 
-**Current test behavior:** `BOOKING_TMS_MODE=mock` is the default and is explicitly pinned in the local Docker configuration. Booking still checks real OPEN inventory and the agreed terms, then saves a simulated attempt/result in Twin without sending `LOAD_BOOK`. It returns `booking.simulated=true`, `booking_saved=true`, `booking_confirmed=false` and a `MOCK-…` reference; finalization records `booking_simulated`. The operator UI and persisted records retain simulation labels. At the owner's request, caller-facing speech treats a confirmed saved test booking as successful: ask "Would you like me to book this load?", then say "Your booking was successful" only after book_load confirms the saved result. Do not narrate simulation, mock handoff or TMS reservation disclaimers. Do not claim an actual transfer. Apply [M4.2](twin-m4.2.sql) after M4.1 before using this mode. Mock attempts do not consume the cross-call real-booking lock; repeated delivery within one call still returns the same saved result. Existing real uncertain attempts and TMS PENDING loads remain unchanged. Real writes require explicit `BOOKING_TMS_MODE=live`; the low-level transport also refuses writes unless that exact value is set.
+**Current test behavior:** `BOOKING_TMS_MODE=mock` is the default and is explicitly pinned in the local Docker configuration. Booking still checks real OPEN inventory and the agreed terms, then saves a simulated attempt/result in Twin without sending `LOAD_BOOK`. It returns `booking.simulated=true`, `booking_saved=true`, `booking_confirmed=false` and a `MOCK-…` reference; finalization records `booking_simulated`. The operator UI and persisted records retain simulation labels. At the owner's request, caller-facing speech treats a confirmed saved test booking as successful: ask "Would you like me to book this load?", then say "Your booking was successful" only after book_load confirms the saved result. Do not narrate simulation, mock handoff or TMS reservation disclaimers. Do not claim an actual transfer. Apply [M4.2](../apps/api/db/migrations/twin-m4.2.sql) after M4.1 before using this mode. Mock attempts do not consume the cross-call real-booking lock; repeated delivery within one call still returns the same saved result. Existing real uncertain attempts and TMS PENDING loads remain unchanged. Real writes require explicit `BOOKING_TMS_MODE=live`; the low-level transport also refuses writes unless that exact value is set.
 
 Run `npm run verify:mcp -- --mock-booking` for real MCP/Twin persistence with a simulated booking and a post-check that the real load remains OPEN. This is not real booking evidence. Negotiation eval scenarios remain unchanged; their expected test-mode disposition is now `booking_simulated`.
 
@@ -93,7 +95,7 @@ For normal browser-call development, prefer `npm run local:up` and open `http://
 
    Discover the current tunnel from `http://127.0.0.1:4040/api/tunnels`. Set `MCP_PUBLIC_URL` to its HTTPS URL plus `/api/mcp`. Never expose the whole Next app. Keep `HAPPYROBOT_ENVIRONMENT=development`. Environment groups cover HappyRobot, normal MCP auth, TMS, FMCSA, Twin, demo OTP and separate adversarial auth.
 
-2. Edit the prompt in `workflow-spec.ts`; edit tool descriptions/schemas in `src/mcp-tools.ts` only as needed. `toolParameters` derives from these schemas. Preserve existing verification and session safeguards.
+2. Edit the prompt in `workflow-spec.ts`; edit tool descriptions/schemas in `apps/api/src/transport/mcp/tools.ts` only as needed. `toolParameters` derives from these schemas. Preserve existing verification and session safeguards.
 
 3. Run local checks and connect:
 

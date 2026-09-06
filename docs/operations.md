@@ -80,7 +80,7 @@ smoke connects no microphone.
 ## Configuration and migration
 
 1. Existing M3 through M4.2 migrations must already be installed. Apply
-   `docs/twin-m5.sql`, then `docs/twin-m5.1.sql`, **once**. It is additive and preserves existing calls/events.
+   `apps/api/db/migrations/twin-m5.sql`, then `apps/api/db/migrations/twin-m5.1.sql`, **once**. It is additive and preserves existing calls/events.
    Do not rerun the base migrations on shared data.
 2. Set `OPERATOR_RPC_KEY` to a random server-only key in ignored `.env.local`.
 3. Register the SHA-256 hexadecimal digest of `OPERATOR_RPC_KEY` in

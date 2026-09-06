@@ -3,11 +3,11 @@ import { spawn } from 'node:child_process';
 import { mkdir, open, readFile, unlink, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { HappyRobotClient } from '@happyrobot-ai/sdk';
-import { prompt, toolParameters, variable } from './workflow-spec';
-import { toolSpecs, negotiationAction, type ToolName } from '../../src/mcp-tools';
-import { callAction } from '../../src/call-session';
-import { getLoadPricing, runTms } from '../../src/tms';
-import { activateAdversarialSession, prepareAdversarialSession, readAdversarialTrace, revokeAdversarialSession } from '../../src/adversarial-session';
+import { prompt, toolParameters, variable } from './workflow-spec.js';
+import { toolSpecs, negotiationAction, type ToolName } from '../../apps/api/src/transport/mcp/tools.js';
+import { callAction } from '../../apps/api/src/modules/calls/index.js';
+import { getLoadPricing, runTms } from '../../apps/api/src/integrations/tms/client.js';
+import { activateAdversarialSession, prepareAdversarialSession, readAdversarialTrace, revokeAdversarialSession } from '../../apps/api/src/transport/mcp/adversarial.js';
 
 const definitionsPath = new URL('../../tests/happyrobot/negotiation-paths.json', import.meta.url);
 const configPath = new URL('./negotiation-config.json', import.meta.url);

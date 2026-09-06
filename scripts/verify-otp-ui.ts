@@ -3,9 +3,10 @@
 import http from 'node:http';
 import net from 'node:net';
 import readline from 'node:readline';
-import { startCall, callAction, twinRpc } from '../src/call-session';
-import { verifyCarrierForCall, verifyOtpForCall } from '../src/call-services';
-import { createOtpForCall, readDemoOtp } from '../src/demo-otp';
+import { startCall, callAction } from '../apps/api/src/modules/calls/index.js';
+import { twinRpc } from '../apps/api/src/db/twin-client.js';
+import { verifyCarrierForCall, verifyOtpForCall } from '../apps/api/src/modules/verification/index.js';
+import { createOtpForCall, readDemoOtp } from '../apps/api/src/modules/verification/index.js';
 
 let call=await startCall();
 const server=http.createServer((req,res)=>{

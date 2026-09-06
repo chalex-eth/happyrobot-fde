@@ -1,8 +1,8 @@
 import { HappyRobotClient, ApiError } from '@happyrobot-ai/sdk';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import { toolSpecs } from '../../src/mcp-tools';
-import { validateLocalWiring, type WiringNode } from './local-wiring';
+import { toolSpecs } from '../../apps/api/src/transport/mcp/tools.js';
+import { validateLocalWiring, type WiringNode } from './local-wiring.js';
 
 type Connection = { id: string; server_name: string; server_url: string; development_server_url?: string; auth_type: string };
 type Version = { id: string; is_live: boolean; environment: string; version_number: number };

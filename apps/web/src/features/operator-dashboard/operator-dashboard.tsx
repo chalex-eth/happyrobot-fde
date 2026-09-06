@@ -1,0 +1,692 @@
+'use client';
+import {
+  CallsPageSchema,
+  CallDetailSchema,
+  InventorySchema,
+  ReviewResponseSchema,
+} from '@carrier/contracts/operations';
+import { requestApi } from '../../lib/api-client';
+import { z } from 'zod';
+import { useCallback, useEffect, useState } from 'react';
+import { LaneMap } from '../load-map/lane-map';
+import { label, equipmentLabel, cityKey, loadTouchesCity } from './display';
+import {
+  type CallsPage,
+  type OperatorCall,
+  type CallEvent,
+  type Inventory,
+  type Review,
+} from '@carrier/contracts/operations';
+const money = (n: unknown) =>
+  Number.isFinite(Number(n)) && n !== null && n !== undefined
+    ? new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        maximumFractionDigits: 2,
+      }).format(Number(n))
+    : '—';
+const time = (s: string | null) =>
+  s
+    ? new Date(s).toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: '2-digit',
+      })
+    : '—';
+const message = (code: string) =>
+  ({
+    OPERATOR_NOT_CONFIGURED: 'Operator access has not been configured on the server.',
+    REVIEW_CHANGED: 'This review changed. Refresh the call and try again.',
+    TWIN_SCHEMA_REQUIRED: 'The operations database migration is not installed.',
+  })[code] ?? 'Data is temporarily unavailable. Please try again.';
+async function api<S extends z.ZodType>(path: string, schema: S, body?: unknown, method?: string) {
+  return requestApi(`/api/operator/${path}`, schema, {
+    method: method ?? (body ? 'POST' : 'GET'),
+    headers: body ? { 'Content-Type': 'application/json' } : undefined,
+    body: body ? JSON.stringify(body) : undefined,
+    signal: AbortSignal.timeout(path === 'inventory' ? 60000 : 20000),
+  });
+}
+function Badge({ value }: { value: string }) {
+  return (
+    <span
+      className={
+        'badge ' +
+        (value.includes('uncertain') || value === 'technical_error'
+          ? 'danger'
+          : value === 'booked'
+            ? 'success'
+            : value.includes('simulat')
+              ? 'simulation'
+              : '')
+      }
+    >
+      {label(value)}
+    </span>
+  );
+}
+function ReviewItem({ review, onSaved }: { review: Review; onSaved: () => Promise<void> }) {
+  const [note, setNote] = useState(''),
+    [busy, setBusy] = useState(false),
+    [error, setError] = useState('');
+  return (
+    <div className="review-item">
+      <div className="review-heading">
+        <strong>{label(review.reason)}</strong>
+        <Badge value={review.status} />
+      </div>
+      <p>{review.detail}</p>
+      {review.callback_number && (
+        <p>
+          Callback: <a href={`tel:${review.callback_number}`}>{review.callback_number}</a>
+        </p>
+      )}
+      {review.resolution_note && <p className="hint">Operator note: {review.resolution_note}</p>}
+      <form
+        onSubmit={async (e) => {
+          e.preventDefault();
+          setBusy(true);
+          setError('');
+          try {
+            await api('review', ReviewResponseSchema, {
+              id: review.id,
+              revision: review.revision,
+              status: review.status === 'open' ? 'reviewed' : 'open',
+              note,
+            });
+            setNote('');
+            await onSaved();
+          } catch (e) {
+            setError(message((e as Error).message));
+          } finally {
+            setBusy(false);
+          }
+        }}
+      >
+        <label>
+          Review note
+          <textarea
+            required
+            minLength={1}
+            maxLength={500}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="What did you check or decide?"
+          />
+        </label>
+        <button disabled={busy || !note.trim()} className="secondary">
+          {busy ? 'Saving…' : review.status === 'open' ? 'Mark reviewed' : 'Reopen review'}
+        </button>
+      </form>
+      {error && (
+        <p role="alert" className="error notice">
+          {error}
+        </p>
+      )}
+    </div>
+  );
+}
+function CallDetail({ id, onChange }: { id: string; onChange: () => Promise<void> }) {
+  const [data, setData] = useState<{ call: OperatorCall | null; events: CallEvent[] } | null>(null),
+    [error, setError] = useState('');
+  const load = useCallback(async () => {
+    try {
+      const r = await api(`calls?call_id=${id}`, CallDetailSchema);
+      setData(r);
+      setError('');
+    } catch (e) {
+      setError(message((e as Error).message));
+    }
+  }, [id]);
+  useEffect(() => {
+    setData(null);
+    void load();
+  }, [load]);
+  if (error)
+    return (
+      <div className="call-detail">
+        <p role="alert">{error}</p>
+        <button className="secondary" onClick={() => void load()}>
+          Retry details
+        </button>
+      </div>
+    );
+  if (!data?.call)
+    return (
+      <p className="call-detail" role="status">
+        Loading call details…
+      </p>
+    );
+  const c = data.call;
+  return (
+    <div className="call-detail">
+      <div className="detail-columns">
+        <div>
+          <h3>Conversation</h3>
+          <p>{c.summary ?? 'No final summary recorded.'}</p>
+          <p className="hint">Agent-written summary · structured facts below come from Twin.</p>
+          <dl>
+            <div>
+              <dt>Call ending reported</dt>
+              <dd>{c.reported_end_reason ? label(c.reported_end_reason) : 'Not recorded'}</dd>
+            </div>
+            <div>
+              <dt>End evidence</dt>
+              <dd>
+                {c.end_evidence ? label(c.end_evidence) : 'No provider end confirmation recorded'}
+              </dd>
+            </div>
+            <div>
+              <dt>Authority / OTP</dt>
+              <dd>
+                {c.authority_passed ? 'Passed' : 'Not passed'} /{' '}
+                {c.verified ? 'Verified' : 'Not verified'}
+              </dd>
+            </div>
+            <div>
+              <dt>Negotiation</dt>
+              <dd>
+                {c.negotiation?.status ?? 'Not started'} · {c.negotiation?.counter_rounds ?? 0}{' '}
+                counter rounds
+              </dd>
+            </div>
+            <div>
+              <dt>Booking reference</dt>
+              <dd>{c.booking?.reference ?? 'None'}</dd>
+            </div>
+            <div>
+              <dt>Source</dt>
+              <dd>{label(c.source)}</dd>
+            </div>
+          </dl>
+          {c.booking?.simulated && (
+            <p className="notice">Simulated booking. No load was reserved in TMS.</p>
+          )}
+          {c.interest && (
+            <p className="notice">
+              Interest recorded for {c.interest.load_id}. Callback: {c.interest.callback_number}. No
+              notification has been sent.
+            </p>
+          )}
+          <details>
+            <summary>Call identifiers</summary>
+            <p className="identifier">
+              Call {c.id}
+              <br />
+              Run {c.run_id ?? 'Not created'}
+            </p>
+          </details>
+        </div>
+        <div>
+          <h3>Operator review</h3>
+          {c.reviews.length ? (
+            c.reviews.map((r) => (
+              <ReviewItem
+                key={r.id + r.revision}
+                review={r}
+                onSaved={async () => {
+                  await load();
+                  await onChange();
+                }}
+              />
+            ))
+          ) : (
+            <p className="hint">No review items recorded.</p>
+          )}
+          {c.reviews.length > 0 && (
+            <p className="hint">
+              Review notes do not change a booking, send a notification or retry a TMS request.
+            </p>
+          )}
+        </div>
+      </div>
+      <details className="timeline">
+        <summary>Activity timeline · {data.events.length} events</summary>
+        <ol>
+          {data.events.map((ev) => (
+            <li key={ev.id}>
+              <time>{time(ev.created_at)}</time>
+              <div>
+                <strong>{label(ev.event)}</strong>
+                {Object.keys(ev.data).length > 0 && (
+                  <p>
+                    {Object.entries(ev.data)
+                      .filter(([, v]) => v !== null)
+                      .map(
+                        ([k, v]) =>
+                          `${label(k)}: ${typeof v === 'object' ? JSON.stringify(v) : String(v)}`,
+                      )
+                      .join(' · ')}
+                  </p>
+                )}
+              </div>
+            </li>
+          ))}
+        </ol>
+      </details>
+    </div>
+  );
+}
+export function OperatorDashboard() {
+  const [calls, setCalls] = useState<CallsPage | null>(null),
+    [callError, setCallError] = useState(''),
+    [callBusy, setCallBusy] = useState(false),
+    [reviewOnly, setReviewOnly] = useState(false),
+    [source, setSource] = useState('all'),
+    [query, setQuery] = useState(''),
+    [search, setSearch] = useState(''),
+    [offset, setOffset] = useState(0),
+    [expanded, setExpanded] = useState<string | null>(null);
+  const [city, setCity] = useState('ALL');
+  const [equipment, setEquipment] = useState('ALL'),
+    [inventory, setInventory] = useState<Inventory | null>(null),
+    [inventoryError, setInventoryError] = useState(''),
+    [inventoryBusy, setInventoryBusy] = useState(false),
+    [status, setStatus] = useState('ALL'),
+    [selected, setSelected] = useState<string | null>(null);
+  const loadCalls = useCallback(async () => {
+    setCallBusy(true);
+    try {
+      const p = new URLSearchParams({
+        source,
+        review: String(reviewOnly),
+        query: search,
+        offset: String(offset),
+      });
+      setCalls(await api(`calls?${p}`, CallsPageSchema));
+      setCallError('');
+    } catch (e) {
+      const code = (e as Error).message;
+      setCallError(message(code));
+    } finally {
+      setCallBusy(false);
+    }
+  }, [source, reviewOnly, search, offset]);
+  const loadInventory = useCallback(async () => {
+    setInventoryBusy(true);
+    setInventoryError('');
+    try {
+      const result = await api('inventory', InventorySchema);
+      setInventory(result);
+      setSelected(null);
+    } catch (e) {
+      setInventoryError(message((e as Error).message));
+    } finally {
+      setInventoryBusy(false);
+    }
+  }, []);
+  useEffect(() => {
+    void loadInventory();
+  }, [loadInventory]);
+  useEffect(() => {
+    void loadCalls();
+    const refresh = () => {
+      if (!document.hidden) void loadCalls();
+    };
+    const t = setInterval(refresh, 15000);
+    window.addEventListener('carrier-call-updated', refresh);
+    return () => {
+      clearInterval(t);
+      window.removeEventListener('carrier-call-updated', refresh);
+    };
+  }, [loadCalls]);
+  const cityOptions = [
+    ...new Map(
+      (inventory?.records ?? []).flatMap(
+        (l) =>
+          [
+            [cityKey(l.ORIG_CITY, l.ORIG_STATE), `${l.ORIG_CITY}, ${l.ORIG_STATE}`],
+            [cityKey(l.DEST_CITY, l.DEST_STATE), `${l.DEST_CITY}, ${l.DEST_STATE}`],
+          ] as [string, string][],
+      ),
+    ).entries(),
+  ].sort((a, b) => a[1].localeCompare(b[1]));
+  const selectCity = (value: string) => {
+    setCity(value);
+    setSelected(null);
+  };
+  const visible =
+    inventory?.records.filter(
+      (l) =>
+        (status === 'ALL' || l.STATUS === status) &&
+        (equipment === 'ALL' || l.EQTYPE === equipment) &&
+        loadTouchesCity(l, city),
+    ) ?? [];
+  return (
+    <section className="operator" aria-labelledby="operator-title">
+      <div className="section-title">
+        <div>
+          <h2 id="operator-title">The operations desk</h2>
+          <p>Load coverage, conversations, and the calls that need you.</p>
+        </div>
+      </div>
+      <section className="coverage" aria-labelledby="coverage-title">
+        <div className="section-title compact">
+          <div>
+            <h3 id="coverage-title">Lane coverage</h3>
+            <p>All US departure lanes, with equipment and availability from TMS.</p>
+          </div>
+          <button
+            className="secondary"
+            onClick={() => void loadInventory()}
+            disabled={inventoryBusy}
+          >
+            {inventoryBusy ? 'Loading…' : 'Refresh lanes'}
+          </button>
+        </div>
+        {inventoryError && (
+          <p role="alert" className="notice error">
+            {inventoryError}{' '}
+            {inventory ? 'Showing the last successful snapshot; it may be stale.' : ''}
+          </p>
+        )}
+        {inventory && !inventory.coverage.complete && (
+          <p role="alert" className="notice error">
+            Partial TMS coverage.{' '}
+            {inventory.coverage.failed_states.length > 0 &&
+              `Could not load: ${inventory.coverage.failed_states.join(', ')}. `}
+            {inventory.coverage.capped_states.length > 0 &&
+              `Result limit reached in: ${inventory.coverage.capped_states.join(', ')}. `}
+            Refresh to check again.
+          </p>
+        )}
+        <div className="coverage-grid">
+          <LaneMap
+            loads={visible}
+            selected={selected}
+            onSelect={setSelected}
+            selectedCity={city}
+            onCitySelect={selectCity}
+          />
+          <div className="lane-list">
+            <div className="lane-toolbar">
+              <strong>
+                {visible.length} of {inventory?.records.length ?? 0} loads
+              </strong>
+              <label className="city-filter" htmlFor="lane-city">
+                City · origin or destination
+                <select id="lane-city" value={city} onChange={(e) => selectCity(e.target.value)}>
+                  <option value="ALL">All cities</option>
+                  {cityOptions.map(([key, name]) => (
+                    <option key={key} value={key}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="sr-only" htmlFor="equipment">
+                Equipment type
+              </label>
+              <select
+                id="equipment"
+                value={equipment}
+                onChange={(e) => {
+                  setEquipment(e.target.value);
+                  setSelected(null);
+                }}
+              >
+                <option value="ALL">All equipment</option>
+                {[...new Set(inventory?.records.map((l) => l.EQTYPE) ?? [])].sort().map((type) => (
+                  <option key={type} value={type}>
+                    {equipmentLabel(type)}
+                  </option>
+                ))}
+              </select>
+              <label className="sr-only" htmlFor="availability">
+                Availability
+              </label>
+              <select
+                id="availability"
+                value={status}
+                onChange={(e) => {
+                  setStatus(e.target.value);
+                  setSelected(null);
+                }}
+              >
+                <option value="ALL">All statuses</option>
+                {[...new Set(inventory?.records.map((l) => l.STATUS) ?? [])].map((s) => (
+                  <option key={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+            {inventoryBusy && !inventory && <p className="empty">Loading TMS lanes…</p>}
+            {!inventoryBusy && !visible.length && (
+              <p className="empty">
+                {inventory
+                  ? 'No loads in this selection. Change the city, equipment or availability filter.'
+                  : 'Refresh to load coverage.'}
+              </p>
+            )}
+            <div className="lane-rows">
+              {visible.map((l) => {
+                const associated =
+                  calls?.calls.filter(
+                    (c) => c.selected_load_id === l.LOAD_ID || c.interest?.load_id === l.LOAD_ID,
+                  ) ?? [];
+                return (
+                  <button
+                    key={l.LOAD_ID}
+                    className={'lane-row' + (selected === l.LOAD_ID ? ' selected' : '')}
+                    aria-pressed={selected === l.LOAD_ID}
+                    onClick={() => setSelected(l.LOAD_ID)}
+                  >
+                    <span className="lane-name">
+                      {l.ORIG_CITY}
+                      <span aria-hidden="true"> → </span>
+                      {l.DEST_CITY}
+                    </span>
+                    <span className="lane-meta">
+                      {l.LOAD_ID} · {equipmentLabel(l.EQTYPE)} · {money(l.RATE)}
+                    </span>
+                    <span className="lane-bottom">
+                      <Badge value={l.STATUS} />
+                      <span>
+                        {l.PICKUP_DT?.slice(0, 4)}-{l.PICKUP_DT?.slice(4, 6)}-
+                        {l.PICKUP_DT?.slice(6, 8)}
+                      </span>
+                    </span>
+                    {(!l.origin_point || !l.destination_point) && (
+                      <span className="hint">Coordinates unavailable</span>
+                    )}
+                    {associated.slice(0, 2).map((c) => (
+                      <span key={c.id} className="lane-activity">
+                        MC {c.mc ?? 'unknown'} ·{' '}
+                        {c.booking?.simulated
+                          ? 'Simulated booking'
+                          : c.booking
+                            ? label(c.booking.status)
+                            : c.interest
+                              ? 'Callback requested'
+                              : c.outcome
+                                ? label(c.outcome)
+                                : 'Call in progress'}
+                      </span>
+                    ))}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+        <div className="coverage-foot">
+          <span>
+            {inventory
+              ? `US network · Updated ${time(inventory.retrieved_at)}`
+              : 'Loading the TMS network'}
+          </span>
+          <span>Call badges reflect the calls currently listed below.</span>
+        </div>
+      </section>
+      <section className="calls-panel" aria-labelledby="calls-title">
+        <div className="section-title compact">
+          <div>
+            <h3 id="calls-title">Calls & follow-up</h3>
+            <p>Review the reason, inspect the facts, record the next step.</p>
+          </div>
+          <button className="secondary" onClick={() => void loadCalls()} disabled={callBusy}>
+            {callBusy ? 'Refreshing…' : 'Refresh calls'}
+          </button>
+        </div>
+        <div className="calls-toolbar">
+          <div className="tab-group" role="tablist" aria-label="Call view">
+            <button
+              role="tab"
+              aria-selected={!reviewOnly}
+              className={!reviewOnly ? 'active' : ''}
+              onClick={() => {
+                setReviewOnly(false);
+                setOffset(0);
+              }}
+            >
+              Recent calls
+            </button>
+            <button
+              role="tab"
+              aria-selected={reviewOnly}
+              className={reviewOnly ? 'active' : ''}
+              onClick={() => {
+                setReviewOnly(true);
+                setOffset(0);
+              }}
+            >
+              Needs review <span className="count">{calls?.review_count ?? 0}</span>
+            </button>
+          </div>
+          <div className="call-filters">
+            <label className="sr-only" htmlFor="source">
+              Call source
+            </label>
+            <select
+              id="source"
+              value={source}
+              onChange={(e) => {
+                setSource(e.target.value);
+                setOffset(0);
+              }}
+            >
+              {['all', 'browser_demo', 'evaluation', 'integration_test', 'unknown'].map((s) => (
+                <option key={s} value={s}>
+                  {s === 'all' ? 'All sources' : label(s)}
+                </option>
+              ))}
+            </select>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setSearch(query);
+                setOffset(0);
+              }}
+            >
+              <label className="sr-only" htmlFor="call-search">
+                MC or load ID
+              </label>
+              <input
+                id="call-search"
+                placeholder="MC or load ID"
+                maxLength={64}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+              <button className="secondary">Search</button>
+            </form>
+          </div>
+        </div>
+        {callError && (
+          <p role="alert" className="notice error">
+            {callError} {calls ? 'Showing previously loaded calls.' : ''}
+          </p>
+        )}
+        <div className="call-list" role="tabpanel">
+          <div className="call-table-heading">
+            <span>Time / source</span>
+            <span>Carrier</span>
+            <span>Lane / load</span>
+            <span>Outcome / agreed</span>
+            <span>Review reason</span>
+            <span />
+          </div>
+          {!calls && !callError && (
+            <p role="status" className="empty">
+              Loading conversations…
+            </p>
+          )}
+          {calls?.calls.length === 0 && (
+            <p className="empty">
+              {reviewOnly
+                ? 'No open reviews match these filters.'
+                : 'No calls match these filters. Start a demo or change the filters.'}
+            </p>
+          )}
+          {calls?.calls.map((c) => (
+            <article key={c.id} className={'call-entry' + (expanded === c.id ? ' expanded' : '')}>
+              <button
+                className="call-row"
+                aria-expanded={expanded === c.id}
+                onClick={() => setExpanded(expanded === c.id ? null : c.id)}
+              >
+                <span>
+                  <strong>{time(c.created_at)}</strong>
+                  <small>{label(c.source)}</small>
+                </span>
+                <span>
+                  <strong>{c.mc ? 'MC ' + c.mc : 'Carrier not captured'}</strong>
+                  <small>{c.carrier ?? '—'}</small>
+                </span>
+                <span>
+                  <strong>
+                    {c.load?.ORIG_CITY
+                      ? `${c.load.ORIG_CITY} → ${c.load.DEST_CITY}`
+                      : (c.selected_load_id ?? 'No load selected')}
+                  </strong>
+                  <small>{c.selected_load_id}</small>
+                </span>
+                <span>
+                  <Badge value={c.outcome ?? 'Not finalized'} />
+                  <small>{money(c.negotiation?.agreed_rate)}</small>
+                </span>
+                <span className="reason-list">
+                  {c.reviews
+                    .filter((r) => r.status === 'open')
+                    .map((r) => (
+                      <span key={r.id} className="reason">
+                        <i />
+                        {label(r.reason)}
+                      </span>
+                    ))}
+                  {!c.reviews.some((r) => r.status === 'open') && <small>No open review</small>}
+                </span>
+                <span className="expand-label">{expanded === c.id ? 'Close' : 'Details'}</span>
+              </button>
+              {expanded === c.id && <CallDetail id={c.id} onChange={loadCalls} />}
+            </article>
+          ))}
+        </div>
+        <div className="pagination">
+          <span>
+            {calls
+              ? `${calls.total ? offset + 1 : 0}–${Math.min(offset + 30, calls.total)} of ${calls.total} calls`
+              : '—'}{' '}
+            · Review badge counts all sources
+          </span>
+          <div>
+            <button
+              className="secondary"
+              disabled={offset === 0 || callBusy}
+              onClick={() => setOffset(Math.max(0, offset - 30))}
+            >
+              Previous
+            </button>
+            <button
+              className="secondary"
+              disabled={!calls || offset + 30 >= calls.total || callBusy}
+              onClick={() => setOffset(offset + 30)}
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      </section>
+    </section>
+  );
+}

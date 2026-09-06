@@ -5,21 +5,41 @@ services:
     image: carrier-sales-local:dev
     init: true
     restart: unless-stopped
-    env_file: .env.local
+    command: ["node", "node_modules/next/dist/bin/next", "dev", "apps/web", "--hostname", "0.0.0.0"]
     environment:
       NODE_ENV: development
-      HAPPYROBOT_ENVIRONMENT: development
-      BOOKING_TMS_MODE: mock
-      ADVERSARIAL_MCP_ENABLED: "false"
-      NGROK_API_URL: http://ngrok:4040
+      API_INTERNAL_URL: http://api:3001
     ports:
       - "127.0.0.1:3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "node", "scripts/local/health.mjs", "http://127.0.0.1:3000/api/mcp"]
+      test: ["CMD", "node", "scripts/local/health.mjs", "http://127.0.0.1:3000", "200"]
       interval: 5s
       timeout: 10s
       retries: 12
       start_period: 30s
+  api:
+    build: .
+    image: carrier-sales-local:dev
+    init: true
+    restart: unless-stopped
+    command: ["node", "--import", "tsx", "apps/api/src/server.ts"]
+    env_file: .env.local
+    environment:
+      NODE_ENV: development
+      API_HOST: 0.0.0.0
+      API_PORT: "3001"
+      HAPPYROBOT_ENVIRONMENT: development
+      BOOKING_TMS_MODE: mock
+      ADVERSARIAL_MCP_ENABLED: "false"
+      NGROK_API_URL: http://ngrok:4040
+    healthcheck:
+      test: ["CMD", "node", "scripts/local/health.mjs", "http://127.0.0.1:3001/api/mcp"]
+      interval: 5s
+      timeout: 10s
+      retries: 12
   mcp-proxy:
     image: carrier-sales-local:dev
     init: true
@@ -27,10 +47,10 @@ services:
     command: ["node", "scripts/mcp-proxy.mjs"]
     environment:
       MCP_PROXY_HOST: 0.0.0.0
-      MCP_PROXY_TARGET: http://app:3000/api/mcp
+      MCP_PROXY_TARGET: http://api:3001/api/mcp
       MCP_PROXY_ALLOW_ADVERSARIAL: "false"
     depends_on:
-      app:
+      api:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "node", "scripts/local/health.mjs", "http://127.0.0.1:3002/api/mcp"]

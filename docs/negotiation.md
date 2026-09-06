@@ -18,9 +18,9 @@ The challenge PDF requires a hidden maximum rate, up to three counter rounds per
 
 ## State, privacy and reliability
 
-`src/tms.ts` has a separate server-only pricing reader. It reads RATE/MAX_BUY only from complete END-terminated detail responses, validates positive integer cents, refuses missing/inconsistent pricing and non-OPEN loads. Normal public TMS/MCP/browser responses continue to strip MAX_BUY and private notes.
+`apps/api/src/integrations/tms/client.ts` has a separate server-only pricing reader. It reads RATE/MAX_BUY only from complete END-terminated detail responses, validates positive integer cents, refuses missing/inconsistent pricing and non-OPEN loads. Normal public TMS/MCP/browser responses continue to strip MAX_BUY and private notes.
 
-`src/negotiation.ts` reuses the existing load authorization service, fetches current detail outside database locks, and commits the quote only if call identity, selected load and authority revision still match. The SQL action enforces active authority, current OTP, call expiry and finalization again under a call-row lock. The quote expires after two minutes; refresh rotates expired/changed offer references and preserves rounds. This is a quote snapshot, not a guarantee that the load remains available; M4 must recheck before any booking.
+`apps/api/src/modules/negotiation/service.ts` reuses the existing load authorization service, fetches current detail outside database locks, and commits the quote only if call identity, selected load and authority revision still match. The SQL action enforces active authority, current OTP, call expiry and finalization again under a call-row lock. The quote expires after two minutes; refresh rotates expired/changed offer references and preserves rounds. This is a quote snapshot, not a guarantee that the load remains available; M4 must recheck before any booking.
 
 Negotiation state and ceiling live in `poc_private.negotiations`, outside public Twin tables. `poc_private.offer_receipts` stores one response per `(call_id, offer_id)` with the original action/amount/load/revision fingerprint. Identical duplicate responses return the saved result. Conflicting responses to the same offer fail. All writers lock the call before negotiation state; network calls never hold database locks.
 
@@ -28,7 +28,7 @@ Public events include initial/refreshed offers, carrier responses, agreed rates 
 
 ## Applied Twin change
 
-`docs/twin-m3.5.sql` was explicitly approved and applied. Do not reapply it. It is a single transaction and:
+`apps/api/db/migrations/twin-m3.5.sql` was explicitly approved and applied. Do not reapply it. It is a single transaction and:
 
 1. Adds two tables in the existing private schema: negotiations and offer_receipts.
 2. Adds a private public-field projection helper and public poc_negotiate RPC.
@@ -40,7 +40,7 @@ It does not delete existing calls, change TMS loads, book anything, or alter pro
 
 ## Activation record / fresh setup
 
-- Apply exactly the reviewed `docs/twin-m3.5.sql` to the existing Twin workspace once, after confirming it has not already been applied. Do not replay the base migrations.
+- Apply exactly the reviewed `apps/api/db/migrations/twin-m3.5.sql` to the existing Twin workspace once, after confirming it has not already been applied. Do not replay the base migrations.
 - Set NEGOTIATION_ENABLED=true in ignored .env.local; keep .env.example disabled by default. Confirm the Next process reloads the setting.
 - Run `npm run verify:mcp`; it creates its own bound call/provider run, performs real FMCSA/OTP/TMS, accepts a public offer, verifies replay and the derived outcome, then cancels its run. It never books.
 - Verify Version 5 stored prompt, seven tools, offer_id/amount argument mappings, Current Run ID header and public result visibility against source.

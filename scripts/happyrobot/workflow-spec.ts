@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { toolSpecs, type ToolName } from '../../src/mcp-tools';
+import { toolSpecs, type ToolName } from '../../apps/api/src/transport/mcp/tools.js';
 
 export const mcpServerName = process.env.HAPPYROBOT_MCP_SERVER_NAME || 'Carrier sales local MCP';
 export const paragraph = (text: string) => [{ type: 'paragraph', children: [{ text }] }];

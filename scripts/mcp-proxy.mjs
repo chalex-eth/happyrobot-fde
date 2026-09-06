@@ -1,9 +1,13 @@
+import { Readable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
 import { createServer } from 'node:http';
 import { pathToFileURL } from 'node:url';
 
 // Tunnel only this proxy, never the Next dev server or the local operator API.
-export function createMcpProxy(target = 'http://127.0.0.1:3000/api/mcp', { allowAdversarial = true } = {}) {
+export function createMcpProxy(target = 'http://127.0.0.1:3001/api/mcp', { allowAdversarial = true } = {}) {
   return createServer(async (req, res) => {
+    const disconnected = new AbortController();
+    res.once('close', () => { if (!res.writableFinished) disconnected.abort(); });
     res.setHeader('Cache-Control', 'no-store');
     if (req.url !== '/api/mcp' && !(allowAdversarial && req.url === '/api/mcp/adversarial')) { res.writeHead(404).end(); return; }
     if (!['POST', 'GET', 'DELETE'].includes(req.method)) { res.writeHead(405).end(); return; }
@@ -20,11 +24,13 @@ export function createMcpProxy(target = 'http://127.0.0.1:3000/api/mcp', { allow
       }
       const upstream = await fetch(req.url === '/api/mcp/adversarial' ? `${target}/adversarial` : target, { method: req.method, headers,
         ...(req.method === 'POST' ? { body: Buffer.concat(chunks) } : {}),
-        redirect: 'error', signal: AbortSignal.timeout(30_000) });
-      for (const name of ['content-type', 'x-request-id', 'www-authenticate']) {
+        redirect: 'error', signal: AbortSignal.any([disconnected.signal, AbortSignal.timeout(30_000)]) });
+      for (const name of ['content-type', 'x-request-id', 'www-authenticate', 'mcp-session-id', 'mcp-protocol-version']) {
         if (upstream.headers.has(name)) res.setHeader(name, upstream.headers.get(name));
       }
-      res.writeHead(upstream.status).end(Buffer.from(await upstream.arrayBuffer()));
+      res.writeHead(upstream.status);
+      if (upstream.body) await pipeline(Readable.fromWeb(upstream.body), res);
+      else res.end();
     } catch { if (!res.headersSent) res.writeHead(502); res.end(); }
   });
 }

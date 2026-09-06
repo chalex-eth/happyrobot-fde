@@ -28,7 +28,7 @@ The MCP protocol is stateless Streamable HTTP with JSON responses. It supports S
 
 Every tool invocation also requires `x-happyrobot-run-id`. The MCP Call action maps HappyRobot's built-in **Current → Run ID** into this header. The backend resolves it against the provider run saved by voice startup in Twin. The model cannot choose an identity through tool arguments. Discovery requires no run header. Missing/unknown runs fail closed.
 
-Schemas in `src/mcp-tools.ts` are shared by discovery, server validation and the Git-tracked workflow configuration. Unknown arguments are rejected.
+Schemas in `apps/api/src/transport/mcp/tools.ts` are shared by discovery, server validation and the Git-tracked workflow configuration. Unknown arguments are rejected.
 
 | Tool | Inputs | Behavior |
 | --- | --- | --- |
@@ -49,7 +49,7 @@ Code display is intentionally a local-demo capability, not real contact ownershi
 
 ## Start locally
 
-1. `docs/twin-m3.2.sql` is **already applied to this Twin workspace**; do not reapply. For a fresh workspace, apply once after m3 and m3.1. The existing function is moved to a private schema, then a public wrapper enforces finalization. Existing call data is preserved.
+1. `apps/api/db/migrations/twin-m3.2.sql` is **already applied to this Twin workspace**; do not reapply. For a fresh workspace, apply once after m3 and m3.1. The existing function is moved to a private schema, then a public wrapper enforces finalization. Existing call data is preserved.
 2. Keep `npm run dev` running on `127.0.0.1:3000`.
 3. Run `npm run mcp:proxy` on `127.0.0.1:3002`.
 4. Run `npm run mcp:tunnel` if the approved tunnel is not already running. This uses ngrok with inspection disabled. It exposes only the proxy, not Next directly.

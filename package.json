@@ -7,13 +7,13 @@
     "node": "22.x"
   },
   "scripts": {
-    "dev": "next dev --hostname 127.0.0.1",
-    "build": "next build",
-    "start": "next start --hostname 0.0.0.0",
-    "typecheck": "next typegen && tsc --noEmit",
-    "test": "node --import tsx --test tests/*.test.ts",
+    "dev": "node scripts/local/dev.mjs",
+    "build": "npm run build -w @carrier/api && npm run build -w @carrier/web",
+    "start": "node scripts/local/dev.mjs --production",
+    "typecheck": "npm run typecheck --workspaces && tsc --noEmit -p tsconfig.scripts.json",
+    "test": "node --import tsx --test apps/api/tests/*.test.ts apps/web/tests/*.test.ts",
     "verify:local": "node --env-file=.env.local scripts/verify-local.mjs",
-    "start:local": "next start --hostname 127.0.0.1",
+    "start:local": "node scripts/local/dev.mjs --production",
     "verify:fmcsa": "node scripts/verify-fmcsa.mjs",
     "mcp:proxy": "node scripts/mcp-proxy.mjs",
     "mcp:tunnel": "ngrok http http://127.0.0.1:3002 --inspect=false",
@@ -27,22 +27,26 @@
     "local:logs": "node scripts/local/stack.mjs logs",
     "local:check": "node scripts/local/stack.mjs check",
     "app:restart": "node scripts/local/stack.mjs app-restart",
-    "app:stop": "node scripts/local/stack.mjs app-stop"
-  },
-  "dependencies": {
-    "@happyrobot-ai/sdk": "0.1.45",
-    "@modelcontextprotocol/sdk": "1.30.0",
-    "livekit-client": "2.17.2",
-    "next": "16.3.4",
-    "react": "19.2.8",
-    "react-dom": "19.2.8",
-    "zod": "4.5.4"
+    "app:stop": "node scripts/local/stack.mjs app-stop",
+    "db:generate": "node apps/api/db/scripts/schema.mjs generate",
+    "db:check": "node apps/api/db/scripts/schema.mjs check",
+    "db:test": "node --import tsx apps/api/db/scripts/schema.mjs test",
+    "check:boundaries": "node scripts/check-boundaries.mjs"
   },
   "devDependencies": {
+    "@happyrobot-ai/sdk": "0.1.45",
+    "@modelcontextprotocol/sdk": "1.30.0",
     "@types/node": "22.20.1",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.7",
+    "esbuild": "0.28.2",
+    "prettier": "^3.9.6",
     "tsx": "4.23.13",
-    "typescript": "7.0.2"
-  }
+    "typescript": "7.0.2",
+    "zod": "4.5.4"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
 }

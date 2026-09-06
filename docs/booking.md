@@ -35,12 +35,12 @@ An unresolved/confirmed attempt also blocks booking that load through another ca
 
 ## Files
 
-- `src/tms-booking.ts`: strict write framing, positive confirmation and uncertainty.
-- `src/booking.ts`: preparation, fresh detail, claim, one send and persistence recovery.
-- `docs/twin-m4.sql`: forward migration; call fields, state transitions and finalization.
-- `src/mcp-tools.ts`, `scripts/happyrobot/workflow-spec.ts`: eighth tool and conversation behavior.
-- `app/carrier-check.tsx`: live booking status and simulated-handoff disclosure.
-- `tests/booking.test.ts`, `tests/booking-transitions.sql`, `scripts/verify-booking-db.mjs`: transport, service, SQL and concurrency checks.
+- `apps/api/src/integrations/tms/booking.ts`: strict write framing, positive confirmation and uncertainty.
+- `apps/api/src/modules/booking/service.ts`: preparation, fresh detail, claim, one send and persistence recovery.
+- `apps/api/db/migrations/twin-m4.sql`: forward migration; call fields, state transitions and finalization.
+- `apps/api/src/transport/mcp/tools.ts`, `scripts/happyrobot/workflow-spec.ts`: eighth tool and conversation behavior.
+- `apps/web/src/features/carrier-verification/carrier-check.tsx`: live booking status and simulated-handoff disclosure.
+- `apps/api/tests/booking.test.ts`, `apps/api/db/tests/booking-transitions.sql`, `scripts/verify-booking-db.mjs`: transport, service, SQL and concurrency checks.
 
 ## Rollout
 
@@ -48,7 +48,7 @@ An unresolved/confirmed attempt also blocks booking that load through another ca
 
 Validation: 74 local tests, typecheck, production build, all SQL transition suites and OTP/negotiation/booking concurrency checks passed. HappyRobot discovered eight tools; argument mappings, run binding and full-result visibility were read back. A real HappyRobot action reached the backend and correctly returned VOICE_BINDING_REQUIRED for an unbound node-test run. Real bound MCP verification/search/agreement/finalization passed with the M4 agreement snapshot saved in Twin. **No real LOAD_BOOK or complete spoken booking conversation has been tested.**
 
-BOOKING_ENABLED defaults off. Apply `docs/twin-m4.sql` once **after** m3.6, after inspecting the current Twin schema. Existing functions are retained privately; existing records are preserved. Do not rerun base migrations on Twin.
+BOOKING_ENABLED defaults off. Apply `apps/api/db/migrations/twin-m4.sql` once **after** m3.6, after inspecting the current Twin schema. Existing functions are retained privately; existing records are preserved. Do not rerun base migrations on Twin.
 
 After migration, enable BOOKING_ENABLED=true in local configuration and rebuild the Docker app. Inspect the current development workflow, fork a normal draft, refresh MCP discovery, sync all eight tools and the booking-enabled prompt, and read back mappings/result visibility. Keep isolated conversation-test drafts separate: their adapter explicitly rejects book_load to prevent simulators/configuration probes from mutating real inventory.
 

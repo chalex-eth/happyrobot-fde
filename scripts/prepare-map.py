@@ -9,7 +9,7 @@ for line in z.read('cities15000.txt').decode().splitlines():
  for name in set([f[1],f[2]]):
   key=name.lower()+'|'+f[10]
   if key not in cities or int(f[14])>cities[key][2]:cities[key]=[round(float(f[5]),4),round(float(f[4]),4),int(f[14])]
-pathlib.Path('src/data/us-cities.json').write_text(json.dumps({k:v[:2] for k,v in sorted(cities.items())},separators=(',',':'))+'\n')
+pathlib.Path('apps/api/src/modules/operations/data/us-cities.json').write_text(json.dumps({k:v[:2] for k,v in sorted(cities.items())},separators=(',',':'))+'\n')
 geo=json.loads(data[1]); usa=next(f for f in geo['features'] if f['properties']['ADM0_A3']=='USA')
 def project(p):
  x,y=p
@@ -22,5 +22,5 @@ for polygon in usa['geometry']['coordinates']:
   pts=[project(p) for p in ring]
   if any(p is None for p in pts):continue
   paths.append('M'+'L'.join(f'{x:.1f},{y:.1f}' for x,y in pts)+'Z')
-pathlib.Path('src/data/us-outline.json').write_text(json.dumps(paths)+'\n')
+pathlib.Path('apps/web/src/assets/us-outline.json').write_text(json.dumps(paths)+'\n')
 print('Prepared',len(cities),'city coordinates and',len(paths),'map polygons')

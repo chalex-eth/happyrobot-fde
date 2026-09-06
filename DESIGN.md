@@ -88,7 +88,7 @@ components:
 
 The existing interface pairs light paper and white surfaces with dark green ink and a restrained teal action color. Serif page headings separate major groups; compact sans-serif controls and records support operational reading. The north star uses the implemented section title, rather than introducing a new brand concept.
 
-This is a source-derived record of the incumbent POC, grounded in `app/globals.css` and the call, map and operator components. Surface-specific composition remains in `docs/m5-design.md`; product scope remains in `PRODUCT.md`.
+This is a source-derived record of the incumbent POC, grounded in `apps/web/src/app/globals.css` and the call, map and operator components. Surface-specific composition remains in `docs/m5-design.md`; product scope remains in `PRODUCT.md`.
 
 **Key Characteristics:**
 - Light surfaces, green ink and restrained borders.

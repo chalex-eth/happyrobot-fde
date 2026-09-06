@@ -146,4 +146,4 @@ No full-path HappyRobot tests were created or run as part of the original draft.
 6. Add P02–P09, then remaining branches. A repeated run may expose nondeterminism; label all attempts and do not hide failures by keeping only a successful retry.
 7. For now, reproduce failures through the adversarial conversation tests and their traces. Custom regression tests are deferred by user decision; do not recreate them automatically.
 
-Sources: current scripts/happyrobot/workflow-spec.ts, src/mcp-tools.ts, docs/mcp-local.md and docs/milestone-3-validation.md. HappyRobot product documentation: https://www.happyrobot.ai/product/governance/adversarial-agents and https://www.happyrobot.ai/product/governance/audits-and-tests.
+Sources: current scripts/happyrobot/workflow-spec.ts, apps/api/src/transport/mcp/tools.ts, docs/mcp-local.md and docs/milestone-3-validation.md. HappyRobot product documentation: https://www.happyrobot.ai/product/governance/adversarial-agents and https://www.happyrobot.ai/product/governance/audits-and-tests.

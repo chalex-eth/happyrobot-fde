@@ -1,0 +1,30 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "types": [
+      "node",
+      "react",
+      "react-dom"
+    ],
+    "noUnusedLocals": true,
+    "noUnusedParameters": true
+  },
+  "include": [
+    "next-env.d.ts",
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "tests/**/*.ts",
+    ".next/types/**/*.ts",
+    ".next/dev/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

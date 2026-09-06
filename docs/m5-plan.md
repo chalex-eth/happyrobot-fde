@@ -81,8 +81,8 @@ and same-origin review-write checks remain in place.
 
 ## Implementation sequence
 
-1. Refactor `app/carrier-check.tsx` into a session-owning wrapper and compact demo
-   area; reuse `app/voice-call.tsx`, the existing cookie-bound endpoints and OTP
+1. Refactor `apps/web/src/features/carrier-verification/carrier-check.tsx` into a session-owning wrapper and compact demo
+   area; reuse `apps/web/src/features/voice-call/voice-call.tsx`, the existing cookie-bound endpoints and OTP
    lifecycle. First review checkpoint: the call and nearby code work with the
    simplified presentation before adding the map.
 2. Add a small operator service and read endpoints for inventory,

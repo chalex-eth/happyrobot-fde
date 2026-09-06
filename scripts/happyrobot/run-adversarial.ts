@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import { HappyRobotClient } from '@happyrobot-ai/sdk';
-import { paragraph, prompt, prepareAdversarialPrompt, toolParameters, variable } from './workflow-spec';
-import { toolSpecs, type ToolName } from '../../src/mcp-tools';
-import { callAction } from '../../src/call-session';
-import { activateAdversarialSession, prepareAdversarialSession, readAdversarialTrace, revokeAdversarialSession } from '../../src/adversarial-session';
+import { paragraph, prompt, prepareAdversarialPrompt, toolParameters, variable } from './workflow-spec.js';
+import { toolSpecs, type ToolName } from '../../apps/api/src/transport/mcp/tools.js';
+import { callAction } from '../../apps/api/src/modules/calls/index.js';
+import { activateAdversarialSession, prepareAdversarialSession, readAdversarialTrace, revokeAdversarialSession } from '../../apps/api/src/transport/mcp/adversarial.js';
 
 // Native HappyRobot adversarial runs, real Twin/FMCSA/OTP tools. No browser call
 // is borrowed. The temporary caller-only envelope is restored after the run.

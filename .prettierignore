@@ -1,0 +1,9 @@
+apps/api/db/migrations/
+apps/api/src/db/generated/
+**/assets/*.json
+**/data/*.json
+node_modules/
+**/.next/
+**/dist/
+tmp/
+docs/

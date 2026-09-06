@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { prompt } from './workflow-spec';
+import { prompt } from './workflow-spec.js';
 import { mkdir, readFile, writeFile, unlink } from 'node:fs/promises';
 import { HappyRobotClient } from '@happyrobot-ai/sdk';
-import { callAction } from '../../src/call-session';
-import { activateAdversarialSession, prepareAdversarialSession, readAdversarialTrace, revokeAdversarialSession } from '../../src/adversarial-session';
+import { callAction } from '../../apps/api/src/modules/calls/index.js';
+import { activateAdversarialSession, prepareAdversarialSession, readAdversarialTrace, revokeAdversarialSession } from '../../apps/api/src/transport/mcp/adversarial.js';
 
 // Real native conversations, isolated from the operator call and verification suite.
 // Uses the existing caller-only prepared challenge, never synthetic load outputs.

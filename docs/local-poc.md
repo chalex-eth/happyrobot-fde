@@ -63,7 +63,7 @@ This completes the local M2 authority check. It does not authenticate the caller
 
 ## Historical verification checkpoint before m3.6 — 2026-09-05
 
-The earlier deferral above was superseded by the user's request to implement Twin and OTP. The schema is kept in `docs/twin-m3.sql`; setup details and remaining work are in `docs/otp-setup.md`.
+The earlier deferral above was superseded by the user's request to implement Twin and OTP. The schema is kept in `apps/api/db/migrations/twin-m3.sql`; setup details and remaining work are in `docs/otp-setup.md`.
 
 - Real Twin tables/functions were created through its SQL console. Its REST RPC is reachable with the provided org header.
 - A real MC 133654 lookup passed, created a saved call, and recovered the same call after browser reload. Search stayed disabled before OTP.

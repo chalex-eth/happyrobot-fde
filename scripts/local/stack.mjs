@@ -33,13 +33,13 @@ try {
   if (mode === 'up') {
     await run(['up', '-d', '--build', '--wait', '--wait-timeout', '180']);
   } else if (mode === 'app-restart') {
-    await run(['up', '-d', '--build', '--no-deps', '--force-recreate', '--wait', '--wait-timeout', '180', 'app']);
+    await run(['up', '-d', '--build', '--no-deps', '--force-recreate', '--wait', '--wait-timeout', '180', 'api', 'app']);
   }
   if (needsCheck) {
-    await run(['exec', '-T', 'app', 'node', '--import', 'tsx', 'scripts/happyrobot/check-local.ts']);
+    await run(['exec', '-T', 'api', 'node', '--import', 'tsx', 'scripts/happyrobot/check-local.ts']);
     console.log('Ready: http://localhost:3000 — development workflow and public MCP connection verified.');
   } else if (mode === 'app-stop') {
-    await run(['stop', 'app']);
+    await run(['stop', 'app', 'api']);
     console.log('App stopped. The MCP proxy and ngrok were left unchanged; tool calls need the app running.');
   } else if (mode === 'down') await run(['down']);
   else if (mode === 'status') await run(['ps']);

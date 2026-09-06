@@ -2,7 +2,7 @@
 
 ## One-command local startup
 
-With Docker Desktop running, use `npm run local:up`, then open **http://localhost:3000**. This starts the app, MCP proxy and stable ngrok tunnel, then verifies the HappyRobot development connection. Use `npm run local:down` to stop them. See [Docker setup and troubleshooting](docs/local-docker.md) for one-time configuration.
+With Docker Desktop running, use `npm run local:up`, then open **http://localhost:3000**. This starts the web app, API, MCP proxy and stable ngrok tunnel, then verifies the HappyRobot development connection. Use `npm run local:down` to stop them. See [Docker setup and troubleshooting](docs/local-docker.md) for one-time configuration.
 
 Dated rollout notes below are historical; use the agent runbook and live checks for current development state.
 
@@ -17,7 +17,7 @@ npm ci
 npm run dev
 ```
 
-Open http://127.0.0.1:3000. The local console automatically uses `.env.local` on the server. No token entry is required and no credential is embedded in browser JavaScript.
+Open http://127.0.0.1:3000. The independent API listens on port 3001. The local console automatically uses `.env.local` on the server. No token entry is required and no credential is embedded in browser JavaScript.
 
 Start a voice call, give your MC number, then dictate the demo code displayed on screen. After verification, describe a route or pickup preference. Search includes all equipment types unless you specify one (dry van, flatbed, refrigerated, etc.). Email/SMS delivery is simulated; generation and verification share one retry per call, with no OTP expiry. The second failure ends verification.
 
@@ -50,19 +50,15 @@ The local convenience route is enabled only by `npm run dev`, which binds to loo
 
 The local search/detail route enforces authority and OTP. A carrier recheck preserves call identity and spent OTP failures but clears verification and load selection. Details require a load returned by that call’s search. The operator view polls the saved call every five seconds. The bearer-protected `/api/tms` is a privileged operator diagnostic and must not be exposed directly as a carrier agent tool. Managed HappyRobot authentication/tool wiring and booking are still pending.
 
-## Structure and delivery
+## Workspace structure
 
-- `app/`: local console and Node.js API route.
-- `src/call-services.ts`: shared carrier, OTP and gated load operations.
-- `src/voice-session.ts`: SDK voice startup and authenticated run-to-call resolution.
-- `docs/voice-agent-plan.md`: milestone implementation and live workflow blocker.
-- `src/tms.ts`: existing TCP client and public load parser.
-- `src/tms-http.ts`: authentication, validation, and safe HTTP errors.
-- `tests/`: isolated HTTP boundary and parser tests.
-- `scripts/verify-local.mjs`: real local integration verification.
-- `docs/local-poc.md`: milestone scope and verification evidence.
+- `apps/web`: Next.js pages, feature UI and a same-origin API proxy.
+- `apps/api`: independent Node HTTP/MCP server, business modules, integrations and Twin access.
+- `packages/contracts`: shared Zod schemas and inferred public types.
+- `apps/api/db`: ordered SQL migrations, generated schema tooling and database tests.
+- `scripts/happyrobot`: workflow configuration and conversation controllers.
 
-GitHub Actions runs tests, transactional SQL checks in disposable PostgreSQL, typechecking, and build without real integration credentials. Nothing deploys from this workflow. The running app persists only to Twin. Later, integrate these modules into the HappyRobot Next.js template while preserving its authentication and Twin setup. The intended update flow remains local branch → GitHub review/checks → merge → managed deployment; access and automatic deployment still need verification.
+See [architecture and local database generation](docs/architecture.md) for ownership and commands. Run `npm run check:boundaries`, `npm run db:check` and `npm run db:test` locally. There is no CI workflow. The application persists only through Twin.
 
 ## Carrier authority lookup (M2a)
 

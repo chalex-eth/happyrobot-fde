@@ -1,5 +1,5 @@
-import { toolSpecs, type ToolName } from '../../src/mcp-tools';
-import { toolParameters } from './workflow-spec';
+import { toolSpecs, type ToolName } from '../../apps/api/src/transport/mcp/tools.js';
+import { toolParameters } from './workflow-spec.js';
 
 export type WiringNode = {
   id: string; persistent_id?: string; type: string; name?: string; parent_id?: string;
