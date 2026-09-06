@@ -90,6 +90,7 @@ export async function readAdversarialTrace(plan: AdversarialSession) {
 export async function handleAdversarialMcp(request: Request) {
   let resolved: AdversarialSession | undefined;
   let searchArguments: Record<string, unknown> | undefined;
+  let negotiationArguments: Record<string, unknown> | undefined;
   return handleMcp(request, {
     authenticate,
     resolve: async req => {
@@ -101,6 +102,7 @@ export async function handleAdversarialMcp(request: Request) {
     execute: (name, args, hash, signal, operationId, challengeId) => {
       // Only validated, public search filters are retained for conversation QA.
       searchArguments = name === 'search_loads' ? toolSpecs.search_loads.schema.parse(args) : undefined;
+      negotiationArguments = name === 'negotiate_offer' ? toolSpecs.negotiate_offer.schema.parse(args) : undefined;
       return executeTool(name, args, hash, signal, operationId, challengeId, {
       ...(resolved?.fault === 'authority_unavailable' ? { authorityLookup: async () => { throw new FmcsaError('FMCSA_UNAVAILABLE', 503, true); } } : {}),
       ...(resolved?.fault === 'otp_delivery_failed' ? { deliverOtp: async () => false } : {}),
@@ -114,10 +116,18 @@ export async function handleAdversarialMcp(request: Request) {
       if (!resolved) return;
       // No OTP arguments, codes, hashes, credentials or free-form summaries.
       const authority = result.authority as { eligible?: boolean } | undefined;
+      const negotiation = result.negotiation as Record<string, unknown> | undefined;
+      // Explicit public-field projection; never log raw pricing or full tool outputs.
+      const publicNegotiation = negotiation ? Object.fromEntries(
+        ['status', 'load_id', 'offer_id', 'offered_rate', 'agreed_rate', 'counter_rounds', 'rounds_remaining', 'booking_confirmed']
+          .filter(key => key in negotiation).map(key => [key, negotiation[key]])) : undefined;
       await appendFile(join(directory(), `${resolved.id}.jsonl`), JSON.stringify({
         at: new Date().toISOString(), injected_fault: resolved.fault, tool, ok: result.ok, error: result.error,
         runtime_run_id: /^[0-9a-f-]{36}$/.test(request.headers.get('x-happyrobot-run-id') ?? '') ? request.headers.get('x-happyrobot-run-id') : null,
         ...(searchArguments ? { search_arguments: searchArguments } : {}),
+        ...(negotiationArguments ? { negotiation_arguments: negotiationArguments } : {}),
+        ...(publicNegotiation ? { negotiation: publicNegotiation } : {}),
+        ...(tool === 'finalize_call' ? { outcome: result.outcome } : {}),
         eligible: authority?.eligible, delivered: result.delivered, verified: result.verified,
         finalized_at: result.finalized_at, failures_remaining: result.failures_remaining,
       }) + '\n', { mode: 0o600 });

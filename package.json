@@ -19,7 +19,8 @@
     "mcp:tunnel": "ngrok http http://127.0.0.1:3002 --inspect=false",
     "happyrobot:mcp": "node --env-file=.env.local --import tsx scripts/happyrobot/mcp-connect.ts",
     "verify:mcp": "node --env-file=.env.local --import tsx scripts/verify-mcp.ts",
-    "test:adversarial": "NODE_ENV=development node --env-file=.env.local --import tsx scripts/happyrobot/run-adversarial.ts"
+    "test:adversarial": "NODE_ENV=development node --env-file=.env.local --import tsx scripts/happyrobot/run-adversarial.ts",
+    "test:negotiation": "NODE_ENV=development node --env-file=.env.local --import tsx scripts/happyrobot/run-negotiation.ts"
   },
   "dependencies": {
     "@happyrobot-ai/sdk": "0.1.45",

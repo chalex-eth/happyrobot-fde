@@ -1,13 +1,14 @@
 import assert from 'node:assert/strict';
 import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import { HappyRobotClient } from '@happyrobot-ai/sdk';
-import { prepareAdversarialPrompt } from './workflow-spec';
+import { prepareAdversarialPrompt, toolParameters, variable } from './workflow-spec';
+import { toolSpecs, type ToolName } from '../../src/mcp-tools';
 import { callAction } from '../../src/call-session';
 import { activateAdversarialSession, prepareAdversarialSession, readAdversarialTrace, revokeAdversarialSession } from '../../src/adversarial-session';
 
 // Native HappyRobot adversarial runs, real Twin/FMCSA/OTP tools. No browser call
 // is borrowed. The temporary caller-only envelope is restored after the run.
-const configPath = new URL(process.argv.includes('--city-search') ? './city-search-config.json' : './adversarial-config.json', import.meta.url);
+const configPath = new URL(process.argv.includes('--negotiation') ? './negotiation-config.json' : process.argv.includes('--city-search') ? './city-search-config.json' : './adversarial-config.json', import.meta.url);
 const definitionsPath = new URL('../../tests/happyrobot/pre-search-paths.json', import.meta.url);
 const need = (name: string) => { const value = process.env[name]; if (!value) throw Error(`Missing ${name}`); return value; };
 const client = new HappyRobotClient({ apiKey: need('HAPPYROBOT_API_KEY'), cluster: 'us', maxRetries: 0, timeout: 30_000 });
@@ -44,7 +45,7 @@ async function setup() {
   const versionId = fork.id;
   assert.ok(versionId, 'Fork returned no version ID');
   console.log(JSON.stringify({ setup: 'configuring_draft', version_id: versionId }));
-  await api(`/versions/${versionId}`, 'PATCH', { name: 'Adversarial E2E — isolated sessions',
+  await api(`/versions/${versionId}`, 'PATCH', { name: process.argv.includes('--negotiation') ? 'Negotiation evals — isolated sessions' : 'Adversarial E2E — isolated sessions',
     description: 'Native adversarial tests with real carrier and OTP operations. Use npm run test:adversarial -- run to provision a fresh session and private caller code. Test draft only; no voice deployment.' });
   const nodes = (await client.nodes.list(versionId)).data as any[];
   const actions: string[] = [];
@@ -57,11 +58,16 @@ async function setup() {
     const fn = { ...tool.function, mcp_server_credential_id: connection.id };
     delete fn.tool_index_id; delete fn.tool_index_hash;
     await client.nodes.update(versionId, tool.id, { type: 'tool', function: fn });
-    const toolArgs = JSON.parse(JSON.stringify(action.configuration.tool_args), (key, value) =>
-      key === 'group_id' ? nodes.find(n => n.id === value)?.persistent_id ?? value : value);
+    assert.ok(tool.name in toolSpecs, 'Unexpected tool in test draft');
+    // Forks may retain old node IDs. Rebuild from this tool's stable identity.
+    const toolArgs = toolParameters(tool.name as ToolName).map(p => ({
+      key: p.name, value: variable(tool.persistent_id ?? tool.id, p.name),
+    }));
     await client.nodes.update(versionId, action.id, { type: 'action', event_id: mcpEventId, configuration: { ...action.configuration, tool_args: toolArgs,
       credentialId: connection.id, credential: { type: 'static', static: { id: connection.id, name } },
       dynamic_headers: [{ key: 'x-adversarial-session', value: [{ type: 'p', children: [{ text: 'controller' }] }] }] } });
+    const mapped = (await client.nodes.get(versionId, action.id)).data as any;
+    assert.deepEqual(mapped.configuration.tool_args, toolArgs, `Argument mapping readback failed: ${tool.name}`);
     actions.push(action.id);
   }
   assert.equal(actions.length, 7);
@@ -220,6 +226,7 @@ async function run(selectedCase?: string) {
 
 async function main() {
   const action = process.argv[2];
+  assert.ok(!process.argv.includes('--negotiation') || action === 'setup', 'Use run-negotiation.ts to run negotiation cases');
   assert.ok(action === 'setup' || action === 'run', 'Use setup --source-version UUID or run --all or run --test PV_ID');
   await mkdir('tmp/adversarial-sessions', { recursive: true, mode: 0o700 });
   const lock = 'tmp/adversarial-sessions/controller.lock';
