@@ -58,6 +58,7 @@ export function CarrierVerification() {
     } finally { setBusy(false); }
   }
   const negotiation = session?.negotiation;
+  const booking = session?.booking;
   const finalized = !!session?.finalizedAt;
   const verified = !!session?.verified;
   const code = !error && !finalized && !verified && session?.otpState === 'pending'
@@ -91,9 +92,16 @@ export function CarrierVerification() {
       {!error && (verified || finalized) && negotiation && negotiation.status !== 'idle' && <div className="notice" role="status" aria-label="Negotiation status">
         <p><strong>{negotiation.status === 'agreed' ? 'Rate agreed' : negotiation.status === 'failed' ? 'Negotiation ended without agreement'
           : negotiation.status === 'rejected' ? 'Offer declined' : 'Current offer'} · {negotiation.load_id}</strong></p>
-        {negotiation.status === 'agreed' && <p>${negotiation.agreed_rate?.toFixed(2)} agreed. No load booked or reserved.</p>}
+        {negotiation.status === 'agreed' && <p>${negotiation.agreed_rate?.toFixed(2)} agreed. {!booking && 'No load booked or reserved.'}</p>}
         {negotiation.status === 'offered' && <p>${negotiation.offered_rate?.toFixed(2)} · {Date.parse(negotiation.expires_at ?? '') <= now ? 'Offer expired; ask the agent to refresh it.' : 'Tell the agent whether you accept or want to counter.'}</p>}
         <small>{negotiation.counter_rounds} of 3 counter rounds used in this call.</small>
+      </div>}
+      {booking && <div className="notice" role="status" aria-label="Booking status">
+        <p><strong>{booking.status === 'confirmed' ? 'Booking confirmed' : booking.status === 'rejected' ? 'Booking failed'
+          : booking.status === 'pending' ? 'Booking in progress' : 'Booking outcome unknown — review required'}</strong> · {booking.load_id}</p>
+        {booking.status === 'confirmed' && <><p>Reference: {booking.reference}</p><p>Senior-representative handoff recorded as a simulation. No live transfer occurred.</p></>}
+        {booking.status === 'uncertain' && <p>Confirmation is unavailable. Do not submit another booking for this load until it has been reviewed.</p>}
+        {booking.status === 'rejected' && <p>This attempt did not confirm a booking. The agreed rate remains recorded.</p>}
       </div>}
       {otpFailed && <p role="status" className="notice error">Verification could not be completed after two failures. Please start a new call.</p>}
       {code && <div className="otp-display">
@@ -102,7 +110,7 @@ export function CarrierVerification() {
         <p>Read these six digits aloud to the agent.</p>
         <small>Valid for this call.</small>
       </div>}
-      {finalized && <p role="status" className="notice">Conversation saved. {session?.selectedLoadId ? `Interest recorded for ${session.selectedLoadId}. ` : ''}No load has been booked.</p>}
+      {finalized && <p role="status" className="notice">Conversation saved. {!booking && 'No load has been booked.'}</p>}
       <p className="hint">Demo verification · The code appears here instead of being sent by email or SMS.</p>
       {session && <div className="call-actions">
         <button className="secondary" disabled={busy || voiceActive} onClick={() => void newCall().catch(() => setError('Could not start a new call. Please try again.'))}>Start new call</button>

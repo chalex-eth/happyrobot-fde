@@ -1,0 +1,145 @@
+{
+  "checked_at": "2026-09-06T08:19:49.924Z",
+  "workflow_id": "01a06c72-4d55-7cbd-bef1-944d617982bf",
+  "development_version": {
+    "id": "01a075c5-d541-7acc-a178-5c3f930be48b",
+    "number": 13,
+    "source": "01a072d7-33be-7899-ad45-ca360bdb06dd",
+    "previous_live": "01a072da-da35-7b11-8653-e16102e92099",
+    "live": true,
+    "environment": "development",
+    "missing_variables": 0,
+    "test_errors": 0,
+    "voice_preserved": true,
+    "model_preserved": true
+  },
+  "connection": {
+    "id": "01a075c6-c44b-7cbd-ac5d-2ed1573abfcd",
+    "name": "Carrier sales Docker development MCP",
+    "url": "https://nonissuably-overgreasy-georgiann.ngrok-free.dev/api/mcp",
+    "auth": "bearer",
+    "normal_run_header": "x-happyrobot-run-id = Current > Run ID"
+  },
+  "docker": {
+    "services": [
+      "app",
+      "mcp-proxy",
+      "ngrok"
+    ],
+    "restart_command": "npm run local:up",
+    "full_down_up_passed": true,
+    "domain_unchanged_after_restart": true,
+    "workflow_unchanged_by_startup": true,
+    "secrets_excluded_from_image": true,
+    "host_ports": [
+      "127.0.0.1:3000",
+      "127.0.0.1:4040"
+    ],
+    "ngrok_upstream": "http://mcp-proxy:3002",
+    "ngrok_image": "ngrok/ngrok@sha256:14d80d083e5b53145f416bbbd36238336c9de4016c43fd950eb2eb845670583b"
+  },
+  "validation": {
+    "unit_tests": 67,
+    "typecheck": "passed",
+    "isolated_production_build": "passed",
+    "ui": {
+      "url": "http://localhost:3000",
+      "start_call_enabled": true,
+      "console_errors": 0
+    },
+    "public_route_status": {
+      "/": 404,
+      "/api/local/calls": 404,
+      "/api/mcp/adversarial": 404,
+      "/api/mcp": 401
+    },
+    "happyrobot_action": {
+      "node_id": "01a075c5-d54f-78c2-a85f-3747f2f4c2ff",
+      "request_id": "52fb1278-59aa-4221-abd7-f0d8dc4b61a0",
+      "error": "VOICE_BINDING_REQUIRED",
+      "backend_trace_matched": true,
+      "meaning": "Real HappyRobot MCP execution reached the backend; unbound node-test run correctly rejected."
+    },
+    "result_visibility": {
+      "tools": 7,
+      "exposed_fields": [
+        "result",
+        "is_error"
+      ],
+      "method": "Empty structural metadata on draft; not execution evidence"
+    },
+    "before_publication": {
+      "checked_at": "2026-09-06T08:13:05.772Z",
+      "call_id": "59ff89b6-dd3e-4108-bffb-172643b2e2e4",
+      "run_id": "352b673f-7230-4d47-9b18-bf9255a44e00",
+      "searches": [
+        {
+          "arguments": {
+            "origin_city": "Dallas",
+            "max_results": 10
+          },
+          "ok": true,
+          "record_count": 1
+        },
+        {
+          "arguments": {
+            "equipment": "DRY_VAN",
+            "max_results": 10
+          },
+          "ok": true,
+          "record_count": 10
+        },
+        {
+          "arguments": {
+            "origin_city": "Anchorage",
+            "max_results": 10
+          },
+          "ok": true,
+          "record_count": 2
+        }
+      ],
+      "detail_ok": true,
+      "finalized": true,
+      "booking_confirmed": false
+    },
+    "after_publication_and_restart": {
+      "checked_at": "2026-09-06T08:18:41.059Z",
+      "call_id": "853f6590-d842-4fc6-bd36-85d706b82ba9",
+      "run_id": "56e39a65-6e27-4724-bd4a-5ef9b5db9023",
+      "searches": [
+        {
+          "arguments": {
+            "origin_city": "Dallas",
+            "max_results": 10
+          },
+          "ok": true,
+          "record_count": 1
+        },
+        {
+          "arguments": {
+            "equipment": "DRY_VAN",
+            "max_results": 10
+          },
+          "ok": true,
+          "record_count": 10
+        },
+        {
+          "arguments": {
+            "origin_city": "Anchorage",
+            "max_results": 10
+          },
+          "ok": true,
+          "record_count": 2
+        }
+      ],
+      "detail_ok": true,
+      "finalized": true,
+      "booking_confirmed": false
+    }
+  },
+  "limitations": [
+    "Microphone, TTS and complete spoken-agent behavior were not tested.",
+    "This change does not implement booking or handoff.",
+    "Native evals use a separate test draft and manual stack; adversarial endpoints are disabled in this Docker stack."
+  ]
+}

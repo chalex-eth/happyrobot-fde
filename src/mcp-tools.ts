@@ -1,3 +1,4 @@
+import { bookForCall, publicBooking } from './booking';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { loadsForCall, verifyCarrierForCall, verifyOtpForCall } from './call-services';
@@ -48,11 +49,18 @@ export const toolSpecs = {
       amount:z.number().positive().max(1_000_000).multipleOf(0.01).describe('Caller requested total USD rate, at most two decimal places; required only for counter.').optional(),
     }),
   },
+  book_load: {
+    description: 'Book the current saved agreement after the caller agrees to proceed. Copy its load_id and offer_id; carrier and rate come from Twin. One booking attempt per call. Only booking.status=confirmed means booked; a simulated handoff is then recorded. Pending or uncertain needs review, never another write. Changed terms require a new reviewed decision; do not silently change the rate.',
+    schema: z.strictObject({
+      load_id: z.string().regex(/^[A-Za-z0-9_-]{1,64}$/),
+      offer_id: z.string().uuid().describe('Exact offer_id of the saved agreed negotiation.'),
+    }),
+  },
   finalize_call: {
     description: 'Record the end of this conversation once, only when the caller explicitly ends or declines further help, a terminal negotiation outcome is confirmed, or a technical failure prevents continuation. Never call while asking a question or awaiting the caller. Completing verification or a search alone is not a reason to finalize. Backend derives verification and selected-load facts. No booking is created. Repeat only with identical outcome and summary if delivery was uncertain.',
     schema: z.strictObject({
       outcome: z.enum(['conversation_complete', 'caller_declined', 'technical_error']).describe('Conversation outcome; never a booking status.'),
-      summary: z.string().trim().min(1).max(1000).describe('Brief factual conversation summary. Exclude OTP digits, secrets and claims that a load is booked.'),
+      summary: z.string().trim().min(1).max(1000).describe('Brief factual conversation summary. Exclude OTP digits and secrets; claim booking only after a confirmed book_load result.'),
     }),
   },
 };
@@ -103,6 +111,11 @@ export async function executeTool(name: ToolName, input: unknown, hash: string, 
     if (process.env.NEGOTIATION_ENABLED !== 'true') throw new SessionError('NEGOTIATION_NOT_READY',503);
     return negotiateForCall(hash,args);
   }
+  if (name === 'book_load') {
+    const args = toolSpecs.book_load.schema.parse(input);
+    if (process.env.BOOKING_ENABLED !== 'true') throw new SessionError('BOOKING_NOT_READY', 503);
+    return bookForCall(hash, args, signal);
+  }
   const args = toolSpecs.finalize_call.schema.parse(input);
   // Summary is model-reported text; structured facts are derived in PostgreSQL.
   // Avoid retaining standalone codes even if the model ignores its instructions.
@@ -113,5 +126,6 @@ export async function executeTool(name: ToolName, input: unknown, hash: string, 
   if (!s?.finalizedAt || !s.finalOutcome || typeof s.verified !== 'boolean') throw new SessionError('TWIN_INVALID_RESPONSE');
   return { ok: true, outcome: s.finalOutcome, finalized_at: s.finalizedAt,
     authority_passed: s.check?.eligible === true, verified: s.verified,
-    selected_load_id: s.selectedLoadId, negotiation:s.negotiation, booking_confirmed: false };
+    selected_load_id: s.selectedLoadId, negotiation:s.negotiation,
+    booking: s.booking ? publicBooking(s.booking) : null, booking_confirmed: s.booking?.status === 'confirmed' };
 }

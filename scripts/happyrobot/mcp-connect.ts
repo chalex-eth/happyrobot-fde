@@ -2,6 +2,7 @@ import { HappyRobotClient, ApiError } from '@happyrobot-ai/sdk';
 import { readFile } from 'node:fs/promises';
 import { toolSpecs, type ToolName } from '../../src/mcp-tools';
 import { mcpServerName, paragraph, variable, toolParameters, prompt, loadFormattingRule } from './workflow-spec';
+import { validateLocalWiring } from './local-wiring';
 
 type Node = { id: string; persistent_id?: string; type: string; name?: string; parent_id?: string;
   configuration?: Record<string, unknown>; function?: Record<string, unknown>; event_id?: string };
@@ -55,6 +56,13 @@ async function main() {
   const nodes = (await client.nodes.list(versionId)).data as Node[];
   if (mode === 'review-results') {
     let previews: Record<string, Record<string, unknown>> | undefined;
+    if (process.argv.includes('--whole-result')) {
+      if (process.argv.includes('--previews')) throw Error('Choose --whole-result or --previews');
+      if (version.is_published || version.is_live) throw Error('Result visibility must be configured on a draft');
+      // Empty structural metadata allows the complete variable-shaped result to
+      // be selected. These placeholders are never evidence of a tool execution.
+      previews = Object.fromEntries(Object.keys(toolSpecs).map(name => [name, { result: {}, is_error: false }]));
+    }
     if (process.argv.includes('--previews')) {
       if (version.is_published || version.is_live) throw Error('Result previews can only be updated on a draft');
       previews = JSON.parse(await readFile(arg('--previews'),'utf8'));
@@ -85,6 +93,8 @@ async function main() {
         if(!visibility.ok) throw Error(`Result visibility failed (HTTP ${visibility.status})`);
         result=await visibility.json();
         if(result.data.nodes.some((n:{fields:{exposed:boolean}[]})=>n.fields.some(f=>!f.exposed))) throw Error('Result fields remain hidden');
+        if (process.argv.includes('--whole-result') && result.data.nodes.some((n:{fields:{path:string;exposed:boolean}[]})=>
+          !n.fields.some(f=>f.path==='result' && f.exposed))) throw Error('Complete MCP result is not exposed');
       }
       console.log(JSON.stringify({tool:node.name,ack:result.data.ack_state,untested:result.data.has_untested_nodes,
         outputs:result.data.nodes.map((n:{state:string;fields:unknown})=>({state:n.state,fields:n.fields}))}));
@@ -144,6 +154,9 @@ async function main() {
     body: JSON.stringify({ description: paragraph(loadFormattingRule) }), redirect: 'error', signal: AbortSignal.timeout(15_000),
   });
   if (!updated.ok) throw Error('Could not update load-format criterion');
+  const summaries = (await client.nodes.list(versionId)).data as Node[];
+  const readback = await Promise.all(summaries.map(n => client.nodes.get(versionId, n.id).then(r => r.data)));
+  validateLocalWiring(readback, credentialId);
   console.log(JSON.stringify({version_id:versionId,configured_tools:Object.keys(toolSpecs),published:false}));
 }
 

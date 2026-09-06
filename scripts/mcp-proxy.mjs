@@ -2,10 +2,10 @@ import { createServer } from 'node:http';
 import { pathToFileURL } from 'node:url';
 
 // Tunnel only this proxy, never the Next dev server or the local operator API.
-export function createMcpProxy(target = 'http://127.0.0.1:3000/api/mcp') {
+export function createMcpProxy(target = 'http://127.0.0.1:3000/api/mcp', { allowAdversarial = true } = {}) {
   return createServer(async (req, res) => {
     res.setHeader('Cache-Control', 'no-store');
-    if (!['/api/mcp', '/api/mcp/adversarial'].includes(req.url)) { res.writeHead(404).end(); return; }
+    if (req.url !== '/api/mcp' && !(allowAdversarial && req.url === '/api/mcp/adversarial')) { res.writeHead(404).end(); return; }
     if (!['POST', 'GET', 'DELETE'].includes(req.method)) { res.writeHead(405).end(); return; }
     let size = 0; const chunks = [];
     try {
@@ -30,7 +30,8 @@ export function createMcpProxy(target = 'http://127.0.0.1:3000/api/mcp') {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const server = createMcpProxy();
+  const server = createMcpProxy(process.env.MCP_PROXY_TARGET, { allowAdversarial: process.env.MCP_PROXY_ALLOW_ADVERSARIAL !== 'false' });
   server.requestTimeout = 35_000;
-  server.listen(3002, '127.0.0.1', () => console.log('MCP-only proxy listening on 127.0.0.1:3002/api/mcp'));
+  const host = process.env.MCP_PROXY_HOST || '127.0.0.1';
+  server.listen(3002, host, () => console.log(`MCP-only proxy listening on ${host}:3002/api/mcp`));
 }

@@ -100,6 +100,9 @@ export async function handleAdversarialMcp(request: Request) {
       return resolved;
     },
     execute: (name, args, hash, signal, operationId, challengeId) => {
+      // Existing conversation suites are read/negotiation-only. A simulator or
+      // workflow config probe must never book real shared TMS inventory.
+      if (name === 'book_load') throw new SessionError('BOOKING_DISABLED_IN_EVAL', 403);
       // Only validated, public search filters are retained for conversation QA.
       searchArguments = name === 'search_loads' ? toolSpecs.search_loads.schema.parse(args) : undefined;
       negotiationArguments = name === 'negotiate_offer' ? toolSpecs.negotiate_offer.schema.parse(args) : undefined;

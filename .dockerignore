@@ -1,0 +1,16 @@
+**
+!package.json
+!package-lock.json
+!tsconfig.json
+!next-env.d.ts
+!app/
+!app/**
+!src/
+!src/**
+!scripts/
+!scripts/**
+!tests/
+!tests/**
+# Never copy local credentials, test bindings or runtime evidence into an image.
+scripts/happyrobot/*config.json
+scripts/happyrobot/result-previews.json

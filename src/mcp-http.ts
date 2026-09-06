@@ -43,7 +43,7 @@ export async function handleMcp(request: Request, adapter: McpAdapter = voiceAda
     for (const name of Object.keys(toolSpecs) as ToolName[]) {
       const spec = toolSpecs[name];
       server.registerTool(name, { description: spec.description, inputSchema: spec.schema,
-        annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: name === 'finalize_call', openWorldHint: true } },
+        annotations: { readOnlyHint: false, destructiveHint: name === 'book_load', idempotentHint: name === 'finalize_call' || name === 'book_load', openWorldHint: true } },
       async (args: unknown) => {
         const started = Date.now();
         let result: Record<string, unknown>;

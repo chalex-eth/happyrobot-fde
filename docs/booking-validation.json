@@ -1,0 +1,96 @@
+{
+  "checked_at": "2026-09-06T09:00:43.092Z",
+  "scope": "M4 implementation and development rollout; real booking acceptance pending",
+  "workflow_id": "01a06c72-4d55-7cbd-bef1-944d617982bf",
+  "development_version": {
+    "id": "01a075ef-6fa9-793a-a6fe-0148e1cab8aa",
+    "number": 14,
+    "source_version": "01a075c5-d541-7acc-a178-5c3f930be48b",
+    "live": true,
+    "environment": "development"
+  },
+  "database": {
+    "migration": "docs/twin-m4.sql",
+    "applied_via": "HappyRobot Twin MCP execute_sql",
+    "existing_calls_preserved": 86,
+    "existing_events_preserved": 732,
+    "booking_count_immediately_after_migration": 0,
+    "installed_function_bodies_match_tested_migration": true,
+    "body_md5": {
+      "poc_book_call": "4856c083011557adc1c203297db37a81",
+      "poc_call_action": "f0c7e44ddc484f8e8532ec1f49217c48",
+      "poc_finalize_call": "d5f622116909faeda49cd931013cedb3",
+      "poc_negotiate": "57e0cc7e2fbff5532eb26b1ff8ddb930"
+    }
+  },
+  "validation": {
+    "unit_tests": {
+      "passed": 74,
+      "failed": 0
+    },
+    "typecheck": "passed",
+    "production_build": "passed",
+    "sql_transition_suites": "passed",
+    "concurrent_otp_negotiation_booking_checks": "passed",
+    "local_docker_rebuild": "passed",
+    "live_wiring": {
+      "checked": true,
+      "scope": "MCP discovery and workflow configuration; no voice conversation",
+      "workflow_id": "01a06c72-4d55-7cbd-bef1-944d617982bf",
+      "version_id": "01a075ef-6fa9-793a-a6fe-0148e1cab8aa",
+      "version_number": 14,
+      "live": true,
+      "credential_id": "01a075c6-c44b-7cbd-ac5d-2ed1573abfcd",
+      "mcp_url": "https://nonissuably-overgreasy-georgiann.ngrok-free.dev/api/mcp",
+      "tools": [
+        "book_load",
+        "create_otp",
+        "finalize_call",
+        "get_load",
+        "negotiate_offer",
+        "search_loads",
+        "verify_carrier",
+        "verify_otp"
+      ]
+    },
+    "happyrobot_action": {
+      "node_id": "01a075ef-6fb3-796d-9c59-81c7b510e946",
+      "tool": "create_otp",
+      "request_id": "e2eebb54-c976-4573-b560-d1d5d3097ef2",
+      "result": "VOICE_BINDING_REQUIRED",
+      "backend_trace_matched": true,
+      "meaning": "Unbound node test reached the real backend and was correctly rejected."
+    },
+    "full_result_visibility": {
+      "tools": 8,
+      "fields": [
+        "result",
+        "is_error"
+      ],
+      "method": "Readback after empty structural metadata; placeholders are not execution evidence"
+    },
+    "before_publication": {
+      "passed": true,
+      "scenario": "acceptance",
+      "call_id": "165ef016-1ff1-4c8e-8954-9a664e6fd19f",
+      "run_id": "96449803-dda1-485f-8643-91401f14d7ae",
+      "selected_load_id": "LD00755"
+    },
+    "after_publication": {
+      "passed": true,
+      "scenario": "acceptance",
+      "call_id": "cd1feeae-e8a9-4e1a-aeb7-01fa6e0d400f",
+      "run_id": "0eb10351-3159-4612-9fb2-4a4f93781d7f",
+      "selected_load_id": "LD00755"
+    },
+    "agreement_snapshot_checked_in_twin": true,
+    "real_booking": "not_run",
+    "spoken_booking_conversation": "not_run"
+  },
+  "limitations": [
+    "No challenge load has been consumed by these checks. A selected real booking must still verify the TMS reference, duplicate behavior, Twin events and mocked handoff.",
+    "Real email/SMS OTP delivery remains pending; current delivery is screen-only.",
+    "M5 operator review and dropped-call reconciliation remain pending.",
+    "No production publication or managed Apps deployment."
+  ]
+}

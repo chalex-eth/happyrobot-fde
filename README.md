@@ -1,6 +1,10 @@
 # Carrier sales — local POC
 
-Current OTP rollout: **Version 7 is live in development**, with migration m3.6 and one shared retry. See [validation and remaining eval limitation](docs/otp-simplification-validation.md).
+## One-command local startup
+
+With Docker Desktop running, use `npm run local:up`, then open **http://localhost:3000**. This starts the app, MCP proxy and stable ngrok tunnel, then verifies the HappyRobot development connection. Use `npm run local:down` to stop them. See [Docker setup and troubleshooting](docs/local-docker.md) for one-time configuration.
+
+Dated rollout notes below are historical; use the agent runbook and live checks for current development state.
 
 Next.js local POC with real TMS, FMCSA authority checks, Twin call state and an OTP gate. The current local configuration uses a clearly labelled screen-delivered mock OTP so the demo can proceed without email or SMS. Real email delivery remains pending. See [OTP setup and demo flow](docs/otp-setup.md).
 
@@ -93,3 +97,7 @@ The approved Twin migration is applied, NEGOTIATION_ENABLED=true locally, and Ve
 ## Native adversarial OTP checks
 
 Eight core tests use unpublished Version 9 with fresh backend sessions and private caller-only codes where required. Run all eight sequentially with `npm run test:adversarial -- run --all`, or select one with `--test PV01`. PV07 and PV17 inject scoped authority and demo-delivery failures; the other six use no service fault injection. The 14 approved secondary definitions were soft-deleted, preserving their original records locally. The resulting conversations and audits appear in HappyRobot. See [setup, limitations and evidence](docs/adversarial-e2e.md).
+
+## M4 booking
+
+Development Version 14 and the local Docker app now enable the real TMS booking tool, durable Twin attempt tracking and a recorded mock handoff. The M4 migration is applied. Local tests and real verification/agreement smoke pass; actual TMS booking and spoken booking acceptance remain untested. Booking defaults off in fresh configurations until migration and workflow rollout. See [booking scope and activation](docs/booking.md). An agreement alone remains distinct from a confirmed booking.

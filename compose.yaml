@@ -1,0 +1,51 @@
+name: carrier-sales-local
+services:
+  app:
+    build: .
+    image: carrier-sales-local:dev
+    init: true
+    restart: unless-stopped
+    env_file: .env.local
+    environment:
+      NODE_ENV: development
+      HAPPYROBOT_ENVIRONMENT: development
+      ADVERSARIAL_MCP_ENABLED: "false"
+      NGROK_API_URL: http://ngrok:4040
+    ports:
+      - "127.0.0.1:3000:3000"
+    healthcheck:
+      test: ["CMD", "node", "scripts/local/health.mjs", "http://127.0.0.1:3000/api/mcp"]
+      interval: 5s
+      timeout: 10s
+      retries: 12
+      start_period: 30s
+  mcp-proxy:
+    image: carrier-sales-local:dev
+    init: true
+    restart: unless-stopped
+    command: ["node", "scripts/mcp-proxy.mjs"]
+    environment:
+      MCP_PROXY_HOST: 0.0.0.0
+      MCP_PROXY_TARGET: http://app:3000/api/mcp
+      MCP_PROXY_ALLOW_ADVERSARIAL: "false"
+    depends_on:
+      app:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "scripts/local/health.mjs", "http://127.0.0.1:3002/api/mcp"]
+      interval: 5s
+      timeout: 10s
+      retries: 6
+  ngrok:
+    image: ngrok/ngrok@sha256:14d80d083e5b53145f416bbbd36238336c9de4016c43fd950eb2eb845670583b
+    restart: unless-stopped
+    command: ["http", "http://mcp-proxy:3002", "--url=https://${NGROK_DOMAIN:?Set NGROK_DOMAIN in .env.docker.local}", "--inspect=false", "--config=/etc/ngrok.yml"]
+    environment:
+      NGROK_AUTHTOKEN: ${NGROK_AUTHTOKEN:?Set NGROK_AUTHTOKEN in .env.docker.local}
+    volumes:
+      - ./docker/ngrok.yml:/etc/ngrok.yml:ro
+    ports:
+      - "127.0.0.1:4040:4040"
+    depends_on:
+      mcp-proxy:
+        condition: service_healthy

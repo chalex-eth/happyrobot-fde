@@ -1,6 +1,10 @@
 # HappyRobot agent runbook
 
-Working snapshot: 5 September 2026. Use this to orient yourself and reproduce one iteration. Refresh remote versions and tunnel URLs before acting; IDs in saved reports are historical evidence.
+Runbook updated: 6 September 2026. Use this to orient yourself and reproduce one iteration. Refresh remote versions and tunnel URLs before acting; dated IDs in saved reports are historical evidence.
+
+**M4 rollout:** normal Version 14 (`01a075ef-6fa9-793a-a6fe-0148e1cab8aa`) now replaces Version 13 in development, using the same Docker MCP connection below. Twin M4 is applied and local booking is enabled. Eight-tool wiring and bound MCP agreement smoke passed; actual TMS booking and spoken booking acceptance remain untested. Start a fresh call after activation. See [M4 evidence](booking-validation.json).
+
+**6 September Docker rollout:** normal browser-call Version 13 (`01a075c5-d541-7acc-a178-5c3f930be48b`) is now live in development, replacing isolated Version 11. It uses credential `01a075c6-c44b-7cbd-ac5d-2ed1573abfcd` (**Carrier sales Docker development MCP**) at `https://nonissuably-overgreasy-georgiann.ngrok-free.dev/api/mcp`. Start with `npm run local:up`. Version 12 remains an unpublished evaluation draft. See [Docker setup](local-docker.md) and [rollout evidence](local-docker-validation.json); older version snapshots below are historical.
 
 ## Start here
 
@@ -18,7 +22,7 @@ The browser/model cannot choose another caller's session. Normal MCP requests ca
 | --- | --- |
 | `app/voice-call.tsx`, `app/api/local/*` | Local call UI, cookie-bound endpoints, screen-only demo OTP |
 | `src/voice-session.ts`, `src/call-session.ts` | Provider run binding, Twin RPC state, session lifecycle |
-| `src/mcp-tools.ts`, `src/mcp-http.ts` | Seven tool schemas/descriptions, dispatch, MCP auth and transport |
+| `src/mcp-tools.ts`, `src/mcp-http.ts` | Eight tool schemas/descriptions, dispatch, MCP auth and transport |
 | `src/call-services.ts`, `src/fmcsa.ts`, `src/demo-otp.ts` | Authority and OTP gates; shared business operations |
 | `src/tms.ts`, `src/negotiation.ts` | TCP load queries/details; private pricing and offers |
 | `src/adversarial-session.ts` | Development test isolation, capability binding and backend traces |
@@ -38,11 +42,18 @@ TMS uses line-oriented TCP: command first, authentication per request, pipe-deli
 | `search_loads` | City alone is sufficient; omit unspecified filters. At least one search filter is required. City-first discovery uses `origin_city` and `max_results: 10`. |
 | `get_load` | Exact `load_id` from the latest successful search. Refreshes details and obtains the current offer. |
 | `negotiate_offer` | Returned `load_id` and `offer_id`, response, amount only for counteroffers. Three counter rounds per call. |
-| `finalize_call` | Outcome and summary. Records disposition; does not book or transfer. Do not finalize while awaiting an answer. |
+| `book_load` | Exact agreed `load_id` and `offer_id`; enabled only after the M4 migration. One saved attempt; confirmed/rejected/uncertain. Confirmed booking records a mock handoff. |
+| `finalize_call` | Outcome and summary. Records disposition derived from agreement and booking facts; does not initiate a booking. Do not finalize while awaiting an answer. |
 
 Authority and OTP must pass before load access. Retain caller preferences mentioned before verification. Do not require state, destination, date or equipment for the initial city search. Results, dates and equipment must come from actual records. Confirm equipment before negotiation. Older search selections require searching that lane again. See [city-first behavior and acceptance](city-first-discovery.md).
 
+## M4 booking
+
+See [minimal booking scope, protocol, checks and rollout](booking.md). M4 is active locally and in development Version 14. Booking defaults off in fresh configurations until `twin-m4.sql` is applied and `BOOKING_ENABLED=true` is configured. Existing adversarial adapters refuse `book_load`; do not use them for real booking tests. Saved Docker Version 13 evidence describes the prior seven-tool rollout; M4 evidence is separate.
+
 ## Reproduce one iteration
+
+For normal browser-call development, prefer `npm run local:up` and open `http://localhost:3000`. The Docker stack uses a fixed ngrok domain and validates the live development workflow without editing it. See [one-command Docker setup](local-docker.md). It disables the adversarial route; the manual stack below remains available for isolated native evals. Do not run both stacks on the same ports.
 
 1. Check existing processes; avoid duplicate servers. If needed, start each command in a separate terminal:
 
@@ -65,7 +76,7 @@ Authority and OTP must pass before load access. Retain caller preferences mentio
    npm run happyrobot:mcp -- connect
    ```
 
-   `connect` refreshes and verifies the exact seven tools. It refuses a named connection with mismatched URL/auth. For a changed tunnel, deliberately update the connection or set `HAPPYROBOT_MCP_SERVER_NAME` to a distinct name before connecting; this SDK cannot update an MCP URL. Preserve other workflows' connections.
+   `connect` refreshes and verifies the exact eight tools. It refuses a named connection with mismatched URL/auth. For a changed tunnel, deliberately update the connection or set `HAPPYROBOT_MCP_SERVER_NAME` to a distinct name before connecting; this SDK cannot update an MCP URL. Preserve other workflows' connections.
 
 4. Read current versions with `client.workflows.listVersions(workflowId)` or the HappyRobot connector. Use explicit IDs below: `SOURCE_UUID` is the verified source, `DRAFT_UUID` is the returned fork ID.
 
@@ -148,19 +159,20 @@ Evidence goes to `docs/negotiation-results/` with OTPs redacted, public negotiat
 - Tool parameter references use persistent UUIDs, not display names or stale fork node IDs. Normal run header references platform `Current > Run ID`. Discover integration IDs; never invent them.
 - REST gaps use `https://platform.happyrobot.ai/api/v2`: `/nodes/{action}/adversarial-tests`, `/nodes/{prompt}/northstars`, `/northstars/{id}`, `/versions/{version}/tools/{tool}/tool-call-result/inspect` and `/visibility`. Follow existing scripts for methods and payloads; API wrappers differ (`data` versus `test`).
 - `review-results --version UUID` acknowledges inspection; it is not purely read-only. Adding `--previews scripts/happyrobot/result-previews.json` writes empty schema placeholders and visibility on a draft. This is configuration, not evidence of execution. Investigate the current simulator issue before applying previews again.
+- `review-results --version DRAFT_UUID --whole-result` selects the complete `result` object plus `is_error` using empty structural metadata, avoiding an error-only field list that can hide successful OTP/load responses. It modifies only a draft, refuses `--previews` at the same time, and reads back visibility. The Docker rollout first proved a real HappyRobot action/backend trace and a real bound MCP flow; these empty objects themselves never count as execution evidence. Do not normal-sync an isolated test draft.
 - Parameter readback can omit `type`; compare names, descriptions and required flags, then check the actual MCP schema. Missing validation fields are unknown, not zero errors. Prompt issues alone are not complete workflow validation.
 
-## Paused rollout: resume from evidence
+## Historical rollout evidence before Docker
 
-**6 September state refresh:** Version 11 is now live in development, so the 5 September snapshot below is historical. The saved city-test configuration still points to Version 11; `setup` and `run` correctly require an unpublished draft. Refresh the isolated test configuration before running conversations. Folder organization is independent of this restriction.
+**6 September pre-Docker state:** Version 11 was live in development before the normal Version 13 Docker rollout above. The saved city-test configuration still points to Version 11; `setup` and `run` require an unpublished draft. Refresh the isolated test configuration before running conversations. Folder organization is independent of this restriction.
 
 Local checkpoint on 5 September: 63 tests and typecheck passed. Candidate Version 10 and isolated city-test Version 11 remain unpublished; last remotely verified development live was Version 8. Exact IDs and prompt hash are in [rollout evidence](city-first-rollout.json). Refresh remote state before changing anything.
 
 Real TMS city-only queries found Dallas and Anchorage inventory, recorded in `docs/city-search-tms-evidence.json`; inventory is time-sensitive. Some native runs reached the backend, but final prompt acceptance remains incomplete.
 
-**Current blocker:** later native runs returned generic `{"result":"success"}` with no backend trace. Latest saved PV01 run `e7bb4327-95ff-40a5-a779-8c84d112a021` has `integration_passed: false` and an empty trace. Do not count this as verification or tune conversational behavior from these invalid tool results. A relationship to result previews/action updates is a hypothesis, not an established cause. Inspect isolated draft execution/wiring and prove one real backend trace before resuming the suite. Local controller lock and active channel were absent at handoff.
+**Historical simulator blocker:** later native runs returned generic `{"result":"success"}` with no backend trace. Saved PV01 run `e7bb4327-95ff-40a5-a779-8c84d112a021` has `integration_passed: false` and an empty trace. Do not count this as verification or tune conversational behavior from these invalid tool results. A relationship to result previews/action updates was a hypothesis, not an established cause. The Docker rollout separately proved a real normal MCP action/backend trace; it does not retroactively validate these native conversations.
 
-No development publication or post-publication city-first smoke has occurred. Further references: `docs/mcp-local.md`, `docs/adversarial-e2e.md`, `docs/negotiation.md`. Historical README/docs claims may lag the live API and generated configuration.
+At that earlier checkpoint no development publication or post-publication city-first smoke had occurred. Version 13 has since been published and the Docker smoke passed before publication and after a complete restart; see `docs/local-docker-validation.json`. Further references: `docs/mcp-local.md`, `docs/adversarial-e2e.md`, `docs/negotiation.md`. Historical README/docs claims may lag the live API and generated configuration.
 
 ## Suggested skills
 

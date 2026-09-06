@@ -20,7 +20,12 @@
     "happyrobot:mcp": "node --env-file=.env.local --import tsx scripts/happyrobot/mcp-connect.ts",
     "verify:mcp": "node --env-file=.env.local --import tsx scripts/verify-mcp.ts",
     "test:adversarial": "NODE_ENV=development node --env-file=.env.local --import tsx scripts/happyrobot/run-adversarial.ts",
-    "test:negotiation": "NODE_ENV=development node --env-file=.env.local --import tsx scripts/happyrobot/run-negotiation.ts"
+    "test:negotiation": "NODE_ENV=development node --env-file=.env.local --import tsx scripts/happyrobot/run-negotiation.ts",
+    "local:up": "node scripts/local/stack.mjs up",
+    "local:down": "node scripts/local/stack.mjs down",
+    "local:status": "node scripts/local/stack.mjs status",
+    "local:logs": "node scripts/local/stack.mjs logs",
+    "local:check": "node scripts/local/stack.mjs check"
   },
   "dependencies": {
     "@happyrobot-ai/sdk": "0.1.45",

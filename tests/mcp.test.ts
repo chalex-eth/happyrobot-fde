@@ -4,6 +4,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { handleMcp } from '../src/mcp-http';
 import { createMcpProxy } from '../scripts/mcp-proxy.mjs';
+import { createServer } from 'node:http';
 
 const id = '11111111-1111-4111-8111-111111111111';
 function configure(t: TestContext) {
@@ -22,11 +23,11 @@ async function connect(t: TestContext, run?: string) {
 }
 const value = (result: Record<string, unknown>) => JSON.parse((result.content as {text:string}[])[0].text);
 
-test('real MCP client initializes and discovers seven strict schemas without a call binding', async t => {
+test('real MCP client initializes and discovers eight strict schemas without a call binding', async t => {
   configure(t);
   const client = await connect(t);
   const { tools } = await client.listTools();
-  assert.deepEqual(tools.map(t => t.name), ['verify_carrier','create_otp','verify_otp','search_loads','get_load','negotiate_offer','finalize_call']);
+  assert.deepEqual(tools.map(t => t.name), ['verify_carrier','create_otp','verify_otp','search_loads','get_load','negotiate_offer','book_load','finalize_call']);
   for(const tool of tools) {
     assert.equal(tool.inputSchema.additionalProperties,false);
     assert.ok(!JSON.stringify(tool.inputSchema).includes('run_id'));
@@ -96,6 +97,30 @@ test('MCP-only proxy cannot publish operator routes, assets or alternate paths',
     assert.equal((await fetch(`http://127.0.0.1:${port}${path}`)).status,404);
   }
   assert.equal((await fetch(`http://127.0.0.1:${port}/api/mcp`,{method:'PUT'})).status,405);
+});
+
+test('Docker proxy reaches a separate upstream, strips cookies and excludes the eval route', async t => {
+  const upstream = createServer((req, res) => {
+    assert.equal(req.url, '/api/mcp');
+    assert.equal(req.headers.authorization, 'Bearer test-proxy');
+    assert.equal(req.headers['x-happyrobot-run-id'], id);
+    assert.equal(req.headers.cookie, undefined);
+    res.writeHead(200, { 'Content-Type': 'application/json' }).end('{"ok":true}');
+  });
+  await new Promise<void>(resolve => upstream.listen(0, '127.0.0.1', resolve));
+  const upstreamPort = (upstream.address() as { port: number }).port;
+  const proxy = createMcpProxy(`http://127.0.0.1:${upstreamPort}/api/mcp`, { allowAdversarial: false });
+  await new Promise<void>(resolve => proxy.listen(0, '127.0.0.1', resolve));
+  t.after(async () => {
+    await new Promise<void>(resolve => proxy.close(() => resolve()));
+    await new Promise<void>(resolve => upstream.close(() => resolve()));
+  });
+  const base = `http://127.0.0.1:${(proxy.address() as { port: number }).port}`;
+  const response = await fetch(`${base}/api/mcp`, { method: 'POST', body: '{}', headers: {
+    authorization: 'Bearer test-proxy', 'x-happyrobot-run-id': id, cookie: 'carrier_session=private',
+  } });
+  assert.deepEqual(await response.json(), { ok: true });
+  assert.equal((await fetch(`${base}/api/mcp/adversarial`, { method: 'POST' })).status, 404);
 });
 
 

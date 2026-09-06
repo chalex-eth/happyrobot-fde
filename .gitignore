@@ -4,6 +4,7 @@ node_modules/
 .vercel/
 .env*
 !.env.example
+!.env.docker.example
 *.tsbuildinfo
 references/
 tmp/

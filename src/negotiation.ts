@@ -32,7 +32,14 @@ export async function getNegotiableLoad(hash: string, loadId: string, signal?: A
   if (!result.ok || !prices) throw new SessionError('TMS_PRICING_UNAVAILABLE');
   const quoted = await twinRpc('poc_negotiate', {p_session_hash:hash,p_action:'quote',p_load_id:loadId,
     p_revision:before.session!.authorityRevision,p_listed_cents:prices.listedCents,p_max_cents:prices.maxCents});
-  return { ...result, negotiation:decision(quoted) };
+  let negotiation = decision(quoted);
+  if (process.env.BOOKING_ENABLED === 'true' && ['offered', 'agreed'].includes(negotiation.status)) {
+    const saved = await twinRpc('poc_book_call', { p_session_hash: hash, p_action: 'quote',
+      p_metadata: { loadId, offerId: negotiation.offer_id, terms: result.records[0] } });
+    if (!saved.ok) throw new SessionError(saved.error ?? 'BOOKING_TERMS_REQUIRED', 409);
+    negotiation = decision(saved);
+  }
+  return { ...result, negotiation };
 }
 
 export async function negotiateForCall(hash: string, args: {
