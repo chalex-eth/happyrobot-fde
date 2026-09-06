@@ -1,0 +1,384 @@
+{
+  "test": "CS03",
+  "test_id": "01a072df-25d8-7b22-b0f9-741b7ec096be",
+  "run_id": "dcfc13eb-9cd5-42d1-9229-b101d7afe8b9",
+  "version_id": "01a072da-da35-7b11-8653-e16102e92099",
+  "call_id": "ef6760c2-3048-407d-a406-3824d60c2b46",
+  "completed_at": "2026-09-05T18:44:52.821Z",
+  "checks": {
+    "conversation_completed": true,
+    "verified": true,
+    "search_after_verification": true,
+    "search_succeeded": true,
+    "finalized": true,
+    "no_negotiation": true
+  },
+  "automated_checks_passed": true,
+  "conversation_review": "pending",
+  "audit_remarks": [
+    {
+      "northstar_id": "01a072da-da84-7121-8a52-0cfca22b3363",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-705f-bb70-4ddc9dc15bc9",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-708f-a737-b573efa922d4",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-715c-83f6-9d2118b6c63a",
+      "grade": "failed",
+      "correction": "At closure, include a professional thank-you to the caller (e.g., “Thanks again for your time—have a great day!”) before ending.",
+      "correction_reason": "The caller indicated closure with thanks, but the assistant’s final message simply stated it would close without thanking the caller. This does not meet the requirement to close professionally and thank the caller.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-715c-b603-c040d1110bd8",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7175-a1bd-83c3178459c7",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-724b-91b3-d5ee0893ee36",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-728f-ab30-ac832e1592b2",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-73ae-8d79-45ae119bcbb5",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7559-a51b-0a05ac614baa",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-75de-acbc-db8fe9d641a4",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-769b-9370-ec45842aa47d",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-76da-a0c2-ac30df2add29",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-78c6-b519-2508deff858a",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-78dd-98c3-91b110ff8551",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-78eb-9395-23e4089ad634",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-78f1-8c7c-83eb45264c87",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-78f4-88da-c6cd4643579e",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7942-a9d2-40f15daccd1a",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-79a1-9f0f-84dc52996889",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-79c4-8136-cf26c77170eb",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7a07-806f-dd854d9db310",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7a5e-9c64-40cee2be3871",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7aac-a46b-622b5ed1abaf",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7bb3-985d-870a5bf5e855",
+      "grade": "failed",
+      "correction": "When presenting the load, include the date in YYYYMMDD format (e.g., 20260917) and keep formatting consistent for state abbreviations and dates.",
+      "correction_reason": "The assistant presented the pickup date as “September 17” instead of the required YYYYMMDD format. State abbreviations were used (WA), but the date formatting requirement was not met.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7c3f-950e-2593b39c1468",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7c50-9a9d-737742952fc2",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7c6d-a943-edc2bcf66546",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7cdf-b04b-ece1be4a2d89",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7d35-b44c-86d598e5b038",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7d66-a8e1-e4f699d7aa96",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7daa-914b-c6915290c9e7",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7e33-8ae5-9a7b762679a4",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7edc-90c2-21696197530b",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7efe-9501-5a24d9bb3dfc",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7f99-a9a3-4a6e8e7b8258",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7fda-ae72-c1104ab172c8",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    }
+  ],
+  "trace": [
+    {
+      "at": "2026-09-05T18:43:54.690Z",
+      "injected_fault": "none",
+      "tool": "verify_carrier",
+      "ok": true,
+      "runtime_run_id": null,
+      "eligible": true,
+      "verified": false,
+      "failures_remaining": 2
+    },
+    {
+      "at": "2026-09-05T18:43:58.324Z",
+      "injected_fault": "none",
+      "tool": "create_otp",
+      "ok": true,
+      "runtime_run_id": null,
+      "eligible": true,
+      "delivered": true,
+      "verified": false,
+      "failures_remaining": 2
+    },
+    {
+      "at": "2026-09-05T18:44:09.251Z",
+      "injected_fault": "none",
+      "tool": "verify_otp",
+      "ok": true,
+      "runtime_run_id": null,
+      "eligible": true,
+      "verified": true,
+      "failures_remaining": 2
+    },
+    {
+      "at": "2026-09-05T18:44:15.872Z",
+      "injected_fault": "none",
+      "tool": "search_loads",
+      "ok": true,
+      "runtime_run_id": null,
+      "search_arguments": {
+        "origin_city": "Dallas",
+        "max_results": 10
+      }
+    },
+    {
+      "at": "2026-09-05T18:44:25.171Z",
+      "injected_fault": "none",
+      "tool": "finalize_call",
+      "ok": true,
+      "runtime_run_id": null,
+      "verified": true,
+      "finalized_at": "2026-09-05T18:44:25.122303+00:00"
+    }
+  ],
+  "tool_calls": [],
+  "messages": [
+    {
+      "role": "assistant",
+      "content": "“Thanks for calling HappyRobot Logistics. I’m Daniel, your carrier sales assistant. I can help you find available loads. Can I get your MC number?”"
+    },
+    {
+      "role": "user",
+      "content": "My MC number is 135797."
+    },
+    {
+      "role": "assistant",
+      "content": "Thanks. I have your MC number as 135797. I’ll check your operating authority now."
+    },
+    {
+      "role": "user",
+      "content": "That is correct. Let me know once you are ready for the verification code."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"authority\":{\"carrier\":{\"allowedToOperate\":true,\"commonAuthority\":\"A\",\"contractAuthority\":\"A\",\"dotNumber\":\"80806\",\"legalName\":\"J B HUNT TRANSPORT INC\",\"outOfService\":null,\"outOfServiceReported\":false},\"checkedAt\":\"2026-09-05T18:43:54.550Z\",\"eligible\":true,\"mcNumber\":\"135797\",\"outcome\":\"eligible\",\"reason\":\"ACTIVE_CARRIER_AUTHORITY\"},\"delivery\":\"frontend_mock\",\"demo\":true,\"failures_remaining\":2,\"ok\":true,\"otp_status\":\"not_sent\",\"request_id\":\"6db07480-ccc4-46a7-b591-fb8691e48993\",\"retry_allowed\":false,\"verified\":false}}"
+    },
+    {
+      "role": "assistant",
+      "content": "Your authority is active. I’m sending the verification code now."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"authority\":{\"carrier\":{\"allowedToOperate\":true,\"commonAuthority\":\"A\",\"contractAuthority\":\"A\",\"dotNumber\":\"80806\",\"legalName\":\"J B HUNT TRANSPORT INC\",\"outOfService\":null,\"outOfServiceReported\":false},\"checkedAt\":\"2026-09-05T18:43:54.550Z\",\"eligible\":true,\"mcNumber\":\"135797\",\"outcome\":\"eligible\",\"reason\":\"ACTIVE_CARRIER_AUTHORITY\"},\"delivered\":true,\"delivery\":\"frontend_mock\",\"demo\":true,\"failures_remaining\":2,\"ok\":true,\"otp_status\":\"pending\",\"request_id\":\"ff97cc82-754e-4293-abc2-c47c2309b9e9\",\"retry_allowed\":false,\"verified\":false}}"
+    },
+    {
+      "role": "user",
+      "content": "Great, I am ready. Let me know when you need the code."
+    },
+    {
+      "role": "assistant",
+      "content": "I’ve sent you a code. Please read the six digits from your screen."
+    },
+    {
+      "role": "user",
+      "content": "The verification code is [OTP REDACTED]."
+    },
+    {
+      "role": "assistant",
+      "content": "I’ll verify the six-digit code now."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"authority\":{\"carrier\":{\"allowedToOperate\":true,\"commonAuthority\":\"A\",\"contractAuthority\":\"A\",\"dotNumber\":\"80806\",\"legalName\":\"J B HUNT TRANSPORT INC\",\"outOfService\":null,\"outOfServiceReported\":false},\"checkedAt\":\"2026-09-05T18:43:54.550Z\",\"eligible\":true,\"mcNumber\":\"135797\",\"outcome\":\"eligible\",\"reason\":\"ACTIVE_CARRIER_AUTHORITY\"},\"delivery\":\"frontend_mock\",\"demo\":true,\"failures_remaining\":2,\"ok\":true,\"otp_status\":\"verified\",\"request_id\":\"7d99bfda-82c0-4ce8-b5c1-5708d61edbe6\",\"retry_allowed\":false,\"verified\":true}}"
+    },
+    {
+      "role": "user",
+      "content": "Let me know once that's verified. I am in Dallas, anywhere is fine and any day works."
+    },
+    {
+      "role": "assistant",
+      "content": "You’re verified. I’ll search for some available loads starting in Dallas."
+    },
+    {
+      "role": "user",
+      "content": "Perfect, thank you. Let me know what you find."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"attempts\":2,\"command\":\"LOAD_QUERY\",\"complete\":true,\"elapsed_ms\":797,\"failures\":[\"INCOMPLETE_RESPONSE\"],\"ok\":true,\"record_count\":1,\"records\":[{\"DEST_CITY\":\"Spokane\",\"DEST_STATE\":\"WA\",\"DEST_ZIP\":\"99201\",\"EQTYPE\":\"FLATBED\",\"LOAD_ID\":\"LD00761\",\"MILES\":\"1488\",\"ORIG_CITY\":\"Dallas\",\"ORIG_STATE\":\"TX\",\"ORIG_ZIP\":\"75201\",\"PICKUP_DT\":\"20260917011000\",\"RATE\":\"3428\",\"STATUS\":\"OPEN\"}],\"request_id\":\"861532c8-8015-430f-8efe-fca6d6f7cb91\"}}"
+    },
+    {
+      "role": "assistant",
+      "content": "I found an option from Dallas to Spokane, WA, on September 17 with a flatbed. Would that work for you?"
+    },
+    {
+      "role": "user",
+      "content": "That is all I need today. Thank you for your help!"
+    },
+    {
+      "role": "assistant",
+      "content": "I’ll close out our conversation now."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"authority_passed\":true,\"booking_confirmed\":false,\"finalized_at\":\"2026-09-05T18:44:25.122303+00:00\",\"negotiation\":null,\"ok\":true,\"outcome\":\"caller_declined\",\"request_id\":\"1aaa9655-b05d-43a4-9e81-1df1c5fca57f\",\"selected_load_id\":null,\"verified\":true}}"
+    },
+    {
+      "role": "event",
+      "content": "session_closed"
+    }
+  ]
+}

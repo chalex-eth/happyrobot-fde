@@ -1,0 +1,26 @@
+{
+  "workflow_id": "01a06c72-4d55-7cbd-bef1-944d617982bf",
+  "previous_development_version_id": "01a0721e-36e3-7ee2-9f7e-7a951e32323c",
+  "version_id": "01a072d7-33be-7899-ad45-ca360bdb06dd",
+  "version_number": 10,
+  "created_at": "2026-09-05T18:31:41.785Z",
+  "published": false,
+  "prompt_node_id": "01a072d7-33cb-7d8c-862f-48e7dcbec97c",
+  "prompt_exact_match": true,
+  "search_parameter_descriptions_and_optional_flags_match": true,
+  "result_fields_visible": true,
+  "verified_at": "2026-09-05T18:49:34.188Z",
+  "missing_variable_count": null,
+  "test_error_count": null,
+  "prompt_sha256": "9f16dde3f5fd3788905f6e407b925a372a1794ba282d1ad6819695bea56e5141",
+  "test_version_id": "01a072da-da35-7b11-8653-e16102e92099",
+  "prompt_verified_at": "2026-09-05T18:52:32.827Z",
+  "prompt_issues": [
+    {
+      "node": "Carrier sales conversation",
+      "status": null,
+      "issues": []
+    }
+  ],
+  "prepublish_verified_at": "2026-09-05T19:02:46.249Z"
+}

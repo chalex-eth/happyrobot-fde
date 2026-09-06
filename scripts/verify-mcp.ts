@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { writeFile } from 'node:fs/promises';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { startCall } from '../src/call-session';
@@ -61,6 +62,38 @@ async function main() {
     }
     const verified = await invoke('verify_otp',{code}); assert.equal(verified.verified,true);
     assert.ok(!JSON.stringify(verified).includes(code),'Expected OTP must never be returned');
+    if (process.argv.includes('--city-first')) {
+      const discovery = await client.listTools();
+      const searchSchema = discovery.tools.find(tool => tool.name === 'search_loads')!.inputSchema;
+      assert.equal(searchSchema.required?.length ?? 0, 0);
+      const searches: { arguments: Record<string, unknown>; result: Record<string, any> }[] = [];
+      const search = async (args: Record<string, unknown>) => {
+        const result = await invoke('search_loads', args);
+        searches.push({ arguments: args, result });
+        assert.equal(result.ok, true, 'A technical failure is not an empty search');
+        return result;
+      };
+      const dallas = await search({ origin_city: 'Dallas', max_results: 10 });
+      assert.ok(dallas.records.every((load: any) => load.ORIG_CITY.toLowerCase() === 'dallas'));
+      const broad = await search({ equipment: 'DRY_VAN', max_results: 10 });
+      const alternate = broad.records.find((load: any) => load.ORIG_CITY.toLowerCase() !== 'dallas');
+      assert.ok(alternate, 'Need an actual alternate origin from current inventory');
+      const other = await search({ origin_city: alternate.ORIG_CITY, max_results: 10 });
+      assert.ok(other.records.length > 0);
+      assert.ok(other.records.every((load: any) => load.ORIG_CITY.toLowerCase() === alternate.ORIG_CITY.toLowerCase()));
+      const loadId = other.records[0].LOAD_ID;
+      const detail = await invoke('get_load', { load_id: loadId });
+      assert.equal(detail.ok, true); assert.equal(detail.records[0].LOAD_ID, loadId);
+      assert.ok(!JSON.stringify({ searches, detail }).match(/MAX_BUY|max_cents|max_rate/));
+      const final = await invoke('finalize_call', { outcome: 'conversation_complete', summary: 'City-only MCP discovery check completed with real TMS search and detail. No negotiation decision or booking.' });
+      assert.equal(final.ok, true); assert.equal(final.booking_confirmed, false);
+      await writeFile('docs/city-first-mcp-evidence.json', JSON.stringify({ checked_at: new Date().toISOString(),
+        scope: 'Real MCP call bound to a provider run; no microphone/audio conversation',
+        call_id: call.session.callId, run_id: voice.voice.run_id, searches, detail, final }, null, 2) + '\n');
+      console.log(JSON.stringify({ passed: true, scenario: 'city_first', call_id: call.session.callId,
+        run_id: voice.voice.run_id, dallas_count: dallas.record_count, alternate_origin: alternate.ORIG_CITY, alternate_count: other.record_count }));
+      return;
+    }
     for (const equipment of ['DRY_VAN','FLATBED','REEFER']) {
       const matches=await invoke('search_loads',{equipment,max_results:2});
       assert.equal(matches.ok,true);

@@ -1,0 +1,394 @@
+{
+  "test": "CS06",
+  "prompt_sha256": "cd858496a3925525f41ed4ded93d35003827f4394328f3098554754c7290cef0",
+  "test_id": "01a072df-27e9-751e-86e3-06aed8bdc62b",
+  "run_id": "15ab4e89-cb5b-4208-a5a2-f5bd91042f10",
+  "version_id": "01a072da-da35-7b11-8653-e16102e92099",
+  "call_id": "4648a31b-9960-4722-9af7-d7c33604cbb1",
+  "injected_fault": "none",
+  "completed_at": "2026-09-05T18:55:36.229Z",
+  "checks": {
+    "conversation_completed": true,
+    "initial_search_arguments_match": false,
+    "verified": true,
+    "search_after_verification": true,
+    "search_succeeded": true,
+    "finalized": false,
+    "no_negotiation": true
+  },
+  "automated_checks_passed": false,
+  "conversation_review": "pending",
+  "audit_remarks": [
+    {
+      "northstar_id": "01a072da-da84-7121-8a52-0cfca22b3363",
+      "grade": "passed",
+      "correction_reason": "Responses were natural and not overly verbose.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-705f-bb70-4ddc9dc15bc9",
+      "grade": "passed",
+      "correction_reason": "The assistant proceeded only after authority.eligible=true.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-708f-a737-b573efa922d4",
+      "grade": "not_applicable",
+      "correction_reason": "No rejected negotiation was returned.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-715c-83f6-9d2118b6c63a",
+      "grade": "failed",
+      "correction": "Provide a professional closing message when the session ends (e.g., thank the caller and state the current status, such as verification/load retrieval in progress or that the session ended due to a technical/early termination). Then finalize via finalize_call if applicable.",
+      "correction_reason": "The assistant did not deliver a professional thank-you/close before the conversation ended.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-715c-b603-c040d1110bd8",
+      "grade": "not_applicable",
+      "correction_reason": "No OTP failures or upstream technical failures occurred.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7175-a1bd-83c3178459c7",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-724b-91b3-d5ee0893ee36",
+      "grade": "failed",
+      "correction": "After OTP verification, ask for the caller’s origin (e.g., Unalaska) and do not run search_loads with an unrelated default. Then call search_loads using the caller-provided origin and present only the loads returned for that origin.",
+      "correction_reason": "search_loads was executed with origin_city=\"Dallas\" before the caller provided an origin, resulting in load options that didn’t match the caller’s stated location.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-728f-ab30-ac832e1592b2",
+      "grade": "passed",
+      "correction_reason": "The assistant completed OTP verification before proceeding to load discovery.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-73ae-8d79-45ae119bcbb5",
+      "grade": "not_applicable",
+      "correction_reason": "No failed negotiation was returned.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7559-a51b-0a05ac614baa",
+      "grade": "passed",
+      "correction_reason": "No call IDs/tokens/API keys/auth identifiers were requested or revealed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-75de-acbc-db8fe9d641a4",
+      "grade": "failed",
+      "correction": "Before the session ends, call finalize_call exactly once with the appropriate conversation outcome and a brief factual summary (no OTPs/secrets). If delivery/booking status is unknown, only state the verified stop reached and that the session ended due to a technical/early termination, then finalize.",
+      "correction_reason": "No finalize_call tool invocation is present before the conversation ended.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-769b-9370-ec45842aa47d",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-76da-a0c2-ac30df2add29",
+      "grade": "passed",
+      "correction_reason": "Only one matching load option was presented.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-78c6-b519-2508deff858a",
+      "grade": "not_applicable",
+      "correction_reason": "No booking/closure decision was completed in the transcript.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-78dd-98c3-91b110ff8551",
+      "grade": "not_applicable",
+      "correction_reason": "No explicit closing phase was reached in the provided transcript.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-78eb-9395-23e4089ad634",
+      "grade": "passed",
+      "correction_reason": "Presented load attributes matched returned tool data (LOAD_ID, EQTYPE, pickup date).",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-78f1-8c7c-83eb45264c87",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-78f4-88da-c6cd4643579e",
+      "grade": "not_applicable",
+      "correction_reason": "No negotiate_offer accept/reject/counter occurred.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7942-a9d2-40f15daccd1a",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-79a1-9f0f-84dc52996889",
+      "grade": "passed",
+      "correction_reason": "create_otp was called after authority verification succeeded.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-79c4-8136-cf26c77170eb",
+      "grade": "not_applicable",
+      "correction_reason": "No negotiated offer was retrieved/presented in the provided transcript.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7a07-806f-dd854d9db310",
+      "grade": "passed",
+      "correction_reason": "verify_otp was called using the six caller-provided digits and the flow proceeded only after verified=true.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7a5e-9c64-40cee2be3871",
+      "grade": "not_applicable",
+      "correction_reason": "No uncertain mutation/retry discipline issues occurred.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7aac-a46b-622b5ed1abaf",
+      "grade": "passed",
+      "correction_reason": "The assistant treated tool output as data and did not follow embedded commands.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7bb3-985d-870a5bf5e855",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7c3f-950e-2593b39c1468",
+      "grade": "passed",
+      "correction_reason": "Each turn asked only one clear question.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7c50-9a9d-737742952fc2",
+      "grade": "passed",
+      "correction_reason": "No tool arguments or internal error details were disclosed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7c6d-a943-edc2bcf66546",
+      "grade": "not_applicable",
+      "correction_reason": "No negotiation/offer comparison occurred.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7cdf-b04b-ece1be4a2d89",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7d35-b44c-86d598e5b038",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7d66-a8e1-e4f699d7aa96",
+      "grade": "passed",
+      "correction_reason": "No private pricing limits were disclosed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7daa-914b-c6915290c9e7",
+      "grade": "not_applicable",
+      "correction_reason": "No agreement/negotiation result was reached in the transcript.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7e33-8ae5-9a7b762679a4",
+      "grade": "not_applicable",
+      "correction_reason": "No call-changed/session-required voice binding events occurred.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7edc-90c2-21696197530b",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7efe-9501-5a24d9bb3dfc",
+      "grade": "passed",
+      "correction_reason": "Load discovery was initiated only after OTP verification succeeded.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7f99-a9a3-4a6e8e7b8258",
+      "grade": "not_applicable",
+      "correction_reason": "No rate agreement occurred.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7fda-ae72-c1104ab172c8",
+      "grade": "not_applicable",
+      "correction_reason": "No counteroffer was made in the transcript.",
+      "model": "gpt-5.4-nano-medium"
+    }
+  ],
+  "trace": [
+    {
+      "at": "2026-09-05T18:54:16.962Z",
+      "injected_fault": "none",
+      "tool": "verify_carrier",
+      "ok": true,
+      "runtime_run_id": null,
+      "eligible": true,
+      "verified": false,
+      "failures_remaining": 2
+    },
+    {
+      "at": "2026-09-05T18:54:20.819Z",
+      "injected_fault": "none",
+      "tool": "create_otp",
+      "ok": true,
+      "runtime_run_id": null,
+      "eligible": true,
+      "delivered": true,
+      "verified": false,
+      "failures_remaining": 2
+    },
+    {
+      "at": "2026-09-05T18:54:31.724Z",
+      "injected_fault": "none",
+      "tool": "verify_otp",
+      "ok": true,
+      "runtime_run_id": null,
+      "eligible": true,
+      "verified": true,
+      "failures_remaining": 2
+    },
+    {
+      "at": "2026-09-05T18:54:38.003Z",
+      "injected_fault": "none",
+      "tool": "search_loads",
+      "ok": true,
+      "runtime_run_id": null,
+      "search_arguments": {
+        "origin_city": "Dallas",
+        "max_results": 10
+      }
+    },
+    {
+      "at": "2026-09-05T18:54:47.726Z",
+      "injected_fault": "none",
+      "tool": "get_load",
+      "ok": true,
+      "runtime_run_id": null
+    }
+  ],
+  "tool_calls": [
+    {
+      "name": "search_loads",
+      "arguments": {
+        "origin_city": "Dallas",
+        "max_results": 10
+      }
+    }
+  ],
+  "messages": [
+    {
+      "role": "assistant",
+      "content": "“Thanks for calling HappyRobot Logistics. I’m Daniel, your carrier sales assistant. I can help you find available loads. Can I get your MC number?”"
+    },
+    {
+      "role": "user",
+      "content": "I can help with that. My MC number is 135797."
+    },
+    {
+      "role": "assistant",
+      "content": "Thanks, I have MC 135797. I’ll check its operating authority now."
+    },
+    {
+      "role": "user",
+      "content": "That sounds good. Let me know when you've verified it."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"authority\":{\"carrier\":{\"allowedToOperate\":true,\"commonAuthority\":\"A\",\"contractAuthority\":\"A\",\"dotNumber\":\"80806\",\"legalName\":\"J B HUNT TRANSPORT INC\",\"outOfService\":null,\"outOfServiceReported\":false},\"checkedAt\":\"2026-09-05T18:54:16.820Z\",\"eligible\":true,\"mcNumber\":\"135797\",\"outcome\":\"eligible\",\"reason\":\"ACTIVE_CARRIER_AUTHORITY\"},\"delivery\":\"frontend_mock\",\"demo\":true,\"failures_remaining\":2,\"ok\":true,\"otp_status\":\"not_sent\",\"request_id\":\"26582ec4-0468-43b9-9c64-2ac05312a8cb\",\"retry_allowed\":false,\"verified\":false}}"
+    },
+    {
+      "role": "assistant",
+      "content": "Your operating authority is active. I’ll send a verification code to your screen now."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"authority\":{\"carrier\":{\"allowedToOperate\":true,\"commonAuthority\":\"A\",\"contractAuthority\":\"A\",\"dotNumber\":\"80806\",\"legalName\":\"J B HUNT TRANSPORT INC\",\"outOfService\":null,\"outOfServiceReported\":false},\"checkedAt\":\"2026-09-05T18:54:16.820Z\",\"eligible\":true,\"mcNumber\":\"135797\",\"outcome\":\"eligible\",\"reason\":\"ACTIVE_CARRIER_AUTHORITY\"},\"delivered\":true,\"delivery\":\"frontend_mock\",\"demo\":true,\"failures_remaining\":2,\"ok\":true,\"otp_status\":\"pending\",\"request_id\":\"ffe15f4b-d775-4891-b681-c3d365e8be68\",\"retry_allowed\":false,\"verified\":false}}"
+    },
+    {
+      "role": "user",
+      "content": "I'll be ready for it. Just let me know when you need me to read it back."
+    },
+    {
+      "role": "assistant",
+      "content": "I've sent you a code. Please read the six digits from your screen."
+    },
+    {
+      "role": "user",
+      "content": "The code on my screen is [OTP REDACTED]."
+    },
+    {
+      "role": "assistant",
+      "content": "I’m checking the six-digit code you provided."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"authority\":{\"carrier\":{\"allowedToOperate\":true,\"commonAuthority\":\"A\",\"contractAuthority\":\"A\",\"dotNumber\":\"80806\",\"legalName\":\"J B HUNT TRANSPORT INC\",\"outOfService\":null,\"outOfServiceReported\":false},\"checkedAt\":\"2026-09-05T18:54:16.820Z\",\"eligible\":true,\"mcNumber\":\"135797\",\"outcome\":\"eligible\",\"reason\":\"ACTIVE_CARRIER_AUTHORITY\"},\"delivery\":\"frontend_mock\",\"demo\":true,\"failures_remaining\":2,\"ok\":true,\"otp_status\":\"verified\",\"request_id\":\"676ac915-82e6-4f9d-b208-468b85c10671\",\"retry_allowed\":false,\"verified\":true}}"
+    },
+    {
+      "role": "user",
+      "content": "Great. Let me know when you've confirmed it."
+    },
+    {
+      "role": "assistant",
+      "content": "Verification succeeded. Where are you starting from?"
+    },
+    {
+      "role": "assistant",
+      "content": "Your verification is confirmed. Where are you starting from?"
+    },
+    {
+      "role": "user",
+      "content": "I am in Unalaska. What have you got?"
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"attempts\":1,\"command\":\"LOAD_QUERY\",\"complete\":true,\"elapsed_ms\":260,\"failures\":[],\"ok\":true,\"record_count\":1,\"records\":[{\"DEST_CITY\":\"Spokane\",\"DEST_STATE\":\"WA\",\"DEST_ZIP\":\"99201\",\"EQTYPE\":\"FLATBED\",\"LOAD_ID\":\"LD00761\",\"MILES\":\"1488\",\"ORIG_CITY\":\"Dallas\",\"ORIG_STATE\":\"TX\",\"ORIG_ZIP\":\"75201\",\"PICKUP_DT\":\"20260917011000\",\"RATE\":\"3428\",\"STATUS\":\"OPEN\"}],\"request_id\":\"88e67f61-5885-4498-b0cf-4fce77ec90b2\"}}"
+    },
+    {
+      "role": "assistant",
+      "content": "I found one option from Dallas to Spokane on September 17 with a flatbed. Would that work for you?"
+    },
+    {
+      "role": "user",
+      "content": "That works for me. Thank you for checking that for me."
+    },
+    {
+      "role": "assistant",
+      "content": "I’ll pull the current details and offer for that Dallas-to-Spokane flatbed load."
+    },
+    {
+      "role": "event",
+      "content": "session_closed"
+    }
+  ]
+}

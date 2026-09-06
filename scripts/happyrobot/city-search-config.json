@@ -1,0 +1,18 @@
+{
+  "workflow_id": "01a06c72-4d55-7cbd-bef1-944d617982bf",
+  "source_version_id": "01a072d7-33be-7899-ad45-ca360bdb06dd",
+  "version_id": "01a072da-da35-7b11-8653-e16102e92099",
+  "version_number": 11,
+  "credential_id": "01a0727a-5875-72f7-87f3-3d0203d0b103",
+  "action_ids": [
+    "01a072da-da3c-7a96-b04b-5bb5ffa7523c",
+    "01a072da-da3d-79f3-8599-96937f2a63d2",
+    "01a072da-da39-716b-ad1f-daa8a9ad8216",
+    "01a072da-da3e-77a7-9f7e-2da060a3793a",
+    "01a072da-da3f-700f-b100-12aef3c12f02",
+    "01a072da-da3f-78c7-a9ce-c6c13df1cf74",
+    "01a072da-da3e-78ad-95f7-0b28f31c1e88"
+  ],
+  "setup_ready_after": "2026-09-05T18:36:17.085Z",
+  "delivery_mode": "caller_only_preprovisioned_challenge"
+}

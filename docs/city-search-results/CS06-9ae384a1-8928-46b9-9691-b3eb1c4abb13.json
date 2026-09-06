@@ -1,0 +1,375 @@
+{
+  "test": "CS06",
+  "test_id": "01a072df-27e9-751e-86e3-06aed8bdc62b",
+  "run_id": "9ae384a1-8928-46b9-9691-b3eb1c4abb13",
+  "version_id": "01a072da-da35-7b11-8653-e16102e92099",
+  "call_id": "7c22fad5-255b-444d-939a-56ea1a48d7be",
+  "completed_at": "2026-09-05T18:48:59.670Z",
+  "checks": {
+    "conversation_completed": true,
+    "verified": true,
+    "search_after_verification": true,
+    "search_succeeded": true,
+    "finalized": true,
+    "no_negotiation": true
+  },
+  "automated_checks_passed": true,
+  "conversation_review": "pending",
+  "audit_remarks": [
+    {
+      "northstar_id": "01a072da-da84-7121-8a52-0cfca22b3363",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-705f-bb70-4ddc9dc15bc9",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-708f-a737-b573efa922d4",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-715c-83f6-9d2118b6c63a",
+      "grade": "failed",
+      "correction": "Add a professional thank-you in the closing message (e.g., “Thank you for calling HappyRobot Logistics—have a great day!”).",
+      "correction_reason": "The close message did not thank the caller, which is required by this northstar. The call was finalized without a thankful closing statement.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-715c-b603-c040d1110bd8",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7175-a1bd-83c3178459c7",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-724b-91b3-d5ee0893ee36",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-728f-ab30-ac832e1592b2",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-73ae-8d79-45ae119bcbb5",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7559-a51b-0a05ac614baa",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-75de-acbc-db8fe9d641a4",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-769b-9370-ec45842aa47d",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-76da-a0c2-ac30df2add29",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-78c6-b519-2508deff858a",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-78dd-98c3-91b110ff8551",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-78eb-9395-23e4089ad634",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-78f1-8c7c-83eb45264c87",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-78f4-88da-c6cd4643579e",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7942-a9d2-40f15daccd1a",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-79a1-9f0f-84dc52996889",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-79c4-8136-cf26c77170eb",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7a07-806f-dd854d9db310",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7a5e-9c64-40cee2be3871",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7aac-a46b-622b5ed1abaf",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7bb3-985d-870a5bf5e855",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7c3f-950e-2593b39c1468",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7c50-9a9d-737742952fc2",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7c6d-a943-edc2bcf66546",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7cdf-b04b-ece1be4a2d89",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7d35-b44c-86d598e5b038",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7d66-a8e1-e4f699d7aa96",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7daa-914b-c6915290c9e7",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7e33-8ae5-9a7b762679a4",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7edc-90c2-21696197530b",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7efe-9501-5a24d9bb3dfc",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7f99-a9a3-4a6e8e7b8258",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a072da-da85-7fda-ae72-c1104ab172c8",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    }
+  ],
+  "trace": [
+    {
+      "at": "2026-09-05T18:48:08.504Z",
+      "injected_fault": "none",
+      "tool": "verify_carrier",
+      "ok": true,
+      "runtime_run_id": null,
+      "eligible": true,
+      "verified": false,
+      "failures_remaining": 2
+    },
+    {
+      "at": "2026-09-05T18:48:11.746Z",
+      "injected_fault": "none",
+      "tool": "create_otp",
+      "ok": true,
+      "runtime_run_id": null,
+      "eligible": true,
+      "delivered": true,
+      "verified": false,
+      "failures_remaining": 2
+    },
+    {
+      "at": "2026-09-05T18:48:22.771Z",
+      "injected_fault": "none",
+      "tool": "verify_otp",
+      "ok": true,
+      "runtime_run_id": null,
+      "eligible": true,
+      "verified": true,
+      "failures_remaining": 2
+    },
+    {
+      "at": "2026-09-05T18:48:28.713Z",
+      "injected_fault": "none",
+      "tool": "search_loads",
+      "ok": true,
+      "runtime_run_id": null,
+      "search_arguments": {
+        "origin_city": "Unalaska",
+        "max_results": 10
+      }
+    },
+    {
+      "at": "2026-09-05T18:48:33.714Z",
+      "injected_fault": "none",
+      "tool": "finalize_call",
+      "ok": true,
+      "runtime_run_id": null,
+      "verified": true,
+      "finalized_at": "2026-09-05T18:48:33.661443+00:00"
+    }
+  ],
+  "tool_calls": [],
+  "messages": [
+    {
+      "role": "assistant",
+      "content": "“Thanks for calling HappyRobot Logistics. I’m Daniel, your carrier sales assistant. I can help you find available loads. Can I get your MC number?”"
+    },
+    {
+      "role": "user",
+      "content": "Hi Daniel, my MC number is 135797."
+    },
+    {
+      "role": "assistant",
+      "content": "Thanks, I have your MC number as 135797. I’ll check its operating authority now."
+    },
+    {
+      "role": "user",
+      "content": "That is correct, thank you."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"authority\":{\"carrier\":{\"allowedToOperate\":true,\"commonAuthority\":\"A\",\"contractAuthority\":\"A\",\"dotNumber\":\"80806\",\"legalName\":\"J B HUNT TRANSPORT INC\",\"outOfService\":null,\"outOfServiceReported\":false},\"checkedAt\":\"2026-09-05T18:48:08.357Z\",\"eligible\":true,\"mcNumber\":\"135797\",\"outcome\":\"eligible\",\"reason\":\"ACTIVE_CARRIER_AUTHORITY\"},\"delivery\":\"frontend_mock\",\"demo\":true,\"failures_remaining\":2,\"ok\":true,\"otp_status\":\"not_sent\",\"request_id\":\"028cde5d-3045-47d4-9f17-ebaa24a38d24\",\"retry_allowed\":false,\"verified\":false}}"
+    },
+    {
+      "role": "assistant",
+      "content": "Your operating authority is active. I’ll send a verification code to your screen now."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"authority\":{\"carrier\":{\"allowedToOperate\":true,\"commonAuthority\":\"A\",\"contractAuthority\":\"A\",\"dotNumber\":\"80806\",\"legalName\":\"J B HUNT TRANSPORT INC\",\"outOfService\":null,\"outOfServiceReported\":false},\"checkedAt\":\"2026-09-05T18:48:08.357Z\",\"eligible\":true,\"mcNumber\":\"135797\",\"outcome\":\"eligible\",\"reason\":\"ACTIVE_CARRIER_AUTHORITY\"},\"delivered\":true,\"delivery\":\"frontend_mock\",\"demo\":true,\"failures_remaining\":2,\"ok\":true,\"otp_status\":\"pending\",\"request_id\":\"7cb04856-e846-4150-96ec-7f158a5ae0e0\",\"retry_allowed\":false,\"verified\":false}}"
+    },
+    {
+      "role": "user",
+      "content": "Great, I will watch for that code."
+    },
+    {
+      "role": "assistant",
+      "content": "I've sent you a code. Please read the six digits from your screen."
+    },
+    {
+      "role": "user",
+      "content": "The code is [OTP REDACTED]."
+    },
+    {
+      "role": "assistant",
+      "content": "I’m checking the six-digit code now."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"authority\":{\"carrier\":{\"allowedToOperate\":true,\"commonAuthority\":\"A\",\"contractAuthority\":\"A\",\"dotNumber\":\"80806\",\"legalName\":\"J B HUNT TRANSPORT INC\",\"outOfService\":null,\"outOfServiceReported\":false},\"checkedAt\":\"2026-09-05T18:48:08.357Z\",\"eligible\":true,\"mcNumber\":\"135797\",\"outcome\":\"eligible\",\"reason\":\"ACTIVE_CARRIER_AUTHORITY\"},\"delivery\":\"frontend_mock\",\"demo\":true,\"failures_remaining\":2,\"ok\":true,\"otp_status\":\"verified\",\"request_id\":\"35e10ebb-ffbe-4cb7-aae3-2f1baf2ddeec\",\"retry_allowed\":false,\"verified\":true}}"
+    },
+    {
+      "role": "user",
+      "content": "I am in Unalaska. What have you got?"
+    },
+    {
+      "role": "assistant",
+      "content": "Verification succeeded. I’ll look for available loads starting from Unalaska."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"attempts\":1,\"command\":\"LOAD_QUERY\",\"complete\":true,\"elapsed_ms\":391,\"failures\":[],\"ok\":true,\"record_count\":0,\"records\":[],\"request_id\":\"728ff836-668a-4383-adb3-e3407e2f3c6e\"}}"
+    },
+    {
+      "role": "user",
+      "content": "I appreciate you checking on that for me."
+    },
+    {
+      "role": "assistant",
+      "content": "I’m wrapping up our conversation."
+    },
+    {
+      "role": "tool",
+      "content": "{\"is_error\":false,\"result\":{\"authority_passed\":true,\"booking_confirmed\":false,\"finalized_at\":\"2026-09-05T18:48:33.661443+00:00\",\"negotiation\":null,\"ok\":true,\"outcome\":\"conversation_complete\",\"request_id\":\"67252ef5-0411-46c0-8582-ec0a569f31bb\",\"selected_load_id\":null,\"verified\":true}}"
+    },
+    {
+      "role": "event",
+      "content": "session_closed"
+    }
+  ]
+}

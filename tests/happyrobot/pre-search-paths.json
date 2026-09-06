@@ -25,12 +25,12 @@
         "Confirm verification outcome and finalize before closing, without load search"
       ],
       "execution_status": "E2E_FAILED",
-      "last_run_id": "350c6e4b-3ea9-4335-890f-674f82df8bee",
-      "last_test_version_id": "01a0727a-5c83-7984-8db3-d41251094868",
+      "last_run_id": "e7bb4327-95ff-40a5-a779-8c84d112a021",
+      "last_test_version_id": "01a072da-da35-7b11-8653-e16102e92099",
       "delivery_mode": "caller_only_preprovisioned_challenge",
       "last_audit_grades": {
-        "not_applicable": 20,
-        "passed": 15,
+        "passed": 19,
+        "not_applicable": 16,
         "failed": 2
       },
       "folder_id": "01a0726a-0cf6-76a6-8f61-d3598056ea73",

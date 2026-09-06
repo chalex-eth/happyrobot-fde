@@ -1,0 +1,87 @@
+{
+  "scope": "City-first discovery after real authority and OTP; separate from verification-only cases. No synthetic load inventory.",
+  "tests": [
+    {
+      "id": "CS01",
+      "name": "City search - Dallas mentioned before verification",
+      "origin": "Dallas",
+      "scenario": "When first providing your MC, also say you are in Dallas and want to know what loads are available. Do not give a state, destination, date or equipment. After verification, wait for options. If asked again where you are, say Dallas once. If an option is offered, ask to hear more about that destination. After hearing details, decline to negotiate today and close politely.",
+      "select": true,
+      "happyrobot_test_id": "01a072df-2463-7562-9a9e-04a4f24c96ec",
+      "last_run_id": "3c8a78d2-f9be-4e99-935a-57cfe580452d",
+      "automated_checks_passed": false,
+      "folder_id": "01a0757d-de7f-7250-81a5-686d5490cb45",
+      "folder_name": "06 - City search"
+    },
+    {
+      "id": "CS03",
+      "name": "City search - Anywhere and any day",
+      "origin": "Dallas",
+      "scenario": "After verification say: I am in Dallas, anywhere is fine and any day works. Do not provide a state or equipment. After hearing real options, say that is all you need today and close politely.",
+      "happyrobot_test_id": "01a072df-25d8-7b22-b0f9-741b7ec096be",
+      "last_run_id": "dcfc13eb-9cd5-42d1-9229-b101d7afe8b9",
+      "automated_checks_passed": true,
+      "folder_id": "01a0757d-de7f-7250-81a5-686d5490cb45",
+      "folder_name": "06 - City search"
+    },
+    {
+      "id": "CS04",
+      "name": "City search - Supplied equipment stays fixed",
+      "origin": "Dallas",
+      "equipment": "FLATBED",
+      "scenario": "After verification say: I am in Dallas with a flatbed. What have you got? Do not provide a state, destination or date. After hearing options, say that is all for now and close politely.",
+      "happyrobot_test_id": "01a072df-2683-7a73-9cc2-b6d8efdb1951",
+      "last_run_id": "7e75ff32-e71f-40df-883a-df6cb84504d3",
+      "automated_checks_passed": true,
+      "folder_id": "01a0757d-de7f-7250-81a5-686d5490cb45",
+      "folder_name": "06 - City search"
+    },
+    {
+      "id": "CS05",
+      "name": "City search - Refine using a returned destination and date",
+      "origin": "Anchorage",
+      "scenario": "After verification say you are in Anchorage and ask what is available. After hearing options, say you want only the last destination mentioned, on the exact month and day the agent gave for that destination. Do not invent a destination or date. After the agent narrows or retrieves that option, say that is all for now and close politely.",
+      "refine": true,
+      "happyrobot_test_id": "01a072df-2735-74df-9082-24d8af8a600e",
+      "last_run_id": "5241a2f2-36b1-4adf-a506-4e594f79053c",
+      "automated_checks_passed": true,
+      "folder_id": "01a0757d-de7f-7250-81a5-686d5490cb45",
+      "folder_name": "06 - City search"
+    },
+    {
+      "id": "CS07",
+      "name": "City search - Unclear departure nickname",
+      "origin": "Dallas",
+      "scenario": "After verification say: I am in DFW, what have you got? When asked which departure city you mean, answer Dallas. Do not provide a state, destination, date or equipment. After hearing options, close politely.",
+      "happyrobot_test_id": "01a072df-2896-7d63-8b77-6161f1b9009e",
+      "last_run_id": "00ec4b5b-9b42-4069-b283-37b89f701605",
+      "automated_checks_passed": true,
+      "folder_id": "01a0757d-de7f-7250-81a5-686d5490cb45",
+      "folder_name": "06 - City search"
+    },
+    {
+      "id": "CS08",
+      "name": "City search - Search transport outage",
+      "origin": "Dallas",
+      "fault": "tms_unavailable",
+      "scenario": "After verification say: I am in Dallas, what have you got? Wait for the agent to explain the outcome in speech; do not infer it from tools. If the agent explains a technical problem, decline further help and stay until it finishes closing.",
+      "happyrobot_test_id": "01a072e9-8c60-7b6c-b203-3a255e5b71f9",
+      "last_run_id": "40363cf1-811d-4707-879e-9fe4c5dba697",
+      "automated_checks_passed": true,
+      "folder_id": "01a0757d-de7f-7250-81a5-686d5490cb45",
+      "folder_name": "06 - City search"
+    },
+    {
+      "id": "CS09",
+      "name": "City search - Ambiguous selection",
+      "origin": "Anchorage",
+      "select": true,
+      "scenario": "After verification say: I am in Anchorage, what have you got? If multiple options are offered, answer ambiguously: That one sounds interesting. If asked which option you mean, identify the last destination the agent actually mentioned. Do not invent a destination. Wait for spoken details, then say you only wanted information and are done for today. Remain on the line for the agent to finish.",
+      "happyrobot_test_id": "01a072e9-8d2e-7d6c-8f0b-9be6f1938d0f",
+      "last_run_id": "0252276f-a417-49d9-973e-bcccd1eb901e",
+      "automated_checks_passed": true,
+      "folder_id": "01a0757d-de7f-7250-81a5-686d5490cb45",
+      "folder_name": "06 - City search"
+    }
+  ]
+}

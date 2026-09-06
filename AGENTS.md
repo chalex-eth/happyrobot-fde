@@ -7,3 +7,9 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## HappyRobot integration
+
+Before changing or troubleshooting the HappyRobot integration, workflow prompts, MCP tools, or test scripts, read [the agent runbook](docs/happyrobot-agent-runbook.md). It explains the code structure, tool sequencing, draft updates, test commands, and development rollout procedure.
+
+Treat its dated rollout snapshot as historical context. Check current source, configuration, and remote state before using version IDs or publishing. Keep the runbook current when changing these procedures.

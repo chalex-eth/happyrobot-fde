@@ -4,6 +4,7 @@ import { loadsForCall, verifyCarrierForCall, verifyOtpForCall } from './call-ser
 import { resultStatus, SessionError, twinRpc, type TwinResult } from './call-session';
 import { getNegotiableLoad, negotiateForCall } from './negotiation';
 import type { lookupCarrier } from './fmcsa';
+import type { runTms } from './tms';
 import { createOtpForCall } from './demo-otp';
 
 const city = z.string().trim().min(1).max(80).regex(/^[A-Za-z .'-]+$/);
@@ -25,13 +26,13 @@ export const toolSpecs = {
     schema: z.strictObject({ code: z.string().regex(/^\d{6}$/).describe('Exactly six caller-supplied digits as a string, preserving leading zeros.') }),
   },
   search_loads: {
-    description: 'Search real loads across all equipment types after authority and OTP verification. Supply at least one location, pickup date or equipment filter. Omit equipment to search all types. Returns public rates only; do not negotiate or book.',
+    description: 'Search real loads across all equipment types after authority and OTP verification. A departure city alone is sufficient: use origin_city and max_results=10 without asking for state, destination, date or equipment. Reuse supplied preferences; omit unspecified filters and never send anywhere or any day literally. At least one location, pickup date or equipment filter is required. Omit equipment to search all types. Returns public rates only; do not negotiate or book.',
     schema: z.strictObject({
       equipment: z.string().regex(/^[A-Z][A-Z0-9_]{0,31}$/).describe('Optional TMS equipment code, e.g. DRY_VAN, FLATBED, REEFER (refrigerated), POWER_ONLY. Omit for all equipment types; never assume dry van.').optional(),
-      origin_city: city.describe('Origin city.').optional(), origin_state: state.describe('Two-letter US origin state.').optional(), origin_zip: zip.describe('Five-digit origin ZIP.').optional(),
-      destination_city: city.describe('Destination city.').optional(), destination_state: state.describe('Two-letter US destination state.').optional(), destination_zip: zip.describe('Five-digit destination ZIP.').optional(),
-      pickup_date: z.string().regex(/^\d{8}$/).describe('Pickup date as YYYYMMDD.').optional(),
-      max_results: z.number().int().min(1).max(10).describe('Result limit; default 5, maximum 10.').optional(),
+      origin_city: city.describe('Departure city actually supplied by the caller. City alone is enough; do not default to an example city, append a state or infer one.').optional(), origin_state: state.describe('Two-letter US origin state only if supplied; omit for a city-only request.').optional(), origin_zip: zip.describe('Five-digit origin ZIP.').optional(),
+      destination_city: city.describe('Destination city only if supplied. Omit when flexible or anywhere.').optional(), destination_state: state.describe('Two-letter US destination state.').optional(), destination_zip: zip.describe('Five-digit destination ZIP.').optional(),
+      pickup_date: z.string().regex(/^\d{8}$/).describe('Pickup date as YYYYMMDD only if supplied. Omit for any day or no date preference.').optional(),
+      max_results: z.number().int().min(1).max(10).describe('Use 10 for conversational discovery. Backend default 5, maximum 10; this is a limited batch, not all inventory.').optional(),
     }),
   },
   get_load: {
@@ -48,7 +49,7 @@ export const toolSpecs = {
     }),
   },
   finalize_call: {
-    description: 'Record the end of this conversation once. Backend derives verification and selected-load facts. No booking is created. Repeat only with identical outcome and summary if delivery was uncertain.',
+    description: 'Record the end of this conversation once, only when the caller explicitly ends or declines further help, a terminal negotiation outcome is confirmed, or a technical failure prevents continuation. Never call while asking a question or awaiting the caller. Completing verification or a search alone is not a reason to finalize. Backend derives verification and selected-load facts. No booking is created. Repeat only with identical outcome and summary if delivery was uncertain.',
     schema: z.strictObject({
       outcome: z.enum(['conversation_complete', 'caller_declined', 'technical_error']).describe('Conversation outcome; never a booking status.'),
       summary: z.string().trim().min(1).max(1000).describe('Brief factual conversation summary. Exclude OTP digits, secrets and claims that a load is booked.'),
@@ -65,7 +66,7 @@ function publicVerification(result: TwinResult) {
       demo: true, delivery: 'frontend_mock' } : {}) };
 }
 
-export async function executeTool(name: ToolName, input: unknown, hash: string, signal?: AbortSignal, operationId = randomUUID() as string, preparedChallenge?: string, dependencies: { authorityLookup?: typeof lookupCarrier; deliverOtp?: () => Promise<boolean> } = {}): Promise<Record<string, unknown>> {
+export async function executeTool(name: ToolName, input: unknown, hash: string, signal?: AbortSignal, operationId = randomUUID() as string, preparedChallenge?: string, dependencies: { authorityLookup?: typeof lookupCarrier; deliverOtp?: () => Promise<boolean>; runTms?: typeof runTms } = {}): Promise<Record<string, unknown>> {
   if (name === 'verify_carrier') {
     const args = toolSpecs[name].schema.parse(input);
     return publicVerification(await verifyCarrierForCall(hash, args.mc_number, signal, dependencies.authorityLookup));
@@ -89,7 +90,7 @@ export async function executeTool(name: ToolName, input: unknown, hash: string, 
     for (const [key, field] of Object.entries(keys)) {
       const value = args[key as keyof typeof keys]; if (value !== undefined) fields[field] = value;
     }
-    return loadsForCall(hash, { command: 'LOAD_QUERY', fields }, signal);
+    return loadsForCall(hash, { command: 'LOAD_QUERY', fields }, signal, dependencies.runTms);
   }
   if (name === 'get_load') {
     const args = toolSpecs[name].schema.parse(input);

@@ -1,7 +1,7 @@
 import { HappyRobotClient, ApiError } from '@happyrobot-ai/sdk';
 import { readFile } from 'node:fs/promises';
 import { toolSpecs, type ToolName } from '../../src/mcp-tools';
-import { mcpServerName, paragraph, variable, toolParameters, prompt } from './workflow-spec';
+import { mcpServerName, paragraph, variable, toolParameters, prompt, loadFormattingRule } from './workflow-spec';
 
 type Node = { id: string; persistent_id?: string; type: string; name?: string; parent_id?: string;
   configuration?: Record<string, unknown>; function?: Record<string, unknown>; event_id?: string };
@@ -127,9 +127,23 @@ async function main() {
   }
   await client.nodes.update(versionId,promptNode.id,{type:'prompt',prompt_md:prompt});
   const stored = (await client.nodes.get(versionId,promptNode.id)).data;
-  if (!stored.prompt_md?.includes('call finalize_call') || stored.prompt_md?.includes('tools are not connected')) {
+  if (stored.prompt_md !== prompt) {
     throw Error('Updated prompt was not stored; draft remains unpublished');
   }
+  // Keep the existing date-format criterion aligned with spoken discovery.
+  // YYYYMMDD belongs in tool arguments, not in the caller-facing pitch.
+  const criteriaResponse = await fetch(`https://platform.happyrobot.ai/api/v2/nodes/${promptNode.id}/northstars`, {
+    headers: { Authorization: `Bearer ${need('HAPPYROBOT_API_KEY')}` }, redirect: 'error', signal: AbortSignal.timeout(15_000),
+  });
+  if (!criteriaResponse.ok) throw Error('Could not inspect load-format criterion');
+  const criteria = (await criteriaResponse.json()).data as { id: string; name: string }[];
+  const formatting = criteria.filter(c => c.name === 'Standard Load Formatting');
+  if (formatting.length !== 1) throw Error('Expected one existing Standard Load Formatting criterion');
+  const updated = await fetch(`https://platform.happyrobot.ai/api/v2/northstars/${formatting[0].id}`, {
+    method: 'PATCH', headers: { Authorization: `Bearer ${need('HAPPYROBOT_API_KEY')}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ description: paragraph(loadFormattingRule) }), redirect: 'error', signal: AbortSignal.timeout(15_000),
+  });
+  if (!updated.ok) throw Error('Could not update load-format criterion');
   console.log(JSON.stringify({version_id:versionId,configured_tools:Object.keys(toolSpecs),published:false}));
 }
 

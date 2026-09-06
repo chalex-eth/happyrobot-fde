@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict';
 import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import { HappyRobotClient } from '@happyrobot-ai/sdk';
-import { otpRetryRule } from './workflow-spec';
+import { prepareAdversarialPrompt } from './workflow-spec';
 import { callAction } from '../../src/call-session';
 import { activateAdversarialSession, prepareAdversarialSession, readAdversarialTrace, revokeAdversarialSession } from '../../src/adversarial-session';
 
 // Native HappyRobot adversarial runs, real Twin/FMCSA/OTP tools. No browser call
 // is borrowed. The temporary caller-only envelope is restored after the run.
-const configPath = new URL('./adversarial-config.json', import.meta.url);
+const configPath = new URL(process.argv.includes('--city-search') ? './city-search-config.json' : './adversarial-config.json', import.meta.url);
 const definitionsPath = new URL('../../tests/happyrobot/pre-search-paths.json', import.meta.url);
 const need = (name: string) => { const value = process.env[name]; if (!value) throw Error(`Missing ${name}`); return value; };
 const client = new HappyRobotClient({ apiKey: need('HAPPYROBOT_API_KEY'), cluster: 'us', maxRetries: 0, timeout: 30_000 });
@@ -69,12 +69,8 @@ async function setup() {
   const targetPrompt = nodes.find(n => n.type === 'prompt' && n.name === 'Carrier sales conversation');
   const p1 = (await client.nodes.get(source, sourcePrompt.id)).data as any;
   const p2 = (await client.nodes.get(versionId, targetPrompt.id)).data as any;
-  // Preserve the chosen source prompt, with one explicit verification-only closing branch.
-  const previous = '4. Only when verified is true, collect route and pickup preferences and call search_loads.';
-  const updated = '4. After verify_otp returns verified=true, tell the caller verification succeeded. If the caller already said they only need verification or do not want loads, immediately follow step 7: call finalize_call with conversation_complete, wait for the result, then thank them and close. Do not ask for load preferences in that case. Otherwise, only when verified is true, collect route and pickup preferences and call search_loads.';
-  assert.ok(p1.prompt_md.includes(previous) || p1.prompt_md.includes(updated), 'Source prompt needs review before applying the closing branch');
-  let draftPrompt = p1.prompt_md.replace(previous, updated);
-  if (!draftPrompt.includes(otpRetryRule)) draftPrompt = draftPrompt.replace('Never invent carrier, load, rate or verification data.', `Never invent carrier, load, rate or verification data.\n${otpRetryRule}`);
+  // Preserve search changes while adding the legacy verification-only branch if needed.
+  const draftPrompt = prepareAdversarialPrompt(p1.prompt_md);
   assert.ok([normalize(p1.prompt_md), normalize(draftPrompt)].includes(normalize(p2.prompt_md)), 'Draft sales prompt has other changes; review before setup');
   await client.nodes.update(versionId, targetPrompt.id, { type: 'prompt', prompt_md: draftPrompt });
   const saved = (await client.nodes.get(versionId, targetPrompt.id)).data as any;

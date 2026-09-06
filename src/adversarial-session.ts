@@ -4,13 +4,13 @@ import { join } from 'node:path';
 import { z } from 'zod';
 import { callAction, mockOtpEnabled, SessionError, startCall } from './call-session';
 import { prepareDemoChallenge } from './demo-otp';
-import { executeTool } from './mcp-tools';
+import { executeTool, toolSpecs } from './mcp-tools';
 import { FmcsaError } from './fmcsa';
 import { handleMcp } from './mcp-http';
 
 const directory = () => join(process.cwd(), 'tmp', 'adversarial-sessions');
 const planSchema = z.strictObject({ id: z.string().uuid(), hash: z.string().regex(/^[a-f0-9]{64}$/),
-  fault: z.enum(['none', 'authority_unavailable', 'otp_delivery_failed']).default('none'),
+  fault: z.enum(['none', 'authority_unavailable', 'otp_delivery_failed', 'tms_unavailable']).default('none'),
   challengeId: z.string().uuid(), callId: z.string().uuid(), expiresAt: z.number().int() });
 export type AdversarialSession = z.infer<typeof planSchema>;
 function secret() {
@@ -89,6 +89,7 @@ export async function readAdversarialTrace(plan: AdversarialSession) {
 }
 export async function handleAdversarialMcp(request: Request) {
   let resolved: AdversarialSession | undefined;
+  let searchArguments: Record<string, unknown> | undefined;
   return handleMcp(request, {
     authenticate,
     resolve: async req => {
@@ -97,17 +98,26 @@ export async function handleAdversarialMcp(request: Request) {
       resolved = await resolveAdversarialSession(token);
       return resolved;
     },
-    execute: (name, args, hash, signal, operationId, challengeId) => executeTool(name, args, hash, signal, operationId, challengeId, {
+    execute: (name, args, hash, signal, operationId, challengeId) => {
+      // Only validated, public search filters are retained for conversation QA.
+      searchArguments = name === 'search_loads' ? toolSpecs.search_loads.schema.parse(args) : undefined;
+      return executeTool(name, args, hash, signal, operationId, challengeId, {
       ...(resolved?.fault === 'authority_unavailable' ? { authorityLookup: async () => { throw new FmcsaError('FMCSA_UNAVAILABLE', 503, true); } } : {}),
       ...(resolved?.fault === 'otp_delivery_failed' ? { deliverOtp: async () => false } : {}),
-    }),
+      // Exercise normal search validation, authorization and save_loads, with a
+      // deliberate transport outage only in this isolated development scenario.
+      ...(resolved?.fault === 'tms_unavailable' ? { runTms: async () => ({ ok: false as const, command: 'LOAD_QUERY' as const,
+        elapsed_ms: 0, attempts: 1, failures: ['TMS_CONNECTION_ERROR'], error: 'TMS_CONNECTION_ERROR', retryable: false }) } : {}),
+    });
+    },
     observe: async (tool, result) => {
       if (!resolved) return;
-      // No arguments, codes, hashes, credentials or free-form summaries.
+      // No OTP arguments, codes, hashes, credentials or free-form summaries.
       const authority = result.authority as { eligible?: boolean } | undefined;
       await appendFile(join(directory(), `${resolved.id}.jsonl`), JSON.stringify({
         at: new Date().toISOString(), injected_fault: resolved.fault, tool, ok: result.ok, error: result.error,
         runtime_run_id: /^[0-9a-f-]{36}$/.test(request.headers.get('x-happyrobot-run-id') ?? '') ? request.headers.get('x-happyrobot-run-id') : null,
+        ...(searchArguments ? { search_arguments: searchArguments } : {}),
         eligible: authority?.eligible, delivered: result.delivered, verified: result.verified,
         finalized_at: result.finalized_at, failures_remaining: result.failures_remaining,
       }) + '\n', { mode: 0o600 });
