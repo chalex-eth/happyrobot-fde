@@ -2,8 +2,10 @@ import { createHash, createHmac, randomBytes, randomInt, randomUUID, timingSafeE
 import type { Booking } from './booking';
 import type { Negotiation } from './negotiation';
 import type { CarrierCheck } from './fmcsa';
+import type { LoadInterest } from './load-interest';
 
 export type CallSession = {
+  loadInterest?: LoadInterest | null;
   booking?: Booking | null;
   negotiation?: Negotiation | null;
   finalizedAt?: string | null; finalOutcome?: string | null;
@@ -17,7 +19,7 @@ export type CallSession = {
 export class SessionError extends Error {
   constructor(public code: string, public status = 503) { super(code); }
 }
-export type TwinResult = { booking?: Booking | null; claimed?: boolean; mcNumber?: string; agreedCents?: number; negotiation?: Negotiation | null; ok: boolean; error?: string; session?: CallSession; replayed?: boolean; verifier?: string; sessionHash?: string };
+export type TwinResult = { interest?: LoadInterest | null; booking?: Booking | null; claimed?: boolean; mcNumber?: string; agreedCents?: number; negotiation?: Negotiation | null; ok: boolean; error?: string; session?: CallSession; replayed?: boolean; verifier?: string; sessionHash?: string };
 const COOKIE = 'carrier_session';
 const sha256 = (value: string) => createHash('sha256').update(value).digest('hex');
 
@@ -31,7 +33,7 @@ export const clearSessionCookie = () => `${COOKIE}=; HttpOnly; SameSite=Strict; 
 
 // Twin reflects PostgreSQL functions as RPC endpoints. No database credentials,
 // raw provider responses, session hashes or OTP digests cross the browser boundary.
-export async function twinRpc(name: 'poc_start_call' | 'poc_call_action' | 'poc_resolve_voice' | 'poc_finalize_call' | 'poc_negotiate' | 'poc_book_call', args: Record<string, unknown>): Promise<TwinResult> {
+export async function twinRpc(name: 'poc_start_call' | 'poc_call_action' | 'poc_resolve_voice' | 'poc_finalize_call' | 'poc_negotiate' | 'poc_book_call' | 'poc_record_load_interest', args: Record<string, unknown>): Promise<TwinResult> {
   const gateway = process.env.TWIN_GATEWAY; const org = process.env.TWIN_ORG_ID;
   if (!gateway || !org) throw new SessionError('TWIN_NOT_CONFIGURED');
   let url: URL;

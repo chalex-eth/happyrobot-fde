@@ -1,0 +1,11 @@
+# Explicit opt-in for native evals. The host controller and app share signed
+# session capabilities; the default compose.yaml keeps this endpoint disabled.
+services:
+  app:
+    environment:
+      ADVERSARIAL_MCP_ENABLED: "true"
+    volumes:
+      - ./tmp/adversarial-sessions:/app/tmp/adversarial-sessions
+  mcp-proxy:
+    environment:
+      MCP_PROXY_ALLOW_ADVERSARIAL: "true"

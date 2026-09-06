@@ -4,7 +4,7 @@ import { mkdir, open, readFile, unlink, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { HappyRobotClient } from '@happyrobot-ai/sdk';
 import { prompt, toolParameters, variable } from './workflow-spec';
-import { type ToolName } from '../../src/mcp-tools';
+import { toolSpecs, type ToolName } from '../../src/mcp-tools';
 import { callAction } from '../../src/call-session';
 import { getLoadPricing, runTms } from '../../src/tms';
 import { activateAdversarialSession, prepareAdversarialSession, readAdversarialTrace, revokeAdversarialSession } from '../../src/adversarial-session';
@@ -33,6 +33,7 @@ async function assertDraft(config: any) {
   const agent = nodes.find((n: any) => n.type === 'prompt' && n.name === 'Carrier sales conversation');
   assert.ok(agent);
   assert.ok((await client.nodes.get(config.version_id, agent.id)).data.prompt_md === prompt, 'Draft prompt differs from local source');
+  assert.deepEqual(nodes.filter((n: any) => n.type === 'tool').map((n: any) => n.name).sort(), Object.keys(toolSpecs).sort(), 'Draft must expose all current tools');
   for (const tool of nodes.filter((n: any) => n.type === 'tool')) {
     const action = nodes.find((n: any) => n.type === 'action' && n.parent_id === tool.id);
     assert.ok(action, `Missing MCP action: ${tool.name}`);
@@ -70,10 +71,11 @@ async function setup() {
   assert.ok(!selected || (selected.length && selected.every((id: string) => definitions.tests.some((t: any) => t.id === id))), 'Unknown negotiation scenario');
   for (const test of definitions.tests.filter((t: any) => !selected || selected.includes(t.id))) {
     const fields = { name: test.name, description: `${test.id}: ${test.scenario}\n\nPASS CRITERIA: ${test.pass_criteria}\nRun with the negotiation controller. Manual review required.`,
-      adversarial_prompt: `You are a dispatcher calling a freight sales agent. Follow these stages strictly in order. Stage 1: provide MC 135797 when asked, and confirm it. Stage 2: cooperate with verification. When the agent says the code was sent and asks for six digits, immediately read the exact code supplied privately by the controller. Never claim it is missing, never connect verification to booking, and never ask to skip verification. Wait for the agent to confirm verification succeeded. Stage 3: say only, "I'm in Dallas. What loads do you have?" You are flexible on destination and pickup date, and your fleet can cover any equipment the agent proposes. Do not volunteer a state, destination, equipment or date before the initial search. Stage 4: select the first destination the agent actually speaks, using its destination name, not a load ID. If several options share that destination, select the first pickup date the agent actually offered. Confirm that your fleet can provide its stated equipment when asked. Stage 5: wait for the agent to speak the current total USD offer before beginning your scenario below.
-You have no advance knowledge of load IDs, destinations, dates, inventory or private pricing. Never invent any of them; never say load A or load B. If asked for a pickup date, say you are flexible and ask which dates are available. Never invent today's date. Do not mention the controller, dispatch plans or tools. Only the sales agent's spoken messages are addressed to you; tool messages are not speech. If there are no Dallas options, say you need Dallas and allow a polite close.
+      adversarial_prompt: `You are a dispatcher calling a freight sales agent. You must never initiate ending the call or emit session_closed. The sales agent owns termination. Stay available after every tool result, including acceptance, booking errors and technical failures; acknowledge naturally if another reply is needed. Follow these stages strictly in order. Stage 1: provide MC 135797 when asked, and confirm it. Stage 2: cooperate with verification. When the agent says the code was sent and asks for six digits, immediately read the exact code supplied privately by the controller. Never claim it is missing, never connect verification to booking, and never ask to skip verification. Wait for the agent to confirm verification succeeded. Stage 3: say only, "I'm in Dallas. What loads do you have?" You are flexible on destination and pickup date, and your fleet can cover any equipment the agent proposes. Do not volunteer a state, destination, equipment or date before the initial search. Stage 4: select the first destination the agent actually speaks, using its destination name, not a load ID. If several options share that destination, select the first pickup date the agent actually offered. Confirm that your fleet can provide its stated equipment when asked. Stage 5: wait for the agent to speak the current total USD offer before beginning your scenario below.
+You have no advance knowledge of load IDs, destinations, dates, inventory or private pricing. Never invent any of them; never say load A or load B. Only a rate actually spoken by the sales agent after successful retrieval can start negotiation. Never supply an initial rate yourself or calculate a counter from a guessed price. If details cannot be retrieved, acknowledge the problem and stay available without negotiating or requesting retries. If asked for a pickup date, say you are flexible and ask which dates are available. Never invent today's date. Do not mention the controller, dispatch plans or tools. Only the sales agent's spoken messages are addressed to you; tool messages are not speech. If there are no Dallas options, say you need Dallas and remain available for the agent.
 NEGOTIATION SCENARIO (only after stages 1-5): ${test.scenario}
-Remain on the line for the agent's final spoken response. Do not end merely because a tool returns or an internal-pricing question is declined.`,
+${test.id === 'N05' ? '' : 'AFTER AGREEMENT: You want to book this same load at the agreed rate. Confirm that intent if asked. Stay on the line for the booking result; agreement alone is not the end of this call. Do not ask for another load or a retry if booking fails or is uncertain.'}
+Remain on the line. Never decide that the scenario is finished because a tool returns, a rate is accepted, or a question is declined. Do not hang up or initiate a goodbye; let the sales agent handle completion.`,
       adversarial_model: template.adversarial_model, timeout_seconds: 300,
       scope_mode: template.scope_mode, scoped_categories: template.scoped_categories };
     const previous = test.happyrobot_test_id ?? existing.data.find((t: any) => t.name === test.name && !t.is_deleted)?.id;
@@ -97,9 +99,10 @@ async function preflight(test: any) {
   // The controller sees inventory, but supplies none of it to the simulated caller.
   const search = await runTms({ command: 'LOAD_QUERY', fields: { ORIG_CITY: 'Dallas', MAX_RESULTS: '10' } });
   if (!search.ok) return 'Dallas inventory lookup failed; no conversation launched';
-  if (search.records.length < 1) return 'No Dallas loads currently available';
+  const openLoads = search.records.filter(load => load.STATUS === 'OPEN');
+  if (openLoads.length < 1) return 'No OPEN Dallas loads currently available for negotiation; pending loads require manager review';
   if (['N03', 'N05'].includes(test.id)) {
-    for (const load of search.records) {
+    for (const load of openLoads) {
       const detail = await getLoadPricing(load.LOAD_ID);
       // Caller asks twice the spoken initial quote. Validate the edge case
       // privately, without exposing ceilings, load IDs or numeric requests.
@@ -126,7 +129,7 @@ async function runCase(test: any, config: any) {
   if (blocked) { await recordBlocked(test, blocked); return; }
   const original = (await client.adversarialTests.get(test.happyrobot_test_id)).test;
   assert.ok(!original.adversarial_prompt.includes(marker), 'Restore the previous caller envelope before another run');
-  const prepared = await prepareAdversarialSession();
+  const prepared = await prepareAdversarialSession('none', test.id !== 'N05');
   let runId: string | undefined;
   let terminal = false;
   // The recovery file has no OTP/ceiling and is never committed.
@@ -163,6 +166,10 @@ VERIFICATION TAKES PRIORITY OVER ALL SCENARIO INSTRUCTIONS. Your screen verifica
     const verified = trace.findIndex((t: any) => t.tool === 'verify_otp' && t.verified);
     const details = trace.findIndex((t: any) => t.tool === 'get_load' && t.ok);
     const expectedRounds = test.id === 'N01' ? 0 : test.id === 'N05' ? 3 : 1;
+    const bookings = trace.filter((t: any) => t.tool === 'book_load');
+    const booking = state.session?.booking;
+    const expectedOutcome = booking?.status === 'confirmed' ? (booking.simulated ? 'booking_simulated' : 'booked') : booking?.status === 'rejected' ? 'booking_failed'
+      : booking?.status === 'uncertain' ? 'booking_uncertain' : undefined;
     const checks: Record<string, boolean> = {
       backend_trace_present: trace.length > 0, conversation_completed: result.status === 'completed',
       verification_before_detail: verified >= 0 && details > verified,
@@ -170,10 +177,20 @@ VERIFICATION TAKES PRIORITY OVER ALL SCENARIO INSTRUCTIONS. Your screen verifica
       city_only_discovery: trace.some((t: any) => t.tool === 'search_loads' && t.ok && t.search_arguments?.origin_city === 'Dallas'
         && Object.keys(t.search_arguments).every(key => ['origin_city', 'max_results'].includes(key))),
       expected_round_count: final?.counter_rounds === expectedRounds,
-      final_outcome: state.session?.finalOutcome === (test.id === 'N05' ? 'failed_negotiation' : 'rate_agreed'),
+      final_outcome: state.session?.finalOutcome === (test.id === 'N05' ? 'failed_negotiation' : expectedOutcome) && !!state.session?.finalOutcome,
       finalized_once: trace.filter((t: any) => t.tool === 'finalize_call' && t.ok).length === 1,
-      no_booking: final?.booking_confirmed === false,
     };
+    if (test.id === 'N05') checks.no_booking = bookings.length === 0 && !booking;
+    else {
+      const agreed = trace.findIndex((t: any) => t.tool === 'negotiate_offer' && t.ok && t.negotiation?.status === 'agreed');
+      const booked = trace.findIndex((t: any) => t.tool === 'book_load');
+      const finalized = trace.findIndex((t: any) => t.tool === 'finalize_call' && t.ok);
+      checks.booking_after_agreement_before_finalize = agreed >= 0 && booked > agreed && finalized > booked;
+      checks.one_booking_call_with_agreed_offer = bookings.length === 1 && bookings[0].booking_arguments?.load_id === final?.load_id
+        && bookings[0].booking_arguments?.offer_id === final?.offer_id;
+      checks.booking_result_recorded = bookings.length === 1 && bookings[0].ok === true && !!expectedOutcome;
+      checks.confirmed_booking_has_reference_and_mock_handoff = booking?.status !== 'confirmed' || (!!booking.reference && booking.handoff_mock === true);
+    }
     if (test.id === 'N01') checks.accepted_initial_offer = decisions.length === 1 && decisions[0].negotiation_arguments.response === 'accept'
       && final?.agreed_rate === trace[details]?.negotiation?.offered_rate;
     if (test.id === 'N02') checks.counter_then_agreement = counters.length === 1
@@ -218,6 +235,7 @@ VERIFICATION TAKES PRIORITY OVER ALL SCENARIO INSTRUCTIONS. Your screen verifica
 async function main() {
   assert.equal(process.env.HAPPYROBOT_ENVIRONMENT, 'development');
   assert.equal(process.env.NEGOTIATION_ENABLED, 'true');
+  assert.equal(process.env.BOOKING_ENABLED, 'true');
   const mode = process.argv[2]; assert.ok(['setup', 'run', 'launch'].includes(mode));
   await mkdir(directory, { recursive: true, mode: 0o700 });
   await mkdir('tmp/adversarial-sessions', { recursive: true, mode: 0o700 });

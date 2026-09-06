@@ -25,7 +25,9 @@
     "local:down": "node scripts/local/stack.mjs down",
     "local:status": "node scripts/local/stack.mjs status",
     "local:logs": "node scripts/local/stack.mjs logs",
-    "local:check": "node scripts/local/stack.mjs check"
+    "local:check": "node scripts/local/stack.mjs check",
+    "app:restart": "node scripts/local/stack.mjs app-restart",
+    "app:stop": "node scripts/local/stack.mjs app-stop"
   },
   "dependencies": {
     "@happyrobot-ai/sdk": "0.1.45",

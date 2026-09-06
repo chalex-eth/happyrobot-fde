@@ -16,7 +16,7 @@ async function main() {
       environment: 'development', note: 'Preserve voice/model. Sync edits an explicit draft only; publish is separate.', prompt }, null, 2));
     return;
   }
-  if (!['connect','fork','sync','inspect','review-results','publish'].includes(mode)) throw Error('Unknown command');
+  if (!['connect','fork','sync','rewire','inspect','review-results','publish'].includes(mode)) throw Error('Unknown command');
   if (need('HAPPYROBOT_ENVIRONMENT') !== 'development') throw Error('This local connector is development-only');
   const client = new HappyRobotClient({ apiKey: need('HAPPYROBOT_API_KEY'), cluster: 'us', maxRetries: 0, timeout: 30_000 });
   const workflowId = need('HAPPYROBOT_WORKFLOW_ID');
@@ -47,6 +47,13 @@ async function main() {
     console.log(JSON.stringify(forked)); return;
   }
   if (mode === 'publish') {
+    const connections = (await client.mcp.list()).data.filter((s: {server_name: string}) => s.server_name === mcpServerName);
+    if (connections.length !== 1 || (connections[0].development_server_url || connections[0].server_url) !== need('MCP_PUBLIC_URL')) {
+      throw Error('Normal development MCP connection does not match local configuration');
+    }
+    const summaries = (await client.nodes.list(versionId)).data as Node[];
+    const stored = await Promise.all(summaries.map(n => client.nodes.get(versionId, n.id).then(r => r.data)));
+    validateLocalWiring(stored, connections[0].id);
     const replacement = process.argv.includes('--replace') ? arg('--replace') : undefined;
     if (replacement && !versions.data.some((v: {id:string})=>v.id===replacement)) throw Error('Replacement is outside this workflow');
     const result = await client.versions.publish(versionId, { environment: 'development', ...(replacement ? {unpublish_version_id:replacement} : {}) });
@@ -115,6 +122,32 @@ async function main() {
   const connections = (await client.mcp.list()).data.filter((s:{server_name:string})=>s.server_name===mcpServerName);
   if (connections.length!==1) throw Error('Run connect successfully first');
   const credentialId=connections[0].id;
+  if (mode === 'rewire') {
+    // Convert a new normal-call candidate without overwriting its sales prompt,
+    // voice settings, parameter descriptions or result visibility.
+    const originalPrompt = (await client.nodes.get(versionId, promptNode.id)).data.prompt_md;
+    for (const name of Object.keys(toolSpecs) as ToolName[]) {
+      const matches = nodes.filter(n => n.type === 'tool' && n.name === name && n.parent_id === promptNode.id);
+      if (matches.length !== 1) throw Error(`Expected one existing tool: ${name}`);
+      const node = (await client.nodes.get(versionId, matches[0].id)).data;
+      const actions = nodes.filter(n => n.type === 'action' && n.parent_id === node.id);
+      if (actions.length !== 1) throw Error(`Expected one existing MCP action: ${name}`);
+      const action = (await client.nodes.get(versionId, actions[0].id)).data;
+      const fn = { ...node.function, mcp_server_credential_id: credentialId };
+      delete fn.tool_index_id; delete fn.tool_index_hash;
+      await client.nodes.update(versionId, node.id, { type: 'tool', function: fn });
+      await client.nodes.update(versionId, action.id, { type: 'action', event_id: action.event_id, configuration: {
+        ...action.configuration, credentialId, credential: { type: 'static', static: { id: credentialId, name: mcpServerName } },
+        tool_args: toolParameters(name).map(p => ({ key: p.name, value: variable(node.persistent_id ?? node.id, p.name) })),
+        dynamic_headers: [{ key: 'x-happyrobot-run-id', value: variable('current', 'run_id') }],
+      } });
+    }
+    const readback = await Promise.all(nodes.map(n => client.nodes.get(versionId, n.id).then(r => r.data)));
+    validateLocalWiring(readback, credentialId);
+    if (readback.find((n: {id: string}) => n.id === promptNode.id)?.prompt_md !== originalPrompt) throw Error('Prompt changed during rewiring');
+    console.log(JSON.stringify({ version_id: versionId, configured_tools: Object.keys(toolSpecs), prompt_preserved: true, published: false }));
+    return;
+  }
   const integrations=await client.integrations.list({search:'MCP',include_events:'true',include_config_schema:'true'});
   const integration=integrations.data.find((i:{name:string})=>i.name==='MCP Server');
   const event=integration?.events?.find((e:{name:string})=>e.name==='MCP Call');

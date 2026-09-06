@@ -136,8 +136,16 @@ function sendOnce(request: TmsRequest, signal?: AbortSignal, inspectDetail?: (li
       }
     });
     socket.on('error', () => finish(new TmsError('TMS_CONNECTION_ERROR', true)));
-    socket.on('end', () => finish(new TmsError('INCOMPLETE_RESPONSE', true)));
-    socket.on('close', () => { if (!finished) finish(new TmsError('INCOMPLETE_RESPONSE', true)); });
+    function incomplete(event: 'end' | 'close') {
+      if (finished) return;
+      // Structural diagnostics only: never log frames, tokens or private rates.
+      console.warn(JSON.stringify({ event: 'tms_incomplete_response', command: request.command,
+        socket_event: event, bytes_received: bytes, complete_lines: lines.length,
+        pending_bytes: Buffer.byteLength(pending, 'ascii'), pending_end_marker: pending === 'END' }));
+      finish(new TmsError('INCOMPLETE_RESPONSE', true));
+    }
+    socket.on('end', () => incomplete('end'));
+    socket.on('close', () => incomplete('close'));
     socket.connect(port, host);
   });
 }
@@ -188,11 +196,17 @@ export function parsePrivatePricing(lines: string[]) {
   return { listedCents, maxCents };
 }
 
-export async function getLoadPricing(loadId: string, signal?: AbortSignal) {
+export async function getLoadAvailability(loadId: string, signal?: AbortSignal) {
   let pricing: ReturnType<typeof parsePrivatePricing> | undefined;
   const result = await executeTms({ command: 'LOAD_GET', fields: { LOAD_ID: loadId } }, signal,
-    lines => { pricing = parsePrivatePricing(lines); });
+    lines => { if (lines.length === 1 && parseFields(lines[0]).STATUS === 'OPEN') pricing = parsePrivatePricing(lines); });
   if (!result.ok) throw new TmsError(result.error, result.retryable);
+  return { result, pricing };
+}
+
+export async function getLoadPricing(loadId: string, signal?: AbortSignal) {
+  const { result, pricing } = await getLoadAvailability(loadId, signal);
+  if (result.records[0]?.STATUS !== 'OPEN') throw new TmsError('LOAD_UNAVAILABLE');
   if (!pricing) throw new TmsError('TMS_PRICING_UNAVAILABLE');
   return { result, pricing };
 }

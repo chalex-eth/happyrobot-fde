@@ -4,7 +4,8 @@ import { fileURLToPath } from 'node:url';
 
 process.chdir(fileURLToPath(new URL('../../', import.meta.url)));
 const mode = process.argv[2] ?? 'up';
-const allowed = ['up', 'down', 'status', 'logs', 'check'];
+const allowed = ['up', 'down', 'status', 'logs', 'check', 'app-restart', 'app-stop'];
+const needsCheck = ['up', 'check', 'app-restart'].includes(mode);
 const compose = ['compose', '--env-file', '.env.local', '--env-file', '.env.docker.local'];
 async function run(args) {
   await new Promise((resolve, reject) => {
@@ -19,7 +20,7 @@ try {
     if (!existsSync(file)) throw Error(`Missing ${file}; see docs/local-docker.md for one-time setup.`);
     process.loadEnvFile(file);
   }
-  if (['up', 'check'].includes(mode)) {
+  if (needsCheck) {
     const domain = process.env.NGROK_DOMAIN;
     if (!domain || !/^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\.[a-z]{2,}$/i.test(domain)) throw Error('Set NGROK_DOMAIN to your assigned hostname, without https:// or a path.');
     if (process.env.MCP_PUBLIC_URL !== `https://${domain}/api/mcp`) throw Error('MCP_PUBLIC_URL must be https://NGROK_DOMAIN/api/mcp. Update .env.local before starting.');
@@ -31,15 +32,20 @@ try {
   }
   if (mode === 'up') {
     await run(['up', '-d', '--build', '--wait', '--wait-timeout', '180']);
+  } else if (mode === 'app-restart') {
+    await run(['up', '-d', '--build', '--no-deps', '--force-recreate', '--wait', '--wait-timeout', '180', 'app']);
   }
-  if (['up', 'check'].includes(mode)) {
+  if (needsCheck) {
     await run(['exec', '-T', 'app', 'node', '--import', 'tsx', 'scripts/happyrobot/check-local.ts']);
     console.log('Ready: http://localhost:3000 — development workflow and public MCP connection verified.');
+  } else if (mode === 'app-stop') {
+    await run(['stop', 'app']);
+    console.log('App stopped. The MCP proxy and ngrok were left unchanged; tool calls need the app running.');
   } else if (mode === 'down') await run(['down']);
   else if (mode === 'status') await run(['ps']);
   else await run(['logs', '--tail', '80', '-f']);
 } catch (error) {
   console.error(error.message);
-  if (mode === 'up' || mode === 'check') console.error('Startup is not verified. Services already started remain running; use npm run local:status or local:down.');
+  if (needsCheck) console.error('Startup is not verified. Services already started remain running; use npm run local:status. If the proxy or tunnel is stopped, run npm run local:up.');
   process.exitCode = 1;
 }

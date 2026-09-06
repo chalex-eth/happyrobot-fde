@@ -55,6 +55,7 @@ export async function loadsForCall(hash: string, input: unknown, signal?: AbortS
     ...metadata, revision: session.authorityRevision, ok: result.ok,
     error: result.ok ? null : result.error,
     loadIds: result.ok ? result.records.map(load => load.LOAD_ID) : [],
+    loadStatuses: result.ok ? Object.fromEntries(result.records.map(load => [load.LOAD_ID, load.STATUS])) : {},
   } });
   if (!saved.ok) throw new SessionError(saved.error ?? 'CALL_CHANGED', resultStatus(saved));
   return result;

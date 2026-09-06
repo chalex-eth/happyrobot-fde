@@ -96,10 +96,17 @@ export function CarrierVerification() {
         {negotiation.status === 'offered' && <p>${negotiation.offered_rate?.toFixed(2)} · {Date.parse(negotiation.expires_at ?? '') <= now ? 'Offer expired; ask the agent to refresh it.' : 'Tell the agent whether you accept or want to counter.'}</p>}
         <small>{negotiation.counter_rounds} of 3 counter rounds used in this call.</small>
       </div>}
+      {session?.loadInterest && <div className="notice" role="status" aria-label="Load interest">
+        <p><strong>Interest recorded for manager review</strong> · {session.loadInterest.load_id}</p>
+        <p>Callback number: {session.loadInterest.callback_number}</p>
+        <p>Reference: {session.loadInterest.reference}</p>
+        <p>This request does not book or reserve the load. No manager notification has been sent and a callback is not guaranteed.</p>
+      </div>}
       {booking && <div className="notice" role="status" aria-label="Booking status">
-        <p><strong>{booking.status === 'confirmed' ? 'Booking confirmed' : booking.status === 'rejected' ? 'Booking failed'
+        <p><strong>{booking.status === 'confirmed' ? (booking.simulated ? 'Simulated booking saved' : 'Booking confirmed') : booking.status === 'rejected' ? 'Booking failed'
           : booking.status === 'pending' ? 'Booking in progress' : 'Booking outcome unknown — review required'}</strong> · {booking.load_id}</p>
         {booking.status === 'confirmed' && <><p>Reference: {booking.reference}</p><p>Senior-representative handoff recorded as a simulation. No live transfer occurred.</p></>}
+        {booking.simulated && <p>Test booking only. No booking request was sent to the TMS and no load was reserved.</p>}
         {booking.status === 'uncertain' && <p>Confirmation is unavailable. Do not submit another booking for this load until it has been reviewed.</p>}
         {booking.status === 'rejected' && <p>This attempt did not confirm a booking. The agreed rate remains recorded.</p>}
       </div>}

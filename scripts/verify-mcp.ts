@@ -4,6 +4,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { startCall } from '../src/call-session';
 import { createVoiceSession, endVoiceSession } from '../src/voice-session';
+import { getLoadAvailability } from '../src/tms';
 
 // Real integration smoke test: creates its own Twin call and provider run,
 // requests an agent-created demo code, reads the local UI delivery, and cancels its own run.
@@ -62,6 +63,57 @@ async function main() {
     }
     const verified = await invoke('verify_otp',{code}); assert.equal(verified.verified,true);
     assert.ok(!JSON.stringify(verified).includes(code),'Expected OTP must never be returned');
+    if (process.argv.includes('--mock-booking')) {
+      assert.equal(process.env.BOOKING_TMS_MODE, 'mock', 'This smoke must explicitly use mock booking');
+      let load: any;
+      for (const equipment of ['DRY_VAN', 'FLATBED', 'REEFER']) {
+        const search = await invoke('search_loads', { equipment, max_results: 10 });
+        assert.equal(search.ok, true);
+        load = search.records.find((record: any) => record.STATUS === 'OPEN');
+        if (load) break;
+      }
+      assert.ok(load, 'Need an actual OPEN load; do not substitute synthetic inventory');
+      const detail = await invoke('get_load', { load_id: load.LOAD_ID });
+      assert.equal(detail.negotiation?.status, 'offered');
+      const agreed = await invoke('negotiate_offer', { load_id: load.LOAD_ID, offer_id: detail.negotiation.offer_id, response: 'accept', amount: null });
+      assert.equal(agreed.negotiation?.status, 'agreed');
+      const args = { load_id: load.LOAD_ID, offer_id: agreed.negotiation.offer_id };
+      const saved = await invoke('book_load', args);
+      assert.equal(saved.booking?.simulated, true); assert.equal(saved.booking?.status, 'confirmed');
+      assert.equal(saved.booking_saved, true); assert.equal(saved.booking_confirmed, false);
+      assert.match(saved.booking.reference, /^MOCK-/);
+      assert.deepEqual((await invoke('book_load', args)).booking, saved.booking);
+      const final = await invoke('finalize_call', { outcome: 'conversation_complete', summary: 'Integration test: simulated booking saved in Twin. No TMS booking request or reservation.' });
+      assert.equal(final.outcome, 'booking_simulated'); assert.equal(final.booking_confirmed, false);
+      const after = await getLoadAvailability(load.LOAD_ID);
+      assert.equal(after.result.records[0].STATUS, 'OPEN');
+      await writeFile('docs/mock-booking-mcp-evidence.json', JSON.stringify({ checked_at: new Date().toISOString(),
+        scope: 'Real bound MCP and Twin persistence with simulated booking; no audio conversation or TMS write',
+        call_id: call.session.callId, run_id: voice.voice.run_id, saved, final,
+        tms_status_before: load.STATUS, tms_status_after: after.result.records[0].STATUS }, null, 2) + '\n');
+      console.log(JSON.stringify({ passed: true, scenario: 'mock_booking', call_id: call.session.callId, run_id: voice.voice.run_id }));
+      return;
+    }
+    if (process.argv.includes('--pending-load')) {
+      const discovery = await client.listTools();
+      assert.ok(discovery.tools.some(tool => tool.name === 'record_load_interest'));
+      const search = await invoke('search_loads', { origin_city: 'Dallas', max_results: 10 });
+      assert.equal(search.ok, true);
+      const pending = search.records.find((load: any) => load.STATUS === 'PENDING');
+      assert.ok(pending, 'Need an actual PENDING Dallas load for this read-only check');
+      const detail = await invoke('get_load', { load_id: pending.LOAD_ID });
+      assert.equal(detail.ok, true); assert.equal(detail.availability, 'pending');
+      assert.equal(detail.negotiation, null); assert.equal(detail.can_book, false);
+      assert.equal(detail.can_negotiate, false); assert.equal(detail.manager_review_available, true);
+      assert.ok(!JSON.stringify(detail).match(/MAX_BUY|max_cents|max_rate/));
+      const final = await invoke('finalize_call', { outcome: 'conversation_complete', summary: 'Read-only pending-load MCP check. No interest request, negotiation decision or booking.' });
+      assert.equal(final.ok, true); assert.equal(final.interest, null); assert.equal(final.booking_confirmed, false);
+      await writeFile('docs/pending-load-mcp-evidence.json', JSON.stringify({ checked_at: new Date().toISOString(),
+        scope: 'Real bound MCP pending-load read; no audio, interest submission or booking',
+        call_id: call.session.callId, run_id: voice.voice.run_id, search, detail, final }, null, 2) + '\n');
+      console.log(JSON.stringify({ passed: true, scenario: 'pending_load_read', call_id: call.session.callId, run_id: voice.voice.run_id }));
+      return;
+    }
     if (process.argv.includes('--city-first')) {
       const discovery = await client.listTools();
       const searchSchema = discovery.tools.find(tool => tool.name === 'search_loads')!.inputSchema;

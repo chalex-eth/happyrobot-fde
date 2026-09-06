@@ -1,3 +1,9 @@
+# Test-mode booking
+
+Current local development uses `BOOKING_TMS_MODE=mock`. The tool saves a simulated booking in Twin, returns a `MOCK-…` reference and `simulated=true`, and finalizes as `booking_simulated`. No `LOAD_BOOK` is sent. Searches and availability/terms checks still use the real TMS, so existing PENDING loads remain pending. M4.2 separates simulated records from real inventory locks without changing earlier attempts.
+
+The protocol and earlier real-booking rollout below remain relevant only when explicitly enabling `BOOKING_TMS_MODE=live`. That also requires changing the Docker mock override.
+
 # M4 — minimal booking POC
 
 ## Scope

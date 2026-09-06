@@ -1,0 +1,58 @@
+{
+  "checked_at": "2026-09-06T10:10:58.080Z",
+  "source_version_id": "01a07612-e812-7470-bca3-37302018dbb1",
+  "version_id": "01a07632-2813-7cc2-860a-4edb67137f9e",
+  "version_number": 18,
+  "preserved_fields": [
+    "configuration",
+    "prompt",
+    "prompt_md",
+    "model"
+  ],
+  "prompt_sha256": "ae8c9918d1c97031ed1456f02e3a531a93e885a088362e4974e647948b2995fe",
+  "credential_id": "01a075c6-c44b-7cbd-ac5d-2ed1573abfcd",
+  "mcp_url": "https://nonissuably-overgreasy-georgiann.ngrok-free.dev/api/mcp",
+  "header": "x-happyrobot-run-id",
+  "published": true,
+  "verified_at": "2026-09-06T10:13:34.725Z",
+  "environment": "development",
+  "live": true,
+  "result_visibility": "complete result and is_error exposed on all eight tools",
+  "checks": {
+    "startup": true,
+    "tool_count": 8,
+    "typecheck": true,
+    "local_wiring_tests": 3,
+    "publication_guard_rejects_eval": true
+  },
+  "smoke": {
+    "passed": true,
+    "scope": "Real MCP call bound to a provider run; no microphone/audio conversation",
+    "run_id": "d448bfc7-4a91-4b43-926a-115a91c9d7b8",
+    "call_id": "419aab5f-0a6c-43ac-b868-a7d037e6a83b",
+    "evidence": "city-first-mcp-evidence.json",
+    "operations": [
+      "verify_carrier",
+      "create_otp",
+      "verify_otp",
+      "search_loads",
+      "get_load",
+      "finalize_call"
+    ],
+    "booking_attempted": false,
+    "first_attempt": "Carrier verification, OTP and two searches passed; subsequent TMS search returned MALFORMED_RESPONSE. Fresh smoke passed in full."
+  },
+  "limitations": [
+    "No microphone/audio conversation exercised.",
+    "Publish guard applies to the repository command, not direct HappyRobot UI publication."
+  ],
+  "eval_version": {
+    "id": "01a0761c-474f-7786-bb07-93d1ae08fd95",
+    "number": 17,
+    "published": false
+  },
+  "previous_live": {
+    "id": "01a07612-e812-7470-bca3-37302018dbb1",
+    "live": false
+  }
+}

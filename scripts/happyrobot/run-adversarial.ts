@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { mkdir, readFile, unlink, writeFile } from 'node:fs/promises';
 import { HappyRobotClient } from '@happyrobot-ai/sdk';
-import { prepareAdversarialPrompt, toolParameters, variable } from './workflow-spec';
+import { paragraph, prompt, prepareAdversarialPrompt, toolParameters, variable } from './workflow-spec';
 import { toolSpecs, type ToolName } from '../../src/mcp-tools';
 import { callAction } from '../../src/call-session';
 import { activateAdversarialSession, prepareAdversarialSession, readAdversarialTrace, revokeAdversarialSession } from '../../src/adversarial-session';
@@ -39,7 +39,7 @@ async function setup() {
     development_server_url: url.href, auth_type: 'bearer', auth_token: need('ADVERSARIAL_MCP_TOKEN'), development_auth_token: need('ADVERSARIAL_MCP_TOKEN') });
   assert.ok(connection.server_url === '__redacted__' || connection.server_url === url.href, 'Existing test connection URL has changed');
   const refreshed = await client.mcp.refresh(connection.id);
-  assert.equal(refreshed.tools.length, 7);
+  assert.equal(refreshed.tools.length, Object.keys(toolSpecs).length);
   const fork = process.argv.includes('--resume-version') ? await client.versions.get(arg('--resume-version')) : await client.versions.fork(source);
   assert.ok(!fork.is_live && !fork.is_published, 'Setup requires an unpublished draft');
   const versionId = fork.id;
@@ -49,6 +49,7 @@ async function setup() {
     description: 'Native adversarial tests with real carrier and OTP operations. Use npm run test:adversarial -- run to provision a fresh session and private caller code. Test draft only; no voice deployment.' });
   const nodes = (await client.nodes.list(versionId)).data as any[];
   const actions: string[] = [];
+  const syncLocal = process.argv.includes('--sync-local-source');
   for (const summary of nodes.filter(n => n.type === 'tool')) {
     console.log(JSON.stringify({ setup: 'configure_tool', tool: summary.name }));
     const tool = (await client.nodes.get(versionId, summary.id)).data as any;
@@ -56,8 +57,19 @@ async function setup() {
     assert.ok(actionSummary, `MCP child missing for ${tool.name}`);
     const action = (await client.nodes.get(versionId, actionSummary.id)).data as any;
     const fn = { ...tool.function, mcp_server_credential_id: connection.id };
+    if (syncLocal) {
+      assert.ok(tool.name in toolSpecs, 'Unexpected tool in test draft');
+      fn.parameters = toolParameters(tool.name as ToolName);
+      fn.description = paragraph(toolSpecs[tool.name as ToolName].description);
+    }
     delete fn.tool_index_id; delete fn.tool_index_hash;
     await client.nodes.update(versionId, tool.id, { type: 'tool', function: fn });
+    if (syncLocal) {
+      const savedTool = (await client.nodes.get(versionId, tool.id)).data as any;
+      const fields = (params: any[]) => params.map(({ name, required, description }) => ({ name, required, description }));
+      assert.deepEqual(fields(savedTool.function.parameters), fields(fn.parameters), `Parameter readback failed: ${tool.name}`);
+      assert.deepEqual(savedTool.function.description, fn.description);
+    }
     assert.ok(tool.name in toolSpecs, 'Unexpected tool in test draft');
     // Forks may retain old node IDs. Rebuild from this tool's stable identity.
     const toolArgs = toolParameters(tool.name as ToolName).map(p => ({
@@ -70,14 +82,14 @@ async function setup() {
     assert.deepEqual(mapped.configuration.tool_args, toolArgs, `Argument mapping readback failed: ${tool.name}`);
     actions.push(action.id);
   }
-  assert.equal(actions.length, 7);
+  assert.equal(actions.length, Object.keys(toolSpecs).length);
   const sourcePrompt = ((await client.nodes.list(source)).data as any[]).find(n => n.type === 'prompt' && n.name === 'Carrier sales conversation');
   const targetPrompt = nodes.find(n => n.type === 'prompt' && n.name === 'Carrier sales conversation');
   const p1 = (await client.nodes.get(source, sourcePrompt.id)).data as any;
   const p2 = (await client.nodes.get(versionId, targetPrompt.id)).data as any;
   // Preserve search changes while adding the legacy verification-only branch if needed.
-  const draftPrompt = prepareAdversarialPrompt(p1.prompt_md);
-  assert.ok([normalize(p1.prompt_md), normalize(draftPrompt)].includes(normalize(p2.prompt_md)), 'Draft sales prompt has other changes; review before setup');
+  const draftPrompt = syncLocal ? prompt : prepareAdversarialPrompt(p1.prompt_md);
+  assert.ok([normalize(p1.prompt_md), normalize(draftPrompt), normalize(prepareAdversarialPrompt(p1.prompt_md))].includes(normalize(p2.prompt_md)), 'Draft sales prompt has other changes; review before setup');
   await client.nodes.update(versionId, targetPrompt.id, { type: 'prompt', prompt_md: draftPrompt });
   const saved = (await client.nodes.get(versionId, targetPrompt.id)).data as any;
   assert.equal(normalize(saved.prompt_md), normalize(draftPrompt), 'Draft prompt readback mismatch');

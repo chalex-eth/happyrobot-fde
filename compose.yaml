@@ -9,6 +9,7 @@ services:
     environment:
       NODE_ENV: development
       HAPPYROBOT_ENVIRONMENT: development
+      BOOKING_TMS_MODE: mock
       ADVERSARIAL_MCP_ENABLED: "false"
       NGROK_API_URL: http://ngrok:4040
     ports:

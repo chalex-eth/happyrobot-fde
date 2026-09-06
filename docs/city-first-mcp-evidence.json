@@ -1,0 +1,306 @@
+{
+  "checked_at": "2026-09-06T10:13:09.668Z",
+  "scope": "Real MCP call bound to a provider run; no microphone/audio conversation",
+  "call_id": "419aab5f-0a6c-43ac-b868-a7d037e6a83b",
+  "run_id": "d448bfc7-4a91-4b43-926a-115a91c9d7b8",
+  "searches": [
+    {
+      "arguments": {
+        "origin_city": "Dallas",
+        "max_results": 10
+      },
+      "result": {
+        "ok": true,
+        "command": "LOAD_QUERY",
+        "complete": true,
+        "elapsed_ms": 294,
+        "attempts": 1,
+        "failures": [],
+        "record_count": 1,
+        "records": [
+          {
+            "LOAD_ID": "LD00761",
+            "ORIG_CITY": "Dallas",
+            "ORIG_STATE": "TX",
+            "ORIG_ZIP": "75201",
+            "DEST_CITY": "Spokane",
+            "DEST_STATE": "WA",
+            "DEST_ZIP": "99201",
+            "PICKUP_DT": "20260917011000",
+            "EQTYPE": "FLATBED",
+            "RATE": "3428",
+            "MILES": "1488",
+            "STATUS": "OPEN"
+          }
+        ],
+        "request_id": "0e4e86dd-b50c-4d4a-8c6e-32198559da5f"
+      }
+    },
+    {
+      "arguments": {
+        "equipment": "DRY_VAN",
+        "max_results": 10
+      },
+      "result": {
+        "ok": true,
+        "command": "LOAD_QUERY",
+        "complete": true,
+        "elapsed_ms": 258,
+        "attempts": 1,
+        "failures": [],
+        "record_count": 10,
+        "records": [
+          {
+            "LOAD_ID": "LD00719",
+            "ORIG_CITY": "Anchorage",
+            "ORIG_STATE": "AK",
+            "ORIG_ZIP": "99501",
+            "DEST_CITY": "Sarasota",
+            "DEST_STATE": "FL",
+            "DEST_ZIP": "34236",
+            "PICKUP_DT": "20260910030300",
+            "EQTYPE": "DRY_VAN",
+            "RATE": "10422",
+            "MILES": "3832",
+            "STATUS": "OPEN"
+          },
+          {
+            "LOAD_ID": "LD00724",
+            "ORIG_CITY": "Jersey City",
+            "ORIG_STATE": "NJ",
+            "ORIG_ZIP": "07302",
+            "DEST_CITY": "Richmond",
+            "DEST_STATE": "VA",
+            "DEST_ZIP": "23219",
+            "PICKUP_DT": "20260909223000",
+            "EQTYPE": "DRY_VAN",
+            "RATE": "676",
+            "MILES": "285",
+            "STATUS": "OPEN"
+          },
+          {
+            "LOAD_ID": "LD00730",
+            "ORIG_CITY": "Virginia Beach",
+            "ORIG_STATE": "VA",
+            "ORIG_ZIP": "23451",
+            "DEST_CITY": "Cheyenne",
+            "DEST_STATE": "WY",
+            "DEST_ZIP": "82001",
+            "PICKUP_DT": "20260911105000",
+            "EQTYPE": "DRY_VAN",
+            "RATE": "3366",
+            "MILES": "1569",
+            "STATUS": "OPEN"
+          },
+          {
+            "LOAD_ID": "LD00731",
+            "ORIG_CITY": "Salt Lake City",
+            "ORIG_STATE": "UT",
+            "ORIG_ZIP": "84111",
+            "DEST_CITY": "Springfield",
+            "DEST_STATE": "IL",
+            "DEST_ZIP": "62701",
+            "PICKUP_DT": "20260910021900",
+            "EQTYPE": "DRY_VAN",
+            "RATE": "2535",
+            "MILES": "1171",
+            "STATUS": "OPEN"
+          },
+          {
+            "LOAD_ID": "LD00735",
+            "ORIG_CITY": "Portland",
+            "ORIG_STATE": "ME",
+            "ORIG_ZIP": "04101",
+            "DEST_CITY": "Tacoma",
+            "DEST_STATE": "WA",
+            "DEST_ZIP": "98402",
+            "PICKUP_DT": "20260908134700",
+            "EQTYPE": "DRY_VAN",
+            "RATE": "7121",
+            "MILES": "2494",
+            "STATUS": "OPEN"
+          },
+          {
+            "LOAD_ID": "LD00738",
+            "ORIG_CITY": "Minneapolis",
+            "ORIG_STATE": "MN",
+            "ORIG_ZIP": "55402",
+            "DEST_CITY": "Grand Rapids",
+            "DEST_STATE": "MI",
+            "DEST_ZIP": "49503",
+            "PICKUP_DT": "20260910162900",
+            "EQTYPE": "DRY_VAN",
+            "RATE": "1093",
+            "MILES": "402",
+            "STATUS": "OPEN"
+          },
+          {
+            "LOAD_ID": "LD00744",
+            "ORIG_CITY": "Fresno",
+            "ORIG_STATE": "CA",
+            "ORIG_ZIP": "93721",
+            "DEST_CITY": "Omaha",
+            "DEST_STATE": "NE",
+            "DEST_ZIP": "68102",
+            "PICKUP_DT": "20260907022500",
+            "EQTYPE": "DRY_VAN",
+            "RATE": "3824",
+            "MILES": "1314",
+            "STATUS": "OPEN"
+          },
+          {
+            "LOAD_ID": "LD00747",
+            "ORIG_CITY": "Tulsa",
+            "ORIG_STATE": "OK",
+            "ORIG_ZIP": "74103",
+            "DEST_CITY": "Las Vegas",
+            "DEST_STATE": "NV",
+            "DEST_ZIP": "89101",
+            "PICKUP_DT": "20260907154700",
+            "EQTYPE": "DRY_VAN",
+            "RATE": "2892",
+            "MILES": "1066",
+            "STATUS": "OPEN"
+          },
+          {
+            "LOAD_ID": "LD00760",
+            "ORIG_CITY": "San Jose",
+            "ORIG_STATE": "CA",
+            "ORIG_ZIP": "95113",
+            "DEST_CITY": "Phoenix",
+            "DEST_STATE": "AZ",
+            "DEST_ZIP": "85004",
+            "PICKUP_DT": "20260916121000",
+            "EQTYPE": "DRY_VAN",
+            "RATE": "1579",
+            "MILES": "614",
+            "STATUS": "OPEN"
+          },
+          {
+            "LOAD_ID": "LD00763",
+            "ORIG_CITY": "Omaha",
+            "ORIG_STATE": "NE",
+            "ORIG_ZIP": "68102",
+            "DEST_CITY": "Newark",
+            "DEST_STATE": "NJ",
+            "DEST_ZIP": "07102",
+            "PICKUP_DT": "20260912023200",
+            "EQTYPE": "DRY_VAN",
+            "RATE": "3504",
+            "MILES": "1132",
+            "STATUS": "OPEN"
+          }
+        ],
+        "request_id": "abbc9733-b051-4d0f-9a18-31a459a7d495"
+      }
+    },
+    {
+      "arguments": {
+        "origin_city": "Anchorage",
+        "max_results": 10
+      },
+      "result": {
+        "ok": true,
+        "command": "LOAD_QUERY",
+        "complete": true,
+        "elapsed_ms": 260,
+        "attempts": 1,
+        "failures": [],
+        "record_count": 2,
+        "records": [
+          {
+            "LOAD_ID": "LD00719",
+            "ORIG_CITY": "Anchorage",
+            "ORIG_STATE": "AK",
+            "ORIG_ZIP": "99501",
+            "DEST_CITY": "Sarasota",
+            "DEST_STATE": "FL",
+            "DEST_ZIP": "34236",
+            "PICKUP_DT": "20260910030300",
+            "EQTYPE": "DRY_VAN",
+            "RATE": "10422",
+            "MILES": "3832",
+            "STATUS": "OPEN"
+          },
+          {
+            "LOAD_ID": "LD00769",
+            "ORIG_CITY": "Anchorage",
+            "ORIG_STATE": "AK",
+            "ORIG_ZIP": "99501",
+            "DEST_CITY": "Memphis",
+            "DEST_STATE": "TN",
+            "DEST_ZIP": "38103",
+            "PICKUP_DT": "20260909104700",
+            "EQTYPE": "POWER_ONLY",
+            "RATE": "7712",
+            "MILES": "3136",
+            "STATUS": "OPEN"
+          }
+        ],
+        "request_id": "08c43fb4-9d80-45a9-8308-74dd08a8840e"
+      }
+    }
+  ],
+  "detail": {
+    "ok": true,
+    "command": "LOAD_GET",
+    "complete": true,
+    "elapsed_ms": 267,
+    "attempts": 1,
+    "failures": [],
+    "record_count": 1,
+    "records": [
+      {
+        "LOAD_ID": "LD00719",
+        "ORIG_CITY": "Anchorage",
+        "ORIG_STATE": "AK",
+        "ORIG_ZIP": "99501",
+        "DEST_CITY": "Sarasota",
+        "DEST_STATE": "FL",
+        "DEST_ZIP": "34236",
+        "PICKUP_DT": "20260910030300",
+        "DELIVERY_DT": "20260910220300",
+        "EQTYPE": "DRY_VAN",
+        "RATE": "10422",
+        "MILES": "3832",
+        "STATUS": "OPEN",
+        "WEIGHT": "29800",
+        "PIECES": "11"
+      }
+    ],
+    "negotiation": {
+      "status": "offered",
+      "load_id": "LD00719",
+      "offer_id": "3781e8d2-8c82-43e8-8ac2-9ea9760bc591",
+      "offered_rate": 10422,
+      "agreed_rate": null,
+      "counter_rounds": 0,
+      "rounds_remaining": 3,
+      "expires_at": "2026-09-06T10:15:08.918508+00:00",
+      "booking_confirmed": false
+    },
+    "request_id": "d6b9bc63-97c9-4fab-8538-ac6832aaa98a"
+  },
+  "final": {
+    "ok": true,
+    "outcome": "conversation_complete",
+    "finalized_at": "2026-09-06T10:13:09.668941+00:00",
+    "authority_passed": true,
+    "verified": true,
+    "selected_load_id": "LD00719",
+    "negotiation": {
+      "status": "offered",
+      "load_id": "LD00719",
+      "offer_id": "3781e8d2-8c82-43e8-8ac2-9ea9760bc591",
+      "expires_at": "2026-09-06T10:15:08.918508+00:00",
+      "agreed_rate": null,
+      "offered_rate": 10422,
+      "counter_rounds": 0,
+      "rounds_remaining": 3,
+      "booking_confirmed": false
+    },
+    "booking": null,
+    "booking_confirmed": false,
+    "request_id": "c3f90f47-bccb-4e7e-acd2-a8be7fc6cee0"
+  }
+}

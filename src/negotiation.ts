@@ -1,6 +1,6 @@
 import { callAction, resultStatus, SessionError, twinRpc } from './call-session';
 import { loadsForCall } from './call-services';
-import { getLoadPricing } from './tms';
+import { getLoadAvailability } from './tms';
 
 export type Negotiation = {
   status: 'idle' | 'offered' | 'agreed' | 'rejected' | 'failed';
@@ -22,14 +22,18 @@ function decision(result: Awaited<ReturnType<typeof twinRpc>>) {
 }
 
 export async function getNegotiableLoad(hash: string, loadId: string, signal?: AbortSignal,
-  pricingLookup: typeof getLoadPricing = getLoadPricing) {
+  pricingLookup: typeof getLoadAvailability = getLoadAvailability) {
   const before = await callAction(hash, 'status');
   if (!before.ok) throw new SessionError(before.error ?? 'SESSION_REQUIRED', resultStatus(before));
   let prices: { listedCents:number; maxCents:number } | undefined;
   const result = await loadsForCall(hash, {command:'LOAD_GET',fields:{LOAD_ID:loadId}}, signal, async () => {
     const detail = await pricingLookup(loadId, signal); prices=detail.pricing; return detail.result;
   });
-  if (!result.ok || !prices) throw new SessionError('TMS_PRICING_UNAVAILABLE');
+  if (!result.ok) throw new SessionError('TMS_PRICING_UNAVAILABLE');
+  const status = result.records[0]?.STATUS;
+  if (status !== 'OPEN') return { ...result, negotiation: null, availability: status === 'PENDING' ? 'pending' : 'unavailable',
+    can_negotiate: false, can_book: false, manager_review_available: status === 'PENDING' };
+  if (!prices) throw new SessionError('TMS_PRICING_UNAVAILABLE');
   const quoted = await twinRpc('poc_negotiate', {p_session_hash:hash,p_action:'quote',p_load_id:loadId,
     p_revision:before.session!.authorityRevision,p_listed_cents:prices.listedCents,p_max_cents:prices.maxCents});
   let negotiation = decision(quoted);

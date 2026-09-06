@@ -4,6 +4,7 @@ import net from 'node:net';
 import {moneyCents,parsePrivatePricing,parseResponse,getLoadPricing} from '../src/tms';
 import {getNegotiableLoad} from '../src/negotiation';
 import {executeTool} from '../src/mcp-tools';
+import {toolParameters} from '../scripts/happyrobot/workflow-spec';
 const line='LOAD_ID:L1|ORIG_CITY:A|ORIG_STATE:TX|ORIG_ZIP:75001|DEST_CITY:B|DEST_STATE:CA|DEST_ZIP:90001|PICKUP_DT:20260910080000|EQTYPE:FLATBED|RATE:1000|MILES:900|STATUS:OPEN|MAX_BUY:1200|NOTES:private';
 
 test('private pricing is validated as cents while public detail excludes ceilings and notes',()=>{
@@ -63,4 +64,27 @@ test('negotiation stays unavailable until its migration-backed feature is activa
   t.after(()=>{if(old===undefined)delete process.env.NEGOTIATION_ENABLED;else process.env.NEGOTIATION_ENABLED=old;});
   t.mock.method(globalThis,'fetch',async()=>{throw Error('No database access before activation');});
   await assert.rejects(()=>executeTool('negotiate_offer',{load_id:'L1',offer_id:'11111111-1111-4111-8111-111111111111',response:'accept'},'a'.repeat(64)),/NEGOTIATION_NOT_READY/);
+});
+
+test('counter then acceptance explicitly clears the previous amount without relaxing numeric acceptance validation', async t => {
+  const values = { NEGOTIATION_ENABLED: 'true', TWIN_GATEWAY: 'https://twin.example.invalid', TWIN_ORG_ID: 'test' };
+  const old = Object.fromEntries(Object.keys(values).map(k => [k, process.env[k]]));
+  Object.assign(process.env, values);
+  t.after(() => { for (const [k,v] of Object.entries(old)) { if (v === undefined) delete process.env[k]; else process.env[k] = v; } });
+  const first = '11111111-1111-4111-8111-111111111111', next = '22222222-2222-4222-8222-222222222222';
+  const requests: Record<string, unknown>[] = [];
+  t.mock.method(globalThis, 'fetch', async (_url: unknown, init: RequestInit) => {
+    const b = JSON.parse(String(init.body)); requests.push(b);
+    return Response.json({ ok: true, negotiation: { status: b.p_action === 'accept' ? 'agreed' : 'offered',
+      load_id: 'L1', offer_id: next, offered_rate: 3496.56, agreed_rate: b.p_action === 'accept' ? 3496.56 : null,
+      counter_rounds: 1, rounds_remaining: 2, booking_confirmed: false } });
+  });
+  await executeTool('negotiate_offer', { load_id: 'L1', offer_id: first, response: 'counter', amount: 6856 }, 'a'.repeat(64));
+  const accepted = await executeTool('negotiate_offer', { load_id: 'L1', offer_id: next, response: 'accept', amount: null }, 'a'.repeat(64));
+  assert.equal((accepted.negotiation as { status: string }).status, 'agreed');
+  assert.deepEqual(requests.map(r => [r.p_action, r.p_offer_id, r.p_amount_cents]), [['counter', first, 685600], ['accept', next, null]]);
+  for (const response of ['accept', 'reject']) await assert.rejects(() => executeTool('negotiate_offer', { load_id: 'L1', offer_id: next, response, amount: 6856 }, 'a'.repeat(64)), /INVALID_OFFER/);
+  await assert.rejects(() => executeTool('negotiate_offer', { load_id: 'L1', offer_id: next, response: 'counter', amount: null }, 'a'.repeat(64)), /INVALID_OFFER/);
+  assert.equal(requests.length, 2);
+  assert.equal(toolParameters('negotiate_offer').find(p => p.name === 'amount')?.required, true);
 });

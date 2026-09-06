@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import test, { type TestContext } from 'node:test';
+import test, { beforeEach, afterEach, type TestContext } from 'node:test';
 import net from 'node:net';
 import { bookTms, bookingFrame } from '../src/tms-booking';
 import { bookForCall, type Booking } from '../src/booking';
@@ -10,6 +10,12 @@ import { toolSpecs, executeTool } from '../src/mcp-tools';
 const request = { loadId: 'L1', mcNumber: '1515', agreedCents: 100001 };
 const id = '11111111-1111-4111-8111-111111111111';
 const booking: Booking = { status: 'pending', attempt_id: id, load_id: 'L1', agreed_rate: 1000.01, attempted_at: new Date().toISOString(), handoff_mock: false };
+let previousMode: string | undefined;
+beforeEach(() => {
+  previousMode = process.env.BOOKING_TMS_MODE;
+  process.env.BOOKING_TMS_MODE = 'live';
+});
+afterEach(() => { if (previousMode === undefined) delete process.env.BOOKING_TMS_MODE; else process.env.BOOKING_TMS_MODE = previousMode; });
 async function server(t: TestContext, reply: (socket: net.Socket) => void) {
   let sends = 0;
   const old = { ...process.env };
@@ -107,4 +113,49 @@ test('lost result persistence returns uncertainty without retrying the TMS', asy
   }));
   assert.equal(sends, 1); assert.equal(r.booking.status, 'uncertain'); assert.equal(r.booking_confirmed, false);
   assert.equal(r.booking.handoff_mock, false); assert.equal(r.booking.reference, undefined);
+});
+
+test('mock is the default: persist a simulated booking, replay its reference, and never call the write adapter', async () => {
+  delete process.env.BOOKING_TMS_MODE;
+  let saved: Booking | undefined;
+  let writes = 0, claims = 0;
+  const rpc: typeof twinRpc = async (_name, args) => {
+    const m = args.p_metadata as any;
+    if (args.p_action === 'prepare') return { ok: true, booking: saved };
+    if (args.p_action === 'claim') {
+      claims++; assert.equal(m.simulated, true);
+      saved = { ...booking, attempt_id: m.attemptId, simulated: true };
+      return { ok: true, claimed: true, booking: saved, mcNumber: request.mcNumber, agreedCents: request.agreedCents };
+    }
+    assert.equal(args.p_action, 'complete'); assert.equal(m.result.simulated, true);
+    assert.equal(m.result.reference, `MOCK-${saved!.attempt_id}`);
+    saved = { ...saved!, status: 'confirmed', reference: m.result.reference, handoff_mock: true };
+    return { ok: true, booking: saved };
+  };
+  const dependencies = deps(rpc, async () => { writes++; throw Error('Must never send'); });
+  const first = await bookForCall('hash', { load_id: 'L1', offer_id: id }, undefined, dependencies);
+  assert.equal(first.booking_saved, true); assert.equal(first.booking_confirmed, false);
+  assert.equal(first.booking.simulated, true);
+  assert.deepEqual(await bookForCall('hash', { load_id: 'L1', offer_id: id }, undefined, dependencies), first);
+  assert.equal(writes, 0); assert.equal(claims, 1);
+});
+
+test('mock and invalid mode cannot reach TCP even through a direct transport call', async t => {
+  let connections = 0;
+  t.mock.method(net.Socket.prototype, 'connect', () => { connections++; throw Error('Unexpected TCP connection'); });
+  for (const mode of [undefined, 'mock', 'typo']) {
+    if (mode === undefined) delete process.env.BOOKING_TMS_MODE; else process.env.BOOKING_TMS_MODE = mode;
+    assert.deepEqual(await bookTms(request), { status: 'rejected', error: 'TMS_BOOKING_DISABLED' });
+  }
+  assert.equal(connections, 0);
+});
+
+test('mock claim without persisted simulation flag fails closed before sending', async () => {
+  process.env.BOOKING_TMS_MODE = 'mock';
+  let writes = 0;
+  const rpc: typeof twinRpc = async (_name, args) => args.p_action === 'prepare' ? { ok: true }
+    : { ok: true, claimed: true, booking, mcNumber: request.mcNumber, agreedCents: request.agreedCents };
+  await assert.rejects(bookForCall('hash', { load_id: 'L1', offer_id: id }, undefined,
+    deps(rpc, async () => { writes++; throw Error(); })), /BOOKING_MODE_MISMATCH/);
+  assert.equal(writes, 0);
 });

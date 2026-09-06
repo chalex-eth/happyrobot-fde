@@ -7,10 +7,12 @@ import { prepareDemoChallenge } from './demo-otp';
 import { executeTool, toolSpecs } from './mcp-tools';
 import { FmcsaError } from './fmcsa';
 import { handleMcp } from './mcp-http';
+import { publicBooking, type Booking } from './booking';
 
 const directory = () => join(process.cwd(), 'tmp', 'adversarial-sessions');
 const planSchema = z.strictObject({ id: z.string().uuid(), hash: z.string().regex(/^[a-f0-9]{64}$/),
   fault: z.enum(['none', 'authority_unavailable', 'otp_delivery_failed', 'tms_unavailable']).default('none'),
+  bookingAllowed: z.boolean().default(false),
   challengeId: z.string().uuid(), callId: z.string().uuid(), expiresAt: z.number().int() });
 export type AdversarialSession = z.infer<typeof planSchema>;
 function secret() {
@@ -27,11 +29,11 @@ function equal(a: string, b: string) {
 function authenticate(authorization: string | null) {
   if (!equal(authorization ?? '', `Bearer ${secret()}`)) throw new SessionError('UNAUTHORIZED', 401);
 }
-export async function prepareAdversarialSession(fault: AdversarialSession['fault'] = 'none') {
+export async function prepareAdversarialSession(fault: AdversarialSession['fault'] = 'none', bookingAllowed = false) {
   secret();
   const call = await startCall();
   const prepared = prepareDemoChallenge(call.hash);
-  const plan: AdversarialSession = { fault, id: randomUUID(), hash: call.hash, callId: call.session.callId,
+  const plan: AdversarialSession = { fault, bookingAllowed, id: randomUUID(), hash: call.hash, callId: call.session.callId,
     challengeId: prepared.challengeId, expiresAt: Date.now() + 10 * 60_000 };
   await mkdir(directory(), { recursive: true, mode: 0o700 });
   await writeFile(join(directory(), `${plan.id}.json`), JSON.stringify({ plan, active: false }), { mode: 0o600, flag: 'wx' });
@@ -91,6 +93,7 @@ export async function handleAdversarialMcp(request: Request) {
   let resolved: AdversarialSession | undefined;
   let searchArguments: Record<string, unknown> | undefined;
   let negotiationArguments: Record<string, unknown> | undefined;
+  let bookingArguments: Record<string, unknown> | undefined;
   return handleMcp(request, {
     authenticate,
     resolve: async req => {
@@ -100,12 +103,13 @@ export async function handleAdversarialMcp(request: Request) {
       return resolved;
     },
     execute: (name, args, hash, signal, operationId, challengeId) => {
-      // Existing conversation suites are read/negotiation-only. A simulator or
-      // workflow config probe must never book real shared TMS inventory.
-      if (name === 'book_load') throw new SessionError('BOOKING_DISABLED_IN_EVAL', 403);
+      // Only a controller-signed opt-in can use the real booking path. Other
+      // suites and inactive configuration probes remain unable to book.
+      if (name === 'book_load' && !resolved?.bookingAllowed) throw new SessionError('BOOKING_DISABLED_IN_EVAL', 403);
       // Only validated, public search filters are retained for conversation QA.
       searchArguments = name === 'search_loads' ? toolSpecs.search_loads.schema.parse(args) : undefined;
       negotiationArguments = name === 'negotiate_offer' ? toolSpecs.negotiate_offer.schema.parse(args) : undefined;
+      bookingArguments = name === 'book_load' ? toolSpecs.book_load.schema.parse(args) : undefined;
       return executeTool(name, args, hash, signal, operationId, challengeId, {
       ...(resolved?.fault === 'authority_unavailable' ? { authorityLookup: async () => { throw new FmcsaError('FMCSA_UNAVAILABLE', 503, true); } } : {}),
       ...(resolved?.fault === 'otp_delivery_failed' ? { deliverOtp: async () => false } : {}),
@@ -129,6 +133,8 @@ export async function handleAdversarialMcp(request: Request) {
         runtime_run_id: /^[0-9a-f-]{36}$/.test(request.headers.get('x-happyrobot-run-id') ?? '') ? request.headers.get('x-happyrobot-run-id') : null,
         ...(searchArguments ? { search_arguments: searchArguments } : {}),
         ...(negotiationArguments ? { negotiation_arguments: negotiationArguments } : {}),
+        ...(bookingArguments ? { booking_arguments: bookingArguments } : {}),
+        ...(result.booking ? { booking: publicBooking(result.booking as Booking) } : {}),
         ...(publicNegotiation ? { negotiation: publicNegotiation } : {}),
         ...(tool === 'finalize_call' ? { outcome: result.outcome } : {}),
         eligible: authority?.eligible, delivered: result.delivered, verified: result.verified,

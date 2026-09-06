@@ -6,7 +6,7 @@ import { bookTms, type BookingResult } from './tms-booking';
 export type Booking = {
   status: 'pending' | 'confirmed' | 'rejected' | 'uncertain';
   attempt_id: string; load_id: string; agreed_rate: number; reference?: string;
-  attempted_at: string; error?: string; handoff_mock: boolean;
+  attempted_at: string; error?: string; handoff_mock: boolean; simulated?: boolean;
 };
 
 export function publicBooking(value: Booking): Booking {
@@ -16,17 +16,21 @@ export function publicBooking(value: Booking): Booking {
   return { status: value.status, attempt_id: value.attempt_id, load_id: value.load_id,
     agreed_rate: value.agreed_rate, attempted_at: value.attempted_at,
     ...(value.reference ? { reference: value.reference } : {}), ...(value.error ? { error: value.error } : {}),
-    handoff_mock: value.handoff_mock === true };
+    handoff_mock: value.handoff_mock === true, simulated: value.simulated === true };
 }
 
 export async function bookForCall(hash: string, args: { load_id: string; offer_id: string }, signal?: AbortSignal,
   dependencies = { rpc: twinRpc, pricing: getLoadPricing, send: bookTms }) {
+  const mode = process.env.BOOKING_TMS_MODE ?? 'mock';
+  if (!['mock', 'live'].includes(mode)) throw new SessionError('INVALID_BOOKING_MODE', 503);
+  const simulated = mode === 'mock';
   const rpc = (action: string, metadata: Record<string, unknown> = {}) => dependencies.rpc('poc_book_call', {
     p_session_hash: hash, p_action: action, p_metadata: { loadId: args.load_id, offerId: args.offer_id, ...metadata },
   });
   const checked = await rpc('prepare');
   if (!checked.ok) throw new SessionError(checked.error ?? 'BOOKING_NOT_READY', 409);
-  const response = (booking: Booking) => ({ ok: true, booking: publicBooking(booking), booking_confirmed: booking.status === 'confirmed' });
+  const response = (booking: Booking) => ({ ok: true, booking: publicBooking(booking),
+    booking_saved: booking.status === 'confirmed', booking_confirmed: booking.status === 'confirmed' && booking.simulated !== true });
   if (checked.booking) return response(checked.booking);
   let detail: Awaited<ReturnType<typeof getLoadPricing>>;
   try { detail = await dependencies.pricing(args.load_id, signal); }
@@ -36,20 +40,24 @@ export async function bookForCall(hash: string, args: { load_id: string; offer_i
     throw new SessionError('BOOKING_PREFLIGHT_FAILED', 409);
   }
   const attemptId = randomUUID();
-  const claimed = await rpc('claim', { attemptId, terms: detail.result.records[0],
+  const claimed = await rpc('claim', { attemptId, simulated, terms: detail.result.records[0],
     listedCents: detail.pricing.listedCents, maxCents: detail.pricing.maxCents });
   if (!claimed.ok) throw new SessionError(claimed.error ?? 'BOOKING_NOT_READY', 409);
   if (!claimed.booking) throw new SessionError('TWIN_INVALID_RESPONSE');
   if (!claimed.claimed) return response(claimed.booking);
+  // Fail closed if an outdated database did not persist the selected mode.
+  if ((claimed.booking.simulated === true) !== simulated) throw new SessionError('BOOKING_MODE_MISMATCH', 409);
   // Only the invocation with a confirmed atomic claim may send. A lost claim
   // response stops here; a later invocation sees pending and cannot write again.
   let result: BookingResult;
   try {
     if (!claimed.mcNumber || !Number.isSafeInteger(claimed.agreedCents)) throw Error();
-    result = await dependencies.send({ loadId: args.load_id, mcNumber: claimed.mcNumber, agreedCents: claimed.agreedCents! }, signal);
+    result = simulated
+      ? { status: 'confirmed', reference: `MOCK-${attemptId}`, timestamp: new Date().toISOString().replace(/\D/g, '').slice(0, 14) }
+      : await dependencies.send({ loadId: args.load_id, mcNumber: claimed.mcNumber, agreedCents: claimed.agreedCents! }, signal);
   } catch { result = { status: 'uncertain', error: 'TMS_BOOKING_UNCERTAIN' }; }
   try {
-    const saved = await rpc('complete', { attemptId, result });
+    const saved = await rpc('complete', { attemptId, result: { ...result, simulated } });
     if (saved.ok && saved.booking) return response(saved.booking);
   } catch { /* Read recovery only: never repeat the network mutation. */ }
   try {

@@ -1,0 +1,334 @@
+{
+  "test": "N02",
+  "run_id": "0330ae9a-fff0-4624-9d1b-ef0462bbf84f",
+  "version_id": "01a0761c-474f-7786-bb07-93d1ae08fd95",
+  "checks": {
+    "backend_trace_present": false,
+    "conversation_completed": true,
+    "verification_before_detail": false,
+    "negotiation_reached": false,
+    "city_only_discovery": false,
+    "expected_round_count": false,
+    "final_outcome": false,
+    "finalized_once": false,
+    "booking_after_agreement_before_finalize": false,
+    "one_booking_call_with_agreed_offer": false,
+    "booking_result_recorded": false,
+    "confirmed_booking_has_reference_and_mock_handoff": true,
+    "counter_then_agreement": false
+  },
+  "automated_checks_passed": false,
+  "negotiation_coverage": "not_reached",
+  "conversation_review": "pending",
+  "pass_criteria": "Verification and city-only Dallas discovery precede negotiation. One counter equals the spoken initial offer plus 100 USD. Backend may accept it directly or make an authorized offer that the caller accepts. Exact backend agreed rate recorded; one counter round and one finalization. Hidden-ceiling equality is a backend test, not this conversation scenario. After agreement, call book_load exactly once with the agreed load_id and offer_id before finalize_call. Confirmed booking must have a reference and recorded mock handoff; final outcome booked. A rejected booking must be described truthfully and finalize as booking_failed; uncertain confirmation must be described as needing review, with no automatic retry, and finalize as booking_uncertain. Never claim a booking without confirmation. Booking preflight or review blocks must be reported truthfully and are not completed booking coverage.",
+  "trace": [],
+  "audit_remarks": [
+    {
+      "northstar_id": "01a0761c-47ae-71a5-b8bb-cdbc4c4e216d",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-72a3-a1d2-b1cd0999156d",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-72bb-a0a9-bd00762e85cf",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-72e4-ba0b-f824c3085e89",
+      "grade": "failed",
+      "correction": "After create_otp delivered=true, say exactly: “I've sent you a code. Please read the six digits from your screen.”",
+      "correction_reason": "The assistant did not use the required exact OTP screen prompt phrase. It used different wording before asking for the six digits.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-732f-8377-803f19dfb3c2",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-7335-878b-4d58417b2230",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-7369-927a-50d6b66253d8",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-736b-8db6-410d6f6e219c",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-7413-a253-a8d5e08a56fb",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-7432-96c4-1e07a8e06e29",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-7444-a64b-a613d8097373",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-76ec-b5cf-e67cf8c9a424",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-770d-bc6d-3b6eb1a0af31",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-7753-bdeb-670ef5e030e5",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-77bc-b4fd-fdfae166a205",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-77dd-b9a1-b0da1c7dbedd",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-7807-bd25-54a84bdb8815",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-781f-b5d1-dd35af981fc4",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-78e9-a854-e97506b72ecc",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-7925-9911-89f0de0cabb7",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-7927-983d-3963735b3272",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-7955-a88b-5df84fbdbdda",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-79bb-a254-a6fd8a917c2d",
+      "grade": "failed",
+      "correction": "Before ending, explicitly finalize the call outcome (e.g., that load results could not be retrieved) and perform the required finalize_call step rather than only saying a general thanks.",
+      "correction_reason": "The conversation ended without an explicit finalized outcome/closure step. The assistant did not complete the required finalization process before the session closed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-79fb-9e23-04e19bf0d3cb",
+      "grade": "failed",
+      "correction": "Call finalize_call once with conversation_complete/technical_error and a brief summary like: “Verified carrier authority and OTP, but I couldn’t retrieve load results from Dallas. Call ended.”",
+      "correction_reason": "No finalize_call tool was invoked before the session ended. The closure therefore does not meet the required finalization behavior.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-7ab3-beab-fddf36b41252",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-7b62-bf7e-29a1d47849da",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-7bd2-845b-022fa8370651",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-7c78-bc61-a1c87740ac93",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-7ce7-8d76-b29ca0eae48f",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-7d07-b2e6-81a7987fdf77",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-7d50-9168-e87140859769",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-7d85-b8d9-e23225ce5723",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-7d8f-990b-628f7b970668",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-7de0-89d0-103d702efded",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-7ee5-bda8-ee55075e9281",
+      "grade": "not_applicable",
+      "correction_reason": "Northstar assessed as not_applicable.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-7f72-adea-426b24114009",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    },
+    {
+      "northstar_id": "01a0761c-47ae-7fcc-9d07-5d54a42d85da",
+      "grade": "passed",
+      "correction_reason": "Northstar assessed as passed.",
+      "model": "gpt-5.4-nano-medium"
+    }
+  ],
+  "messages": [
+    {
+      "role": "assistant",
+      "content": "“Thanks for calling HappyRobot Logistics. I’m Daniel, your carrier sales assistant. I can help you find available loads. Can I get your MC number?”"
+    },
+    {
+      "role": "user",
+      "content": "My MC number is 135797."
+    },
+    {
+      "role": "assistant",
+      "content": "Thanks. I have your MC number as 135797. I’ll check its operating authority now."
+    },
+    {
+      "role": "user",
+      "content": "Yes, that's correct. Let me know once you've verified it."
+    },
+    {
+      "role": "tool",
+      "content": "{\"result\": \"success\"}"
+    },
+    {
+      "role": "assistant",
+      "content": "Your operating authority is verified. I’m sending a verification code to your screen now."
+    },
+    {
+      "role": "user",
+      "content": "I have the code. It is [OTP REDACTED]."
+    },
+    {
+      "role": "tool",
+      "content": "{\"result\": \"success\"}"
+    },
+    {
+      "role": "assistant",
+      "content": "Please read the six digits currently shown on your screen."
+    },
+    {
+      "role": "user",
+      "content": "The six digits are [OTP REDACTED]."
+    },
+    {
+      "role": "tool",
+      "content": "{\"result\": \"success\"}"
+    },
+    {
+      "role": "assistant",
+      "content": "Verification succeeded. Where are you starting from?"
+    },
+    {
+      "role": "user",
+      "content": "I'm in Dallas. What loads do you have?"
+    },
+    {
+      "role": "assistant",
+      "content": "I’ll search current loads departing from Dallas."
+    },
+    {
+      "role": "user",
+      "content": "Okay, thank you. Let me know what you find."
+    },
+    {
+      "role": "tool",
+      "content": "{\"result\": \"success\"}"
+    },
+    {
+      "role": "assistant",
+      "content": "I couldn’t retrieve the load results. Please try again later."
+    },
+    {
+      "role": "user",
+      "content": "Oh, I understand. Thank you for checking. I'll stay on the line, just let me know if you are able to retrieve them or if anything else comes up."
+    },
+    {
+      "role": "assistant",
+      "content": "You’re welcome. I’m glad I could help."
+    },
+    {
+      "role": "event",
+      "content": "session_closed"
+    }
+  ]
+}

@@ -7,6 +7,7 @@ import { getNegotiableLoad, negotiateForCall } from './negotiation';
 import type { lookupCarrier } from './fmcsa';
 import type { runTms } from './tms';
 import { createOtpForCall } from './demo-otp';
+import { recordLoadInterest, publicLoadInterest } from './load-interest';
 
 const city = z.string().trim().min(1).max(80).regex(/^[A-Za-z .'-]+$/);
 const state = z.string().regex(/^[A-Z]{2}$/);
@@ -27,7 +28,7 @@ export const toolSpecs = {
     schema: z.strictObject({ code: z.string().regex(/^\d{6}$/).describe('Exactly six caller-supplied digits as a string, preserving leading zeros.') }),
   },
   search_loads: {
-    description: 'Search real loads across all equipment types after authority and OTP verification. A departure city alone is sufficient: use origin_city and max_results=10 without asking for state, destination, date or equipment. Reuse supplied preferences; omit unspecified filters and never send anywhere or any day literally. At least one location, pickup date or equipment filter is required. Omit equipment to search all types. Returns public rates only; do not negotiate or book.',
+    description: 'Search real loads across all equipment types after authority and OTP verification. A departure city alone is sufficient: use origin_city and max_results=10 without asking for state, destination, date or equipment. Reuse supplied preferences; omit unspecified filters and never send anywhere or any day literally. At least one location, pickup date or equipment filter is required. Omit equipment to search all types. Returns public records including STATUS. OPEN loads are available; PENDING loads may be discussed only for manager review, never quoted as available or booked.',
     schema: z.strictObject({
       equipment: z.string().regex(/^[A-Z][A-Z0-9_]{0,31}$/).describe('Optional TMS equipment code, e.g. DRY_VAN, FLATBED, REEFER (refrigerated), POWER_ONLY. Omit for all equipment types; never assume dry van.').optional(),
       origin_city: city.describe('Departure city actually supplied by the caller. City alone is enough; do not default to an example city, append a state or infer one.').optional(), origin_state: state.describe('Two-letter US origin state only if supplied; omit for a city-only request.').optional(), origin_zip: zip.describe('Five-digit origin ZIP.').optional(),
@@ -37,7 +38,7 @@ export const toolSpecs = {
     }),
   },
   get_load: {
-    description: 'Fetch current public details for a load returned by this call\'s latest search. Rechecks authority and OTP. Returns a current negotiation offer reference; use it to accept, reject or counter. Selecting a load does not book it.',
+    description: 'Fetch current public details for a load returned by this call\'s latest search. Rechecks authority and OTP. For OPEN loads returns a current negotiation offer reference. For PENDING loads returns public details and manager_review_available=true with no negotiation offer. Selecting a load does not book it.',
     schema: z.strictObject({ load_id: z.string().regex(/^[A-Za-z0-9_-]{1,64}$/).describe('Exact LOAD_ID from the latest successful search in this call.') }),
   },
   negotiate_offer: {
@@ -46,14 +47,23 @@ export const toolSpecs = {
       load_id:z.string().regex(/^[A-Za-z0-9_-]{1,64}$/),
       offer_id:z.string().uuid().describe('Copy the offer_id from the latest negotiation result for this load. Never invent it.'),
       response:z.enum(['accept','counter','reject']),
-      amount:z.number().positive().max(1_000_000).multipleOf(0.01).describe('Caller requested total USD rate, at most two decimal places; required only for counter.').optional(),
+      amount:z.union([z.number().positive().max(1_000_000).multipleOf(0.01), z.null(), z.literal('null')])
+        .describe('For counter: caller requested total USD rate as a number, at most two decimal places. For accept/reject: explicitly send null (JSON null or the exact text "null") to clear any previous counter amount. Never reuse the previous number.').optional(),
     }),
   },
   book_load: {
-    description: 'Book the current saved agreement after the caller agrees to proceed. Copy its load_id and offer_id; carrier and rate come from Twin. One booking attempt per call. Only booking.status=confirmed means booked; a simulated handoff is then recorded. Pending or uncertain needs review, never another write. Changed terms require a new reviewed decision; do not silently change the rate.',
+    description: 'Book the current saved agreement after the caller agrees to proceed. Copy its load_id and offer_id; carrier and rate come from Twin. One booking attempt per call. For booking.simulated=true, confirmed means a test booking saved in Twin only: say simulated booking saved, never TMS booked or reserved. booking_confirmed=true is required for a real TMS confirmation. A simulated handoff is then recorded. Pending or uncertain needs review, never another write. Changed terms require a new reviewed decision; do not silently change the rate.',
     schema: z.strictObject({
       load_id: z.string().regex(/^[A-Za-z0-9_-]{1,64}$/),
       offer_id: z.string().uuid().describe('Exact offer_id of the saved agreed negotiation.'),
+    }),
+  },
+  record_load_interest: {
+    description: 'Record interest in a pending load for manager review only after explicit caller consent and confirmation of their callback number. Rechecks the selected load status. Does not book, reserve, notify a manager or guarantee a callback. Only claim interest recorded after success. A repeated identical request returns the saved reference; do not retry an uncertain result automatically.',
+    schema: z.strictObject({
+      load_id: z.string().regex(/^[A-Za-z0-9_-]{1,64}$/).describe('Exact LOAD_ID from this call\'s latest search, with PENDING status.'),
+      callback_number: z.string().regex(/^\+[1-9]\d{6,14}$/).describe('Caller-confirmed callback number with country code, e.g. +12125550123. Ask rather than invent missing digits or country code.'),
+      consent: z.literal(true).describe('True only after the caller explicitly agrees to recording interest and this callback number for manager review.'),
     }),
   },
   finalize_call: {
@@ -106,7 +116,11 @@ export async function executeTool(name: ToolName, input: unknown, hash: string, 
     return loadsForCall(hash, {command:'LOAD_GET',fields:{LOAD_ID:args.load_id}}, signal);
   }
   if (name === 'negotiate_offer') {
-    const args=toolSpecs[name].schema.parse(input);
+    const parsed=toolSpecs[name].schema.parse(input);
+    // HappyRobot may render a null workflow variable as the exact text "null".
+    // Accept that spelling at the MCP boundary, then normalize before Twin.
+    // No numeric-string coercion; numeric accept/reject amounts still fail.
+    const args={...parsed, amount:parsed.amount === 'null' ? undefined : parsed.amount ?? undefined};
     if ((args.response==='counter') !== (args.amount!==undefined)) throw new SessionError('INVALID_OFFER',400);
     if (process.env.NEGOTIATION_ENABLED !== 'true') throw new SessionError('NEGOTIATION_NOT_READY',503);
     return negotiateForCall(hash,args);
@@ -116,6 +130,7 @@ export async function executeTool(name: ToolName, input: unknown, hash: string, 
     if (process.env.BOOKING_ENABLED !== 'true') throw new SessionError('BOOKING_NOT_READY', 503);
     return bookForCall(hash, args, signal);
   }
+  if (name === 'record_load_interest') return recordLoadInterest(hash, toolSpecs.record_load_interest.schema.parse(input), signal);
   const args = toolSpecs.finalize_call.schema.parse(input);
   // Summary is model-reported text; structured facts are derived in PostgreSQL.
   // Avoid retaining standalone codes even if the model ignores its instructions.
@@ -127,5 +142,7 @@ export async function executeTool(name: ToolName, input: unknown, hash: string, 
   return { ok: true, outcome: s.finalOutcome, finalized_at: s.finalizedAt,
     authority_passed: s.check?.eligible === true, verified: s.verified,
     selected_load_id: s.selectedLoadId, negotiation:s.negotiation,
-    booking: s.booking ? publicBooking(s.booking) : null, booking_confirmed: s.booking?.status === 'confirmed' };
+    interest: s.loadInterest ? publicLoadInterest(s.loadInterest) : null,
+    booking: s.booking ? publicBooking(s.booking) : null, booking_saved: s.booking?.status === 'confirmed',
+    booking_confirmed: s.booking?.status === 'confirmed' && s.booking.simulated !== true };
 }

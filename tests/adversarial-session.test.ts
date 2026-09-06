@@ -16,7 +16,7 @@ test('native test envelope remains private, authority-gated, isolated and revoca
   t.after(() => rm(isolated, { recursive: true, force: true }));
   const values = { NODE_ENV: 'development', OTP_DEMO_MODE: 'true', OTP_DELIVERY_MODE: 'mock',
     OTP_HASH_SECRET: 'otp-test-'.repeat(8), ADVERSARIAL_MCP_ENABLED: 'true', ADVERSARIAL_MCP_TOKEN: 'eval-test-'.repeat(8),
-    MCP_AUTH_TOKEN: 'voice-test-'.repeat(8), TWIN_GATEWAY: 'https://twin.example.invalid', TWIN_ORG_ID: 'test' };
+    MCP_AUTH_TOKEN: 'voice-test-'.repeat(8), BOOKING_ENABLED: 'true', TWIN_GATEWAY: 'https://twin.example.invalid', TWIN_ORG_ID: 'test' };
   const old = Object.fromEntries(Object.keys(values).map(k => [k, process.env[k]])); Object.assign(process.env, values);
   t.after(() => { for (const [k,v] of Object.entries(old)) { if (v === undefined) delete process.env[k]; else process.env[k] = v; } });
   const sessions = new Map<string, { session: CallSession; digest?: string }>();
@@ -28,6 +28,7 @@ test('native test envelope remains private, authority-gated, isolated and revoca
       otpFailuresRemaining: 2, otpRetryAllowed: true, verified: false, demo: true } });
     const entry = sessions.get(b.p_session_hash);
     if (!entry) return Response.json({ ok: false, error: 'SESSION_REQUIRED' });
+    if (b.p_action === 'prepare') return Response.json({ ok: false, error: 'AGREEMENT_REQUIRED' });
     if (b.p_action === 'issue') {
       if (!entry.session.check?.eligible) return Response.json({ ok: false, error: 'AUTHORITY_REQUIRED', session: entry.session });
       entry.digest = b.p_digest; entry.session.challengeId = b.p_challenge; entry.session.otpState = 'dispatching';
@@ -59,6 +60,9 @@ test('native test envelope remains private, authority-gated, isolated and revoca
     fetch: async (input, init) => handleAdversarialMcp(new Request(input, init)),
   });
   await client.connect(transport); t.after(() => client.close());
+  const bookingArgs = { load_id: 'LD001', offer_id: first.plan.id };
+  const deniedBooking = await client.callTool({ name: 'book_load', arguments: bookingArgs });
+  assert.equal(JSON.parse((deniedBooking.content as { text: string }[])[0].text).error, 'BOOKING_DISABLED_IN_EVAL');
   const invoke = async () => {
     const r = await client.callTool({ name: 'create_otp', arguments: {} });
     return JSON.parse((r.content as { text: string }[])[0].text);
@@ -113,6 +117,14 @@ test('native test envelope remains private, authority-gated, isolated and revoca
   assert.equal(failedTwice.failures_remaining, 0);
   assert.equal(failedTwice.retry_allowed, false);
   assert.equal(failedTwice.delivered, false);
+  await revokeAdversarialSession(third.plan);
+  const bookingSession = await prepareAdversarialSession('none', true);
+  t.after(() => revokeAdversarialSession(bookingSession.plan));
+  await activateAdversarialSession(bookingSession.plan, bookingSession.plan.id);
+  // Opt-in reaches the normal agreement guard; it never bypasses business gates.
+  assert.equal((await faultInvoke('book_load', bookingArgs)).error, 'AGREEMENT_REQUIRED');
+  const forged = Buffer.from(JSON.stringify({ ...second.plan, bookingAllowed: true })).toString('base64url');
+  await assert.rejects(() => resolveAdversarialSession(`${forged}.${second.token.split('.')[1]}`), /ADVERSARIAL_SESSION_REQUIRED/);
   Object.assign(process.env, { NODE_ENV: 'production' });
   assert.equal((await handleAdversarialMcp(req(values.ADVERSARIAL_MCP_TOKEN))).status, 403);
 });

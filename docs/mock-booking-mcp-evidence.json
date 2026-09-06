@@ -1,0 +1,57 @@
+{
+  "checked_at": "2026-09-06T11:17:47.851Z",
+  "scope": "Real bound MCP and Twin persistence with simulated booking; no audio conversation or TMS write",
+  "call_id": "59f8556e-380f-4a94-8dd5-e43557d07695",
+  "run_id": "8027178d-647a-4163-a22a-7d0138a7db4a",
+  "saved": {
+    "ok": true,
+    "booking": {
+      "status": "confirmed",
+      "attempt_id": "6c19c664-7911-423a-bccf-a317f35a0d0c",
+      "load_id": "LD00719",
+      "agreed_rate": 10422,
+      "attempted_at": "2026-09-06T11:17:46.008465+00:00",
+      "reference": "MOCK-6c19c664-7911-423a-bccf-a317f35a0d0c",
+      "handoff_mock": true,
+      "simulated": true
+    },
+    "booking_saved": true,
+    "booking_confirmed": false,
+    "request_id": "8cc463ba-b9d9-41ed-95ea-15b14f304c42"
+  },
+  "final": {
+    "ok": true,
+    "outcome": "booking_simulated",
+    "finalized_at": "2026-09-06T11:17:47.418266+00:00",
+    "authority_passed": true,
+    "verified": true,
+    "selected_load_id": "LD00719",
+    "negotiation": {
+      "status": "agreed",
+      "load_id": "LD00719",
+      "offer_id": "a1b0811a-d1ea-4016-972c-790d0660d18a",
+      "expires_at": "2026-09-06T11:19:44.232849+00:00",
+      "agreed_rate": 10422,
+      "offered_rate": 10422,
+      "counter_rounds": 0,
+      "rounds_remaining": 3,
+      "booking_confirmed": false
+    },
+    "interest": null,
+    "booking": {
+      "status": "confirmed",
+      "attempt_id": "6c19c664-7911-423a-bccf-a317f35a0d0c",
+      "load_id": "LD00719",
+      "agreed_rate": 10422,
+      "attempted_at": "2026-09-06T11:17:46.008465+00:00",
+      "reference": "MOCK-6c19c664-7911-423a-bccf-a317f35a0d0c",
+      "handoff_mock": true,
+      "simulated": true
+    },
+    "booking_saved": true,
+    "booking_confirmed": false,
+    "request_id": "db30a788-277d-478e-87b9-ab3d3715a179"
+  },
+  "tms_status_before": "OPEN",
+  "tms_status_after": "OPEN"
+}

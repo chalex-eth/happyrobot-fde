@@ -6,7 +6,7 @@ From the repository root, with Docker Desktop running:
 npm run local:up
 ```
 
-Open **http://localhost:3000**. The command builds the current source, starts the three containers, waits for app/proxy readiness, discovers the seven tools over the public HTTPS endpoint, and checks the live HappyRobot development version. It exits unsuccessfully if the saved connection, tool bindings, or run header do not match. The check never creates a call or publishes a workflow. A failed check leaves the containers running for diagnosis.
+Open **http://localhost:3000**. The command builds the current source, starts the three containers, waits for app/proxy readiness, discovers the eight tools over the public HTTPS endpoint, and checks the live HappyRobot development version. It exits unsuccessfully if the saved connection, tool bindings, or run header do not match. The check never creates a call or publishes a workflow. A failed check leaves the containers running for diagnosis.
 
 ```sh
 npm run local:status  # Container status
@@ -14,6 +14,15 @@ npm run local:check   # Repeat public MCP discovery and live workflow checks
 npm run local:logs    # Follow recent service logs; Ctrl-C stops log viewing
 npm run local:down    # Stop this stack and its tunnel
 ```
+
+To keep the tunnel running while working on the app:
+
+```sh
+npm run app:stop      # Stop only the app; keep ngrok and the proxy running
+npm run app:restart   # Rebuild/recreate only the app, then verify the connection
+```
+
+Start the full stack once with `local:up`. `app:restart` applies current source and environment changes without restarting the proxy or ngrok. During an app stop/restart, the public URL stays the same but MCP tool calls fail until the app is healthy again. The proxy may show unhealthy while the app is stopped; it recovers when the app returns. Your Mac and Docker must remain running to keep this local tunnel online. Use `local:down` only when you also want to stop the tunnel. These commands use the normal configuration, not the optional evaluation overlay.
 
 `local:up` is also the command to apply source or environment changes. It uses the Docker build cache. Ordinary restarts reuse the same ngrok domain and saved HappyRobot credential. Docker restarts the containers after a daemon restart unless they were explicitly stopped; run `local:check` to verify the external configuration again.
 
@@ -30,7 +39,7 @@ For another machine:
 
 The stable domain configured for this checkout is `nonissuably-overgreasy-georgiann.ngrok-free.dev`. It is already assigned to the user's ngrok account; no paid domain was purchased.
 
-Development is configured with normal **Version 13**, connection **Carrier sales Docker development MCP**. The former live isolated Version 11 was replaced. Exact IDs and validation scope are recorded in [rollout evidence](local-docker-validation.json).
+As checked on 6 September, development uses **Version 18: Local app — normal MCP restored**, connection **Carrier sales Docker development MCP**. This replaces isolated Version 16, which had caused HTTP 404 on normal app calls by pointing to the disabled `/api/mcp/adversarial` route. Exact IDs and validation scope are recorded in [repair evidence](mcp-repair-validation.json); [original Docker rollout evidence](local-docker-validation.json) describes the earlier seven-tool Version 13. Start a fresh app call after changing the live version.
 
 ## Services and boundaries
 
@@ -66,3 +75,7 @@ docker run --rm -e NODE_ENV=production carrier-sales-local:dev npm run build
 ```
 
 If the startup check fails, read the specific error and inspect `local:status` / `local:logs`. Common causes are occupied host ports, a stopped Docker daemon, an unavailable domain/token, a changed HappyRobot live version, or a workflow still using an isolated test connection. A running container alone is not a verified integration.
+
+## Simulated booking in local tests
+
+The app service pins `BOOKING_TMS_MODE=mock`. `book_load` saves a simulated booking in Twin and never sends `LOAD_BOOK`; real TMS searches and OPEN-load checks continue. Mock confirmation uses a `MOCK-…` reference and the final disposition `booking_simulated`. Restart with `npm run app:restart` after changing application code. Existing PENDING inventory is not reset.
