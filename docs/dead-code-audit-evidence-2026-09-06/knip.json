@@ -1,0 +1,45 @@
+{
+  "workspaces": {
+    ".": {
+      "entry": [
+        "scripts/**/*.{ts,mjs}"
+      ],
+      "project": [
+        "scripts/**/*.{ts,mjs}"
+      ]
+    },
+    "apps/api": {
+      "entry": [
+        "src/server.ts",
+        "tests/**/*.test.ts",
+        "db/scripts/*.{ts,mjs}"
+      ],
+      "project": [
+        "src/**/*.ts",
+        "tests/**/*.ts",
+        "db/scripts/*.{ts,mjs}"
+      ]
+    },
+    "apps/web": {
+      "entry": [
+        "src/app/**/{page,layout,route}.{ts,tsx}",
+        "tests/**/*.test.ts"
+      ],
+      "project": [
+        "src/**/*.{ts,tsx}",
+        "tests/**/*.ts"
+      ]
+    },
+    "packages/contracts": {
+      "entry": [
+        "src/index.ts"
+      ],
+      "project": [
+        "src/**/*.ts"
+      ]
+    }
+  },
+  "ignoreBinaries": [
+    "ngrok"
+  ]
+}
