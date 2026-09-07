@@ -1,5 +1,6 @@
 import { randomUUID, timingSafeEqual } from 'node:crypto';
 import { runTms, TmsError, validateRequest } from '../../integrations/tms/client.js';
+import { runtimeConfig } from '../../config/env.js';
 
 const requestIdPattern = /^[A-Za-z0-9._:-]{1,128}$/;
 export const upstreamStatus = (code: string) =>
@@ -42,7 +43,7 @@ export async function handleTmsRequest(request: Request, execute: typeof runTms 
   const fail = (error: string, status: number) =>
     json({ ok: false, error, retryable: false }, status);
   // Retain the existing name so local and deployed configuration use the same secret.
-  const token = process.env.LOCAL_API_TOKEN;
+  const token = runtimeConfig().local.apiToken;
   if (!token) return fail('API_AUTH_NOT_CONFIGURED', 503);
   const expected = Buffer.from(`Bearer ${token}`);
   const actual = Buffer.from(request.headers.get('authorization') ?? '');

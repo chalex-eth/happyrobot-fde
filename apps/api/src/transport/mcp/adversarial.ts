@@ -13,6 +13,7 @@ import { FmcsaError } from '../../integrations/fmcsa/client.js';
 import { handleMcp } from './server.js';
 import { publicBooking } from '../../modules/booking/index.js';
 import { type Booking } from '@carrier/contracts/booking';
+import { runtimeConfig } from '../../config/env.js';
 
 const directory = () => join(workspaceRoot(), 'tmp', 'adversarial-sessions');
 const planSchema = z.strictObject({
@@ -28,13 +29,14 @@ const planSchema = z.strictObject({
 });
 export type AdversarialSession = z.infer<typeof planSchema>;
 function secret() {
-  const value = process.env.ADVERSARIAL_MCP_TOKEN;
+  const config = runtimeConfig();
+  const value = config.mcp.adversarialToken;
   if (
     !mockOtpEnabled() ||
-    process.env.ADVERSARIAL_MCP_ENABLED !== 'true' ||
+    !config.mcp.adversarialEnabled ||
     !value ||
     value.length < 32 ||
-    value === process.env.MCP_AUTH_TOKEN
+    value === config.mcp.authToken
   )
     throw new SessionError('ADVERSARIAL_DISABLED', 403);
   return value;

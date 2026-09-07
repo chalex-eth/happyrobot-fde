@@ -6,6 +6,7 @@ import { sessionHash } from '../../../middleware/session-cookie.js';
 import { loadsForCall } from '../../../../../modules/loads/index.js';
 import { runTms, TmsError, validateRequest } from '../../../../../integrations/tms/client.js';
 import { upstreamStatus } from '../../../tms.js';
+import { runtimeConfig } from '../../../../../config/env.js';
 
 export async function POST(request: Request) {
   const rejected = rejectNonLocalRequest(request);
@@ -29,7 +30,7 @@ export async function POST(request: Request) {
       },
     );
   };
-  if (!process.env.LOCAL_API_TOKEN)
+  if (!runtimeConfig().local.apiToken)
     return respond({ ok: false, error: 'API_AUTH_NOT_CONFIGURED' }, 503);
   try {
     const input = validateRequest(await readJson(request, 4096));

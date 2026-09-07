@@ -3,6 +3,7 @@ import { validatedRpc } from '../../db/twin-client.js';
 import { operatorResults } from '../../db/rpc-contracts/index.js';
 import { SessionError } from '../../errors.js';
 import { ErrorResponseSchema } from '@carrier/contracts/calls';
+import { runtimeConfig } from '../../config/env.js';
 
 type Action = keyof typeof operatorResults;
 type Result<A extends Action> = z.output<(typeof operatorResults)[A]>;
@@ -19,7 +20,7 @@ export function operatorRpc(
   metadata: Record<string, unknown>,
 ): Promise<Result<'review'>>;
 export async function operatorRpc(action: Action, metadata: Record<string, unknown> = {}) {
-  const key = process.env.OPERATOR_RPC_KEY;
+  const key = runtimeConfig().features.operatorRpcKey;
   if (!key) throw new SessionError('OPERATOR_NOT_CONFIGURED');
   const result = await validatedRpc(
     'poc_operator',

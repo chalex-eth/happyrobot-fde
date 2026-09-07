@@ -1,3 +1,5 @@
+import { runtimeConfig } from '../../../config/env.js';
+
 // Local operator convenience endpoints are never enabled in a production build.
 export function rejectNonLocalRequest(request: Request): Response | undefined {
   const reject = (status: number, error: string) =>
@@ -8,7 +10,7 @@ export function rejectNonLocalRequest(request: Request): Response | undefined {
         headers: { 'Cache-Control': 'no-store' },
       },
     );
-  if (process.env.NODE_ENV !== 'development') return reject(404, 'LOCAL_CONSOLE_DISABLED');
+  if (runtimeConfig().nodeEnv !== 'development') return reject(404, 'LOCAL_CONSOLE_DISABLED');
   try {
     const origin = new URL(request.headers.get('origin') ?? '');
     if (

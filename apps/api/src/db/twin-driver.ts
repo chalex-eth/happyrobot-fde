@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { SessionError } from '../errors.js';
+import { runtimeConfig } from '../config/env.js';
 
 export const SqlResponseSchema = z.object({
   command: z.string(),
@@ -87,4 +88,4 @@ export function createTwinTransport(options: {
 }
 // Dedicated key may be provisioned separately from workflow administration.
 // Never fall back to the public table gateway or another transport on failure.
-export const twinTransport = createTwinTransport({ key: () => process.env.TWIN_API_KEY });
+export const twinTransport = createTwinTransport({ key: () => runtimeConfig().twin.apiKey });

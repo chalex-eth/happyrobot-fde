@@ -3,12 +3,26 @@ import { readFile } from 'node:fs/promises';
 import { toolSpecs, type ToolName } from '../../apps/api/src/transport/mcp/tools.js';
 import { mcpServerName, paragraph, variable, toolParameters, prompt, loadFormattingRule, initialMessage, toolMessage } from './workflow-spec.js';
 import { validateLocalWiring } from './local-wiring.js';
+import { runtimeConfig } from '../../apps/api/src/config/env.js';
 
 type Node = { id: string; persistent_id?: string; type: string; name?: string; parent_id?: string;
   configuration?: Record<string, unknown>; function?: Record<string, unknown>; event_id?: string };
 const arg = (key: string) => process.argv[process.argv.indexOf(key) + 1];
 const mode = process.argv[2] ?? 'dry-run';
-const need = (key: string) => { const value = process.env[key]; if (!value) throw Error(`Missing ${key}`); return value; };
+const configured = runtimeConfig();
+const values: Record<string, string | undefined> = {
+  HAPPYROBOT_ENVIRONMENT: configured.happyrobot.environment,
+  HAPPYROBOT_API_KEY: configured.happyrobot.apiKey,
+  HAPPYROBOT_WORKFLOW_ID: configured.happyrobot.workflowId,
+  MCP_PUBLIC_URL: configured.mcp.publicUrl,
+  MCP_AUTH_TOKEN: configured.mcp.authToken,
+  HAPPYROBOT_MCP_SERVER_NAME: configured.mcp.serverName,
+};
+const need = (key: string) => {
+  const value = values[key];
+  if (!value) throw Error(`Missing ${key}`);
+  return value;
+};
 
 async function main() {
   if (mode === 'dry-run') {

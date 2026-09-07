@@ -1,10 +1,10 @@
 import { handleRequest } from './app.js';
 import { createApiServer } from './transport/http/node-server.js';
 import { serverConfig } from './config/env.js';
-const { API_HOST, API_PORT } = serverConfig();
+const { host, port } = serverConfig();
 const server = createApiServer(handleRequest);
-server.listen(API_PORT, API_HOST, () =>
-  console.log(`Carrier API listening on ${API_HOST}:${API_PORT}`),
+server.listen(port, host, () =>
+  console.log(`Carrier API listening on ${host}:${port}`),
 );
 for (const signal of ['SIGINT', 'SIGTERM'])
   process.once(signal, () => {

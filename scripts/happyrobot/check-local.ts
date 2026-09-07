@@ -3,11 +3,25 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { toolSpecs } from '../../apps/api/src/transport/mcp/tools.js';
 import { validateLocalWiring, type WiringNode } from './local-wiring.js';
+import { runtimeConfig } from '../../apps/api/src/config/env.js';
 
 type Connection = { id: string; server_name: string; server_url: string; development_server_url?: string; auth_type: string };
 type Version = { id: string; is_live: boolean; environment: string; version_number: number };
 
-function need(key: string) { const value = process.env[key]; if (!value) throw Error(`Missing ${key}.`); return value; }
+const configured = runtimeConfig();
+const values: Record<string, string | undefined> = {
+  HAPPYROBOT_ENVIRONMENT: configured.happyrobot.environment,
+  HAPPYROBOT_API_KEY: configured.happyrobot.apiKey,
+  HAPPYROBOT_WORKFLOW_ID: configured.happyrobot.workflowId,
+  MCP_PUBLIC_URL: configured.mcp.publicUrl,
+  MCP_AUTH_TOKEN: configured.mcp.authToken,
+  HAPPYROBOT_MCP_SERVER_NAME: configured.mcp.serverName,
+};
+function need(key: string) {
+  const value = values[key];
+  if (!value) throw Error(`Missing ${key}.`);
+  return value;
+}
 async function main() {
   if (need('HAPPYROBOT_ENVIRONMENT') !== 'development') throw Error('Only the development workflow can be checked.');
   const publicUrl = need('MCP_PUBLIC_URL');

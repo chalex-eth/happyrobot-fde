@@ -253,7 +253,7 @@ async function main() {
     assert.ok(selected?.length && selected.every((id: string) => definitions.tests.some((t: any) => t.id === id)), 'Unknown negotiation scenario');
     const log = await open(`${directory}/controller.log`, 'a', 0o600);
     try {
-      const child = spawn(process.execPath, ['--env-file=.env.local', '--import', 'tsx', fileURLToPath(import.meta.url), 'run', '--test', selected.join(',')],
+      const child = spawn(process.execPath, ['--env-file=.env.local', '--env-file=.env.eval.local', '--import', 'tsx', fileURLToPath(import.meta.url), 'run', '--test', selected.join(',')],
         { cwd: process.cwd(), env: { ...process.env, NODE_ENV: 'development' }, detached: true, stdio: ['ignore', log.fd, log.fd] });
       await new Promise<void>((resolve, reject) => { child.once('spawn', resolve); child.once('error', reject); });
       child.unref();

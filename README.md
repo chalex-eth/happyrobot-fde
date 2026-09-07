@@ -19,6 +19,7 @@ credentials:
 ~~~sh
 cp .env.example .env.local
 cp .env.docker.example .env.docker.local
+# Optional: cp .env.eval.example .env.eval.local
 npm ci
 ~~~
 
@@ -37,6 +38,10 @@ npm run local:down
 The stack runs the web app on port 3000, the API on port 3001, an authenticated
 MCP proxy, and a stable ngrok tunnel. Startup checks the saved HappyRobot
 development connection and its tool wiring.
+
+The normal stack reads only `.env.local` and `.env.docker.local`. Native
+adversarial and negotiation controllers additionally read `.env.eval.local`;
+email OTP settings belong in the optional `.env.email.local` overlay.
 
 For application-only development, use:
 

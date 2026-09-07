@@ -3,6 +3,7 @@ import { SessionError } from '../../errors.js';
 import { resultStatus } from '../../transport/http/result-status.js';
 import { publicBooking } from '../booking/index.js';
 import { publicLoadInterest } from '../operations/index.js';
+import { runtimeConfig } from '../../config/env.js';
 
 export type FinalizeCall = {
   outcome: string;
@@ -37,7 +38,7 @@ export async function finalizeCall(hash: string, args: FinalizeCall) {
     p_session_hash: hash,
     p_outcome: args.outcome,
     p_summary: summary,
-    ...(process.env.OPERATIONS_ENABLED === 'true' ? { p_review: review } : {}),
+    ...(runtimeConfig().features.operationsEnabled ? { p_review: review } : {}),
   });
   if (!result.ok)
     throw new SessionError(result.error ?? 'FINALIZATION_FAILED', resultStatus(result));

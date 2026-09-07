@@ -11,6 +11,7 @@ import { TmsError } from '../../integrations/tms/client.js';
 import { resolveAgentSession } from './session.js';
 import { executeTool, toolSpecs, type ToolName } from './tools.js';
 import { normalizeToolArguments } from './arguments.js';
+import { runtimeConfig } from '../../config/env.js';
 
 const safeError = (error: unknown) => {
   if (error instanceof SessionError || error instanceof FmcsaError || error instanceof TmsError)
@@ -80,7 +81,7 @@ export async function handleMcp(request: Request, adapter: McpAdapter = voiceAda
         console.info(
           JSON.stringify({ event: 'mcp_validation', tool: name, requestId, validation }),
         );
-        if (adapter === voiceAdapter && process.env.OPERATIONS_ENABLED === 'true')
+        if (adapter === voiceAdapter && runtimeConfig().features.operationsEnabled)
           try {
             const context = await adapter.resolve(request);
             await trackCall(context.hash, 'tool', {

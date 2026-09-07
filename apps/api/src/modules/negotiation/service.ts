@@ -4,6 +4,7 @@ import { SessionError } from '../../errors.js';
 import { twinRpc } from '../../db/twin-client.js';
 import { loadsForCall } from '../loads/index.js';
 import { getLoadAvailability } from '../../integrations/tms/client.js';
+import { runtimeConfig } from '../../config/env.js';
 
 function decision(result: Awaited<ReturnType<typeof twinRpc>>) {
   if (!result.ok)
@@ -73,7 +74,7 @@ export async function getNegotiableLoad(
   });
   let negotiation = decision(quoted);
   if (
-    process.env.BOOKING_ENABLED === 'true' &&
+    runtimeConfig().features.bookingEnabled &&
     ['offered', 'agreed'].includes(negotiation.status)
   ) {
     const saved = await twinRpc('poc_book_call', {

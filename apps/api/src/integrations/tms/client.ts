@@ -1,6 +1,7 @@
 import type { TmsCommand, TmsRequest, PublicLoad } from '@carrier/contracts/loads';
 import net from 'node:net';
 import { setTimeout as delay } from 'node:timers/promises';
+import { runtimeConfig } from '../../config/env.js';
 
 export class TmsError extends Error {
   constructor(
@@ -155,10 +156,8 @@ function sendOnce(
   signal?: AbortSignal,
   inspectDetail?: (lines: string[]) => void,
 ): Promise<PublicLoad[]> {
-  const host = process.env.TMS_HOST;
-  const port = Number(process.env.TMS_PORT);
-  const token = process.env.TMS_TOKEN;
-  if (!host || !Number.isInteger(port) || port < 1 || port > 65535 || !token)
+  const { host, port, token } = runtimeConfig().tms;
+  if (!host || port === undefined || !Number.isInteger(port) || port < 1 || port > 65535 || !token)
     throw new TmsError('TMS_NOT_CONFIGURED');
   const frame = encodeRequest(request, token);
   return new Promise((resolve, reject) => {

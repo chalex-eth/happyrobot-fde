@@ -1,4 +1,5 @@
 import net from 'node:net';
+import { runtimeConfig } from '../../config/env.js';
 
 export type BookingRequest = { loadId: string; mcNumber: string; agreedCents: number };
 export type BookingResult =
@@ -44,12 +45,11 @@ function fields(line: string) {
 // Dedicated write transport: never use the read adapter's retry loop.
 export async function bookTms(input: BookingRequest, signal?: AbortSignal): Promise<BookingResult> {
   // A direct caller cannot bypass the test-mode write boundary.
-  if (process.env.BOOKING_TMS_MODE !== 'live')
+  const config = runtimeConfig();
+  if (config.features.bookingTmsMode !== 'live')
     return { status: 'rejected', error: 'TMS_BOOKING_DISABLED' };
-  const host = process.env.TMS_HOST,
-    port = Number(process.env.TMS_PORT),
-    token = process.env.TMS_TOKEN;
-  if (!host || !Number.isInteger(port) || port < 1 || port > 65535 || !token)
+  const { host, port, token } = config.tms;
+  if (!host || port === undefined || !Number.isInteger(port) || port < 1 || port > 65535 || !token)
     return { status: 'rejected', error: 'TMS_NOT_CONFIGURED' };
   let frame: string;
   try {

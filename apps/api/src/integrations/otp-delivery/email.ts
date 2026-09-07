@@ -1,4 +1,5 @@
 import { SessionError } from '../../errors.js';
+import { runtimeConfig } from '../../config/env.js';
 export type OtpEmail = {
   to: string;
   code: string;
@@ -8,8 +9,7 @@ export type OtpEmail = {
   demo: true;
 };
 export function createOtpEmailSender() {
-  const webhook = process.env.OTP_WEBHOOK_URL,
-    key = process.env.OTP_WEBHOOK_API_KEY;
+  const { webhookUrl: webhook, webhookApiKey: key } = runtimeConfig().otp;
   if (!webhook || !key) throw new SessionError('OTP_SENDER_NOT_CONFIGURED');
   let url: URL;
   try {

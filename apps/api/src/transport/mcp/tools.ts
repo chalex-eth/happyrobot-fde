@@ -12,6 +12,7 @@ import type { lookupCarrier } from '../../integrations/fmcsa/client.js';
 import type { runTms } from '../../integrations/tms/client.js';
 import { createOtpForCall } from '../../modules/verification/index.js';
 import { recordLoadInterest } from '../../modules/operations/index.js';
+import { runtimeConfig } from '../../config/env.js';
 
 const city = z
   .string()
@@ -290,19 +291,19 @@ export async function executeTool(
   }
   if (name === 'get_load') {
     const args = toolSpecs[name].schema.parse(input);
-    if (process.env.NEGOTIATION_ENABLED === 'true')
+    if (runtimeConfig().features.negotiationEnabled)
       return getNegotiableLoad(hash, args.load_id, signal);
     return loadsForCall(hash, { command: 'LOAD_GET', fields: { LOAD_ID: args.load_id } }, signal);
   }
   if (name === 'accept_offer' || name === 'counter_offer' || name === 'reject_offer') {
     const args = toolSpecs[name].schema.parse(input);
-    if (process.env.NEGOTIATION_ENABLED !== 'true')
+    if (!runtimeConfig().features.negotiationEnabled)
       throw new SessionError('NEGOTIATION_NOT_READY', 503);
     return negotiateForCall(hash, { ...args, response: negotiationAction(name)! });
   }
   if (name === 'book_load') {
     const args = toolSpecs.book_load.schema.parse(input);
-    if (process.env.BOOKING_ENABLED !== 'true') throw new SessionError('BOOKING_NOT_READY', 503);
+    if (!runtimeConfig().features.bookingEnabled) throw new SessionError('BOOKING_NOT_READY', 503);
     return bookForCall(hash, args, signal);
   }
   if (name === 'record_load_interest')

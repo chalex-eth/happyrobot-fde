@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { toolSpecs, type ToolName } from '../../apps/api/src/transport/mcp/tools.js';
+import { runtimeConfig } from '../../apps/api/src/config/env.js';
 
 export const initialMessage = "Thanks for calling HappyRobot Logistics, this is Daniel. Before we look at loads, I'll need to verify your identity. Could I get your MC number?";
 
@@ -10,7 +11,8 @@ export function toolMessage(name: ToolName) {
   return { type: 'none' as const };
 }
 
-export const mcpServerName = process.env.HAPPYROBOT_MCP_SERVER_NAME || 'Carrier sales local MCP';
+const config = runtimeConfig();
+export const mcpServerName = config.mcp.serverName;
 export const paragraph = (text: string) => [{ type: 'paragraph', children: [{ text }] }];
 export const variable = (group: string, name: string) => [{ type: 'p', children: [
   { type: 'variable', children: [{ text: '' }], group_id: group, variable_id: name },
@@ -51,9 +53,9 @@ export function prepareAdversarialPrompt(source: string): string {
   return result;
 }
 
-const bookingModeRule = (process.env.BOOKING_TMS_MODE ?? 'mock') === 'mock'
+const bookingModeRule = config.features.bookingTmsMode === 'mock'
   ? 'This is an owner-authorized test conversation with normal customer-facing booking language. Keep simulation details internal. Before book_load, a short acknowledgment is enough: "Absolutely, one moment." Do not mention simulated booking, test mode, mock handoff, Web Call implementation or TMS reservation disclaimers in the spoken conversation. ' : '';
-const bookingRule = process.env.BOOKING_ENABLED === 'true'
+const bookingRule = config.features.bookingEnabled
   ? bookingModeRule + 'A successful acceptance does not end the conversation. After negotiation.status=agreed, continue in your next turn: confirm the agreed load and total with the caller if booking intent is unclear. Once they agree to proceed, call book_load with the load_id and offer_id from that AGREED result before finalizing. Before booking, if permission is needed, ask: Shall I go ahead and book it for you? When booking.status=confirmed with a reference and booking_saved=true, say: We have agreed on [agreed total]. I will pass the booking request to our senior representative for approval and final confirmation. This success wording also applies to the saved test booking when booking.simulated=true; keep that flag internal. Do not volunteer the reference, but provide the exact returned reference if requested. Successful saved booking automatically records the senior-rep confirmation review; do not add callback_requested or human_requested merely for this standard handoff. Keep the mocked follow-up internal and do not promise a callback time or claim a notification or actual transfer occurred. Never announce booking success before the tool returns a confirmed saved result. On rejected, explain the booking failed without calling the load booked. On uncertain or pending, explain that booking confirmation is unavailable and review is needed; do not retry booking or propose starting a new call to rebook that load. On BOOKING_TERMS_CHANGED, BOOKING_PREFLIGHT_FAILED or BOOKING_REVIEW_REQUIRED, explain that booking could not be safely completed and needs review. Do not change the agreement or send another booking automatically. After a successful saved booking, ask "Anything else I can help you with?" and WAIT for the answer before finalizing. If the caller is already clearly done, do not ask again. Handle any remaining question or request before step 7. After another terminal booking result, explain the outcome and follow step 7 when the caller is done. A pending attempt may reject finalization with BOOKING_IN_PROGRESS: end truthfully without claiming the result was saved; the attempt remains recorded for review.'
   : 'Booking is not enabled in this workflow: explain that an agreed rate is recorded but no load has been booked or reserved and no transfer has occurred. Do not call book_load.';
 

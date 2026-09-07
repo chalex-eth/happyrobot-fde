@@ -4,12 +4,13 @@ import { otpCommit, otpOperation, mockOtpEnabled, otpDigest } from './otp.js';
 import { SessionError } from '../../errors.js';
 import { twinRpc } from '../../db/twin-client.js';
 import { type CallSession } from '@carrier/contracts/calls';
+import { runtimeConfig } from '../../config/env.js';
 
 // Demo delivery only: derive the display value from a random challenge and a
 // server secret so refresh/restart works without storing plaintext codes in Twin.
 function displayCode(hash: string, challenge: string) {
   if (!mockOtpEnabled()) throw new SessionError('OTP_MOCK_DISABLED', 403);
-  const secret = process.env.OTP_HASH_SECRET;
+  const secret = runtimeConfig().otp.hashSecret;
   if (!secret || secret.length < 32) throw new SessionError('OTP_NOT_CONFIGURED');
   const bytes = createHmac('sha256', secret)
     .update(`demo-display-v1:${hash}:${challenge}`)

@@ -5,13 +5,15 @@ import { callAction } from '../calls/index.js';
 import { twinRpc } from '../../db/twin-client.js';
 import type { TwinResult } from '../../db/result.js';
 import { SessionError } from '../../errors.js';
+import { runtimeConfig } from '../../config/env.js';
 function otpConfig() {
+  const config = runtimeConfig();
   const recipient = mockOtpEnabled()
     ? 'mock-frontend'
-    : process.env.DEMO_OTP_EMAIL?.trim().toLowerCase();
-  const secret = process.env.OTP_HASH_SECRET;
+    : config.otp.demoEmail?.trim().toLowerCase();
+  const secret = config.otp.hashSecret;
   if (
-    process.env.OTP_DEMO_MODE !== 'true' ||
+    !config.otp.demoMode ||
     !recipient ||
     (!mockOtpEnabled() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient)) ||
     !secret ||
@@ -22,10 +24,11 @@ function otpConfig() {
   return { recipient, secret };
 }
 export function mockOtpEnabled() {
+  const config = runtimeConfig();
   return (
-    process.env.NODE_ENV === 'development' &&
-    process.env.OTP_DEMO_MODE === 'true' &&
-    process.env.OTP_DELIVERY_MODE === 'mock'
+    config.nodeEnv === 'development' &&
+    config.otp.demoMode &&
+    config.otp.deliveryMode === 'mock'
   );
 }
 

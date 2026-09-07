@@ -40,6 +40,17 @@ pricing ceilings, session hashes, and internal credentials out of results and
 spoken responses. An agreed booking is distinct from a confirmed TMS booking;
 the local mode saves a simulated booking and does not send LOAD_BOOK.
 
+## Environment profiles
+
+Keep the normal local and Docker stacks on `.env.local` and
+`.env.docker.local`. Adversarial and negotiation controllers load the ignored
+`.env.eval.local` overlay, which enables the private route and supplies its
+separate token. Do not load that overlay for the normal workflow.
+
+The optional email OTP path is documented in `.env.email.example`; load a
+local copy only when testing email delivery. The default demo remains mock OTP
+delivery.
+
 ## Safe workflow changes
 
 Run commands from the repository root and keep the target in development:

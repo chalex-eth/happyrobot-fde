@@ -1,8 +1,9 @@
 import { timingSafeEqual } from 'node:crypto';
 import { SessionError } from '../../errors.js';
+import { runtimeConfig } from '../../config/env.js';
 
 export function authenticateMcp(authorization: string | null) {
-  const secret = process.env.MCP_AUTH_TOKEN;
+  const secret = runtimeConfig().mcp.authToken;
   if (!secret) throw new SessionError('MCP_NOT_CONFIGURED');
   const expected = Buffer.from(`Bearer ${secret}`);
   const actual = Buffer.from(authorization ?? '');

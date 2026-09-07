@@ -38,6 +38,11 @@ Set the service credentials in .env.local:
 - HAPPYROBOT_MCP_SERVER_NAME
 - OTP_HASH_SECRET
 
+The normal stack does not load evaluation or email overlays. Copy
+`.env.eval.example` to `.env.eval.local` only for native adversarial or
+negotiation controller commands. Copy `.env.email.example` to
+`.env.email.local` only when explicitly testing email OTP delivery.
+
 Set NGROK_DOMAIN and NGROK_AUTHTOKEN in .env.docker.local. The public MCP URL
 must be exactly:
 

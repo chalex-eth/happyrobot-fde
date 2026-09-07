@@ -5,6 +5,7 @@ import { SessionError } from '../../errors.js';
 import { twinRpc } from '../../db/twin-client.js';
 import { getLoadPricing, TmsError } from '../../integrations/tms/client.js';
 import { bookTms, type BookingResult } from '../../integrations/tms/booking.js';
+import { runtimeConfig } from '../../config/env.js';
 
 export function publicBooking(value: Booking): Booking {
   if (
@@ -44,7 +45,7 @@ export async function bookForCall(
     send: bookTms,
   },
 ) {
-  const mode = process.env.BOOKING_TMS_MODE ?? 'mock';
+  const mode = runtimeConfig().features.bookingTmsMode;
   if (!['mock', 'live'].includes(mode)) throw new SessionError('INVALID_BOOKING_MODE', 503);
   const simulated = mode === 'mock';
   const rpc = (action: BookingAction, metadata: Record<string, unknown> = {}) =>

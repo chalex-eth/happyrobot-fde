@@ -4,6 +4,7 @@ import { ApiError, HappyRobotClient } from '@happyrobot-ai/sdk';
 import { callAction } from './repository.js';
 import { resultStatus } from '../../transport/http/result-status.js';
 import { SessionError } from '../../errors.js';
+import { runtimeConfig } from '../../config/env.js';
 
 const uuid = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/;
 
@@ -69,8 +70,7 @@ export async function createVoiceSession(
   hash: string,
   sdk?: Pick<HappyRobotClient, 'voice' | 'runs'>,
 ) {
-  const workflowId = process.env.HAPPYROBOT_WORKFLOW_ID;
-  const environment = process.env.HAPPYROBOT_ENVIRONMENT;
+  const { workflowId, environment } = runtimeConfig().happyrobot;
   if (
     !workflowId ||
     !uuid.test(workflowId) ||

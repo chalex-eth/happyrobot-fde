@@ -1,4 +1,5 @@
 import type { CarrierCheck } from '@carrier/contracts/verification';
+import { runtimeConfig } from '../../config/env.js';
 export class FmcsaError extends Error {
   constructor(
     public code: string,
@@ -90,7 +91,7 @@ export async function lookupCarrier(
   fetcher: typeof fetch = fetch,
 ): Promise<CarrierCheck> {
   const mc = normalizeMc(value);
-  const key = process.env.FMCSA_API_KEY;
+  const key = runtimeConfig().fmcsa.apiKey;
   if (!key) throw new FmcsaError('FMCSA_NOT_CONFIGURED', 503);
   // Fixed official host; never follow response links or redirects containing the web key.
   const url = new URL(`https://mobile.fmcsa.dot.gov/qc/services/carriers/docket-number/${mc}/`);
