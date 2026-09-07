@@ -1,7 +1,7 @@
 import { HappyRobotClient, ApiError } from '@happyrobot-ai/sdk';
 import { readFile } from 'node:fs/promises';
 import { toolSpecs, type ToolName } from '../../apps/api/src/transport/mcp/tools.js';
-import { mcpServerName, paragraph, variable, toolParameters, prompt, loadFormattingRule } from './workflow-spec.js';
+import { mcpServerName, paragraph, variable, toolParameters, prompt, loadFormattingRule, initialMessage, toolMessage } from './workflow-spec.js';
 import { validateLocalWiring } from './local-wiring.js';
 
 type Node = { id: string; persistent_id?: string; type: string; name?: string; parent_id?: string;
@@ -163,7 +163,7 @@ async function main() {
     if(!node) node=(await client.nodes.addBatch(versionId,{nodes:[{type:'tool',name,parent_node_id:promptNode.id,sort_index:index,configuration:{}}]})).data[0] as Node;
     if(!node?.id) throw Error('Tool node creation failed');
     await client.nodes.update(versionId,node.id,{type:'tool',name,parent_id:promptNode.id,sort_index:index,
-      function:{is_mcp:true,message:{type:'ai',description:paragraph('Use one short natural sentence while checking. Do not repeat OTP digits, mention internal tools or claim success before the result.')},
+      function:{is_mcp:true,message:toolMessage(name),
         parameters:toolParameters(name),description:paragraph(toolSpecs[name].description),
         mcp_tool_name:name,mcp_server_credential_id:credentialId}});
     const configuration={credentialId,credential:{type:'static',static:{id:credentialId,name:mcpServerName}},tool_name:name,
@@ -174,7 +174,7 @@ async function main() {
     if(existing) await client.nodes.update(versionId,existing.id,{...body,parent_id:node.id});
     else await client.nodes.addBatch(versionId,{nodes:[{...body,parent_node_id:node.id}]});
   }
-  await client.nodes.update(versionId,promptNode.id,{type:'prompt',prompt_md:prompt});
+  await client.nodes.update(versionId,promptNode.id,{type:'prompt',prompt_md:prompt,initial_message:paragraph(initialMessage)});
   const stored = (await client.nodes.get(versionId,promptNode.id)).data;
   if (stored.prompt_md !== prompt) {
     throw Error('Updated prompt was not stored; draft remains unpublished');
