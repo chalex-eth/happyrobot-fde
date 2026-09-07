@@ -83,7 +83,7 @@ export function LaneMap({
           viewBox="0 0 1000 600"
           style={{ width: `${zoom * 100}%` }}
           role="group"
-          aria-label="United States lane coverage. Hover over a city for its name; select a city to filter connected lanes."
+          aria-label="United States lane coverage. Select a route to inspect its load details."
         >
           <defs>
             <pattern id="map-dots" width="24" height="24" patternUnits="userSpaceOnUse">
@@ -112,7 +112,12 @@ export function LaneMap({
                   : 0),
             )
             .map(({ l, a, b }) => {
-              const d = `M ${a[0]} ${a[1]} Q ${(a[0] + b[0]) / 2} ${Math.min(a[1], b[1]) - Math.min(Math.abs(a[0] - b[0]) * 0.2, 80) - 20} ${b[0]} ${b[1]}`;
+              const controlY = Math.min(a[1], b[1]) - Math.min(Math.abs(a[0] - b[0]) * 0.2, 80) - 20;
+              const d = `M ${a[0]} ${a[1]} Q ${(a[0] + b[0]) / 2} ${controlY} ${b[0]} ${b[1]}`;
+              // At the quadratic midpoint, the tangent points from origin to destination.
+              const arrowX = (a[0] + b[0]) / 2;
+              const arrowY = (a[1] + b[1]) / 4 + controlY / 2;
+              const arrowAngle = Math.atan2(b[1] - a[1], b[0] - a[0]) * 180 / Math.PI;
               return (
                 <g
                   key={l.LOAD_ID}
@@ -148,6 +153,13 @@ export function LaneMap({
                     d={d}
                     fill="none"
                     strokeWidth={selected === l.LOAD_ID ? 4 : 2}
+                  />
+                  <path
+                    className="route-arrow"
+                    d="M -5 -4 L 5 0 L -5 4 L -2 0 Z"
+                    transform={`translate(${arrowX} ${arrowY}) rotate(${arrowAngle}) scale(${1000 / mapWidth})`}
+                    pointerEvents="none"
+                    aria-hidden="true"
                   />
                 </g>
               );
@@ -201,43 +213,26 @@ export function LaneMap({
             ))}
         </svg>
       </div>
-      <div className="map-selection" aria-live="polite">
-        {selectedLoad ? (
-          <>
-            <strong>
-              {selectedLoad.ORIG_CITY} → {selectedLoad.DEST_CITY}
-            </strong>
-            <span>
-              {equipmentLabel(selectedLoad.EQTYPE)} · {selectedLoad.STATUS} · {selectedLoad.LOAD_ID}
-            </span>
-          </>
-        ) : (
+      {selectedLoad && (
+        <div className="map-selection" aria-live="polite">
+          <strong>
+            {selectedLoad.ORIG_CITY} → {selectedLoad.DEST_CITY}
+          </strong>
           <span>
-            Hover over a city for its name. Click a city to filter its lanes; click it again to show
-            all cities.
+            {equipmentLabel(selectedLoad.EQTYPE)} · {selectedLoad.STATUS} · {selectedLoad.LOAD_ID}
           </span>
-        )}
-      </div>
+        </div>
+      )}
       <div className="map-caption">
         <span>
           <i className="dot open" />
           Open <i className="dot pending" />
-          Pending / other
+          Pending / other · Arrows point to destination
         </span>
         <span>
           {routes.length} mapped · {loads.length - routes.length} unmapped
         </span>
       </div>
-      <p className="map-attribution">
-        Approximate city locations, not vehicle tracking.{' '}
-        <a href="https://www.geonames.org/" target="_blank" rel="noreferrer">
-          GeoNames
-        </a>{' '}
-        ·{' '}
-        <a href="https://www.naturalearthdata.com/" target="_blank" rel="noreferrer">
-          Natural Earth
-        </a>
-      </p>
     </div>
   );
 }

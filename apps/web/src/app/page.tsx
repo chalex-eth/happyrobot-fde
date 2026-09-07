@@ -5,15 +5,24 @@ export default function Home() {
     <main>
       <header className="site-header">
         <a className="wordmark" href="/">
-          Load desk<span>Carrier sales</span>
+          <span className="brand-mark" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </span>
+          <span className="wordmark-name">HappyRobot Logistics</span>
+          <span className="wordmark-context">Operations</span>
         </a>
-        <span className="workspace-label">Operations workspace</span>
+        <span className="workspace-label">
+          <i className="status-dot" aria-hidden="true" />
+          Demo workspace <span>·</span> Operator console
+        </span>
       </header>
       <CarrierVerification />
       <OperatorDashboard />
       <footer>
-        Carrier sales POC · TMS inventory and Twin call records · Demo bookings are identified in
-        the operator view.
+        <span>HappyRobot Logistics · Operations</span>
+        <span>Load coverage, booking approvals and carrier follow-up.</span>
       </footer>
     </main>
   );

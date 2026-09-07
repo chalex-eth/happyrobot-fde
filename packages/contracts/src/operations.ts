@@ -36,6 +36,8 @@ export const OperatorCallSchema = z.object({
   selected_load_id: z.string().nullable(),
   load: LoadSnapshotSchema,
   negotiation: NegotiationSchema.nullable(),
+  negotiation_started_at: z.string().nullable().optional(),
+  negotiation_agreed: z.boolean().optional(),
   booking: BookingSchema.nullable(),
   interest: LoadInterestSchema.nullable(),
   reviews: z.array(ReviewSchema),
@@ -88,12 +90,21 @@ export const ReviewResponseSchema = z.object({
   ok: z.literal(true),
   review: ReviewSchema.optional(),
 });
-export const ReviewRequestSchema = z.strictObject({
+const LegacyReviewRequestSchema = z.strictObject({
   id: z.string().uuid(),
   revision: z.string().uuid(),
   status: z.enum(['open', 'reviewed']),
   note: z.string().trim().min(1).max(500),
 });
+export const ManagerReviewRequestSchema = z
+  .strictObject({
+    id: z.string().uuid(),
+    revision: z.string().uuid(),
+    action: z.enum(['approve', 'request_changes', 'reject', 'resubmit', 'comment']),
+    note: z.string().trim().max(500).default(''),
+  })
+  .refine((m) => m.action === 'approve' || m.note.length > 0, { message: 'A comment is required' });
+export const ReviewRequestSchema = z.union([LegacyReviewRequestSchema, ManagerReviewRequestSchema]);
 export const CallsQuerySchema = z.object({
   source: z
     .enum(['all', 'browser_demo', 'evaluation', 'integration_test', 'unknown'])

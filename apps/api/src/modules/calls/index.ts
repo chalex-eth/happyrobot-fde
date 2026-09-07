@@ -1,5 +1,5 @@
 export { callAction, startCall } from './repository.js';
-export { createVoiceSession, endVoiceSession } from './voice.js';
+export { createVoiceSession, endVoiceSession, reconcileVoiceSession } from './voice.js';
 export { trackCall } from './activity.js';
 export { finalizeCall } from './finalize.js';
 export {

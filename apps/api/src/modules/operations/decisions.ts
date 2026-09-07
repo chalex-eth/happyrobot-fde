@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { mockSubmission } from '../../integrations/tms/mock-submission.js';
 import {
   data,
   str,
@@ -62,8 +63,12 @@ export function deriveReviewChanges(s: Snapshot, before: Call) {
       'Voice session could not be started.',
       'voice-start-failed',
     );
-  // Preserve the existing AUTHORITY_CHECKING review until a separate behavior fix.
-  if (!eq(c.authority_check, before.authority_check) && c.authority_check?.outcome === 'unverified')
+  // An in-progress lookup is not a technical failure.
+  if (
+    !eq(c.authority_check, before.authority_check) &&
+    c.authority_check?.outcome === 'unverified' &&
+    c.authority_check.reason !== 'AUTHORITY_CHECKING'
+  )
     decideReviewUpsert(
       s,
       'technical_error',
@@ -77,6 +82,15 @@ export function deriveReviewChanges(s: Snapshot, before: Call) {
       'Callback requested about pending load ' + str(c.load_interest.load_id),
       str(c.load_interest.reference),
       str(c.load_interest.callback_number),
+    );
+  if (!eq(c.booking, before.booking) && c.booking?.status === 'confirmed')
+    decideReviewUpsert(
+      s,
+      'senior_rep_confirmation',
+      'Booking recorded for load ' +
+        str(c.booking.load_id) +
+        '. Senior representative to confirm booking details and collect any remaining documentation.',
+      str(c.booking.attempt_id),
     );
   if (!eq(c.booking, before.booking) && ['uncertain', 'rejected'].includes(str(c.booking?.status)))
     decideReviewUpsert(
@@ -110,8 +124,17 @@ export function decideActivity(s: Snapshot, action: string, m: Data) {
         'audio-disconnected',
       );
   } else if (action === 'ended') {
+    if (m.evidence === 'provider_run_terminal') {
+      if (
+        m.runId !== c.voice_run_id ||
+        !['completed', 'canceled', 'failed'].includes(str(m.status))
+      )
+        return failure('INVALID_ACTIVITY');
+      if (c.end_evidence !== 'provider_run_terminal')
+        recordCallEvent(s, 'provider_run_ended', { runId: m.runId, status: m.status });
+      c.end_evidence = 'provider_run_terminal';
+    } else c.end_evidence ??= 'provider_cancel_acknowledged';
     c.ended_at ??= s.now;
-    c.end_evidence = 'provider_cancel_acknowledged';
   } else if (action === 'tool') {
     if (!/^[a-z_]{1,50}$/.test(str(m.tool)) || !/^[0-9a-f-]{36}$/.test(str(m.requestId)))
       return failure('INVALID_ACTIVITY');
@@ -151,6 +174,23 @@ export function decideActivity(s: Snapshot, action: string, m: Data) {
 }
 export function reconcileOperationalReviews(s: Snapshot) {
   const c = s.call;
+  if (c.booking?.status === 'confirmed' && c.booking.simulated === true) {
+    decideReviewUpsert(
+      s,
+      'senior_rep_confirmation',
+      'Review agreed terms before approving this booking request.',
+      str(c.booking.attempt_id),
+      null,
+      true,
+    );
+    const review = s.reviews.find((r) => r.reason === 'senior_rep_confirmation');
+    // Historical generic review completion is not manager approval.
+    if (review && !c.booking.manager_status && review.status !== 'open') {
+      review.status = 'open';
+      review.revision = randomUUID();
+      review.updated_at = s.now;
+    }
+  }
   if (
     !c.finalized_at &&
     c.voice_run_id &&
@@ -179,6 +219,13 @@ export function reconcileOperationalReviews(s: Snapshot) {
   return { result: { ok: true }, activeSession: false };
 }
 export function validReviewUpdate(m: Data): boolean {
+  if (m.action !== undefined)
+    return (
+      ['approve', 'request_changes', 'reject', 'resubmit', 'comment'].includes(str(m.action)) &&
+      typeof m.note === 'string' &&
+      str(m.note).trim().length <= 500 &&
+      (m.action === 'approve' || str(m.note).trim().length > 0)
+    );
   return (
     str(m.note).trim().length >= 1 &&
     str(m.note).trim().length <= 500 &&
@@ -188,7 +235,64 @@ export function validReviewUpdate(m: Data): boolean {
 export function updateCallReview(s: Snapshot, m: Data) {
   if (!validReviewUpdate(m)) return failure('INVALID_REVIEW');
   const r = s.reviews.find((r) => r.id === m.id);
-  if (!r || r.revision !== m.revision) return failure('REVIEW_CHANGED');
+  if (!r) return failure('REVIEW_CHANGED');
+  // A repeated approval returns the committed result, even with its old revision.
+  if (
+    m.action === 'approve' &&
+    r.reason === 'senior_rep_confirmation' &&
+    s.call.booking?.manager_status === 'approved' &&
+    data(s.call.booking.submission).status === 'confirmed'
+  )
+    return { result: { ok: true }, activeSession: false };
+  if (r.revision !== m.revision) return failure('REVIEW_CHANGED');
+  if (m.action !== undefined) {
+    const b = s.call.booking;
+    if (r.reason !== 'senior_rep_confirmation' || b?.status !== 'confirmed' || b.simulated !== true)
+      return failure('INVALID_REVIEW');
+    const status = str(b.manager_status) || 'awaiting_approval';
+    const action = str(m.action);
+    const allowed =
+      action === 'comment' ||
+      (status === 'approved' && !b.submission && action === 'approve') ||
+      (status === 'awaiting_approval' &&
+        ['approve', 'request_changes', 'reject'].includes(action)) ||
+      (status === 'changes_requested' && ['resubmit', 'reject'].includes(action));
+    if (!allowed) return failure('REVIEW_CHANGED');
+    if (action !== 'comment') {
+      b.manager_status = (
+        {
+          approve: 'approved',
+          request_changes: 'changes_requested',
+          reject: 'rejected',
+          resubmit: 'awaiting_approval',
+        } as Record<string, string>
+      )[action]!;
+      b.manager_updated_at = s.now;
+      if (action === 'approve') {
+        b.submission = mockSubmission(str(b.attempt_id), s.now);
+        recordCallEvent(s, 'tms_submission_confirmed', {
+          reference: data(b.submission).reference ?? null,
+          load_id: b.load_id ?? null,
+          simulated: true,
+        });
+      }
+      r.status = ['approve', 'reject'].includes(action) ? 'reviewed' : 'open';
+      r.reviewed_at = ['approve', 'reject'].includes(action) ? s.now : null;
+      r.resolution_note = str(m.note).trim() || null;
+    }
+    r.updated_at = s.now;
+    r.revision = randomUUID();
+    recordCallEvent(s, 'manager_review', {
+      response: action,
+      status: b.manager_status ?? status,
+      note: str(m.note).trim(),
+      load_id: b.load_id ?? null,
+    });
+    return { result: { ok: true }, activeSession: false };
+  }
+  // A generic completed review must never stand in for a booking decision.
+  if (r.reason === 'senior_rep_confirmation' && s.call.booking?.simulated === true)
+    return failure('INVALID_REVIEW');
   Object.assign(r, {
     status: m.status,
     resolution_note: m.note,

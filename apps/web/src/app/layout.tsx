@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
 import './globals.css';
 export const metadata = {
-  title: 'Load desk · Carrier sales',
-  description: 'Local carrier sales TMS console',
+  title: 'HappyRobot Logistics · Operations',
+  description: 'HappyRobot Logistics operations workspace',
 };
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (

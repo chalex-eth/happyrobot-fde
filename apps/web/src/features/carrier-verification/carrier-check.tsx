@@ -91,9 +91,13 @@ export function CarrierVerification() {
   }, [session?.callId, finalized, voiceActive]);
   return (
     <div className="demo-banner">
+      <span className="live-demo" aria-label="Live demo">
+        <i aria-hidden="true" />
+        Live demo
+      </span>
       <div className="demo-intro">
         <h1>Talk freight. Find your next load.</h1>
-        <p>Try a conversation with our carrier-sales agent.</p>
+        <p>Try a conversation with our logistics agent.</p>
         <div className="demo-cues">
           <span>
             MC <strong>135797</strong>

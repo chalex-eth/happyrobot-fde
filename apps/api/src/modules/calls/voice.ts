@@ -7,23 +7,59 @@ import { SessionError } from '../../errors.js';
 
 const uuid = /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/;
 
-export async function endVoiceSession(
-  hash: string,
-  expectedCallId: string,
-  sdk?: Pick<HappyRobotClient, 'runs'>,
-) {
+// A browser disconnect is not proof of provider completion. Allow a short
+// propagation window for HappyRobot to mark the run terminal after _hangup.
+async function confirmProviderEnd(hash: string, runId: string, sdk: Pick<HappyRobotClient, 'runs'>) {
+  for (const delay of [0, 500, 1500, 3000]) {
+    if (delay) await new Promise((resolve) => setTimeout(resolve, delay));
+    try {
+      const run = await sdk.runs.get(runId);
+      if (run.id === runId && ['completed', 'canceled', 'failed'].includes(run.status)) {
+        await trackCall(hash, 'ended', { evidence: 'provider_run_terminal', runId, status: run.status });
+        return true;
+      }
+    } catch {
+      // Unknown, missing or inaccessible runs are not evidence of completion.
+    }
+  }
+  return false;
+}
+
+async function boundRun(hash: string, expectedCallId: string) {
   if (!uuid.test(expectedCallId)) throw new SessionError('INVALID_REQUEST', 400);
   const current = await callAction(hash, 'status');
   if (!current.ok)
     throw new SessionError(current.error ?? 'SESSION_REQUIRED', resultStatus(current));
   if (current.session?.callId !== expectedCallId) throw new SessionError('CALL_CHANGED', 409);
-  const runId = current.session.voiceRunId;
+  return current.session.voiceRunId;
+}
+
+export async function reconcileVoiceSession(
+  hash: string,
+  expectedCallId: string,
+  sdk?: Pick<HappyRobotClient, 'runs'>,
+) {
+  const runId = await boundRun(hash, expectedCallId);
+  await trackCall(hash, 'disconnected');
+  const confirmed = !!runId && await confirmProviderEnd(hash, runId, sdk ?? createHappyRobotClient());
+  return { ok: true, confirmed };
+}
+
+export async function endVoiceSession(
+  hash: string,
+  expectedCallId: string,
+  sdk?: Pick<HappyRobotClient, 'runs'>,
+) {
+  const runId = await boundRun(hash, expectedCallId);
   if (!runId) return { ok: true };
+  const hr = sdk ?? createHappyRobotClient();
   try {
-    await (sdk ?? createHappyRobotClient()).runs.cancel(runId);
-  } catch (error) {
-    if (!(error instanceof ApiError && error.status === 404))
-      throw new SessionError('HAPPYROBOT_END_UNCONFIRMED');
+    await hr.runs.cancel(runId);
+  } catch {
+    // Cancellation can race with the browser disconnect or native _hangup.
+    // Confirm the actual state, including after a 404; never assume it ended.
+    if (await confirmProviderEnd(hash, runId, hr)) return { ok: true };
+    throw new SessionError('HAPPYROBOT_END_UNCONFIRMED');
   }
   await trackCall(hash, 'ended');
   return { ok: true };

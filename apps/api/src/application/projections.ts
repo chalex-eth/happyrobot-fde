@@ -85,6 +85,12 @@ export function toOperatorCall(s: Snapshot): Data {
       (c.selected_load_id ? c.load_snapshots[c.selected_load_id] : null) ?? c.booking_terms,
     ),
     negotiation: toPublicNegotiation(s),
+    negotiation_started_at:
+      s.events
+        .filter((e) => e.event === 'load_offer')
+        .map((e) => e.created_at)
+        .sort((a, b) => Date.parse(a) - Date.parse(b))[0] ?? null,
+    negotiation_agreed: s.events.some((e) => e.event === 'rate_agreed'),
     booking: bookingView(s),
     interest: c.load_interest,
     reviews: s.reviews.map(({ source_key, ...r }) => r),
