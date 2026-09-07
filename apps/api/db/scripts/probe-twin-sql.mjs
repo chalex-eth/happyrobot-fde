@@ -29,7 +29,7 @@ const report = {
     'Lost-response test deliberately drops the downstream HTTP connection after the upstream response.',
   ],
 };
-const output = new URL('../../../../docs/twin-sql-probe-results.json', import.meta.url);
+const output = new URL('../../../../tmp/evidence/twin-sql-probe-results.json', import.meta.url);
 
 // No user text is interpolated into SQL syntax. Identifiers are generated above;
 // values are restricted base64 ASCII decoded by PostgreSQL. NULL remains SQL NULL.

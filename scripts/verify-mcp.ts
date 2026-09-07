@@ -2,7 +2,7 @@ import { trackCall } from '../apps/api/src/modules/calls/index.js';
 import { operatorRpc } from '../apps/api/src/modules/operations/index.js';
 import type { OperatorCall } from '@carrier/contracts/operations';
 import assert from 'node:assert/strict';
-import { writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import { startCall } from '../apps/api/src/modules/calls/index.js';
@@ -13,6 +13,7 @@ import { getLoadAvailability } from '../apps/api/src/integrations/tms/client.js'
 // requests an agent-created demo code, reads the local UI delivery, and cancels its own run.
 // It does not connect audio or alter the operator's browser call.
 async function main() {
+  await mkdir('tmp/evidence', { recursive: true, mode: 0o700 });
   const url = process.env.MCP_PUBLIC_URL;
   const secret = process.env.MCP_AUTH_TOKEN;
   if (!url || !secret) throw Error('MCP_NOT_CONFIGURED');
@@ -81,7 +82,7 @@ async function main() {
       assert.ok(detail.call.reviews.some(r=>r.reason==='technical_error'));
       assert.ok(!JSON.stringify(detail).match(/session_hash|otp_hash|MAX_BUY|max_cents/));
       assert.ok(detail.events.length>0);
-      await writeFile('docs/m5-mcp-evidence.json',JSON.stringify({checked_at:new Date().toISOString(),scope:'Real bound MCP, FMCSA, OTP, TMS and Twin operator review. No audio, booking or outbound callback.',call_id:call.session.callId,run_id:voice.voice.run_id,final,review_reasons:detail.call.reviews.map(r=>r.reason),event_count:detail.events.length},null,2)+'\n');
+      await writeFile('tmp/evidence/m5-mcp-evidence.json',JSON.stringify({checked_at:new Date().toISOString(),scope:'Real bound MCP, FMCSA, OTP, TMS and Twin operator review. No audio, booking or outbound callback.',call_id:call.session.callId,run_id:voice.voice.run_id,final,review_reasons:detail.call.reviews.map(r=>r.reason),event_count:detail.events.length},null,2)+'\n');
       console.log(JSON.stringify({passed:true,scenario:'operator_review',call_id:call.session.callId,run_id:voice.voice.run_id}));
       return;
     }
@@ -109,7 +110,7 @@ async function main() {
       assert.equal(final.outcome, 'booking_simulated'); assert.equal(final.booking_confirmed, false);
       const after = await getLoadAvailability(load.LOAD_ID);
       assert.equal(after.result.records[0].STATUS, 'OPEN');
-      await writeFile('docs/mock-booking-mcp-evidence.json', JSON.stringify({ checked_at: new Date().toISOString(),
+      await writeFile('tmp/evidence/mock-booking-mcp-evidence.json', JSON.stringify({ checked_at: new Date().toISOString(),
         scope: 'Real bound MCP and Twin persistence with simulated booking; no audio conversation or TMS write',
         call_id: call.session.callId, run_id: voice.voice.run_id, saved, final,
         tms_status_before: load.STATUS, tms_status_after: after.result.records[0].STATUS }, null, 2) + '\n');
@@ -130,7 +131,7 @@ async function main() {
       assert.ok(!JSON.stringify(detail).match(/MAX_BUY|max_cents|max_rate/));
       const final = await invoke('finalize_call', { outcome: 'conversation_complete', summary: 'Read-only pending-load MCP check. No interest request, negotiation decision or booking.' });
       assert.equal(final.ok, true); assert.equal(final.interest, null); assert.equal(final.booking_confirmed, false);
-      await writeFile('docs/pending-load-mcp-evidence.json', JSON.stringify({ checked_at: new Date().toISOString(),
+      await writeFile('tmp/evidence/pending-load-mcp-evidence.json', JSON.stringify({ checked_at: new Date().toISOString(),
         scope: 'Real bound MCP pending-load read; no audio, interest submission or booking',
         call_id: call.session.callId, run_id: voice.voice.run_id, search, detail, final }, null, 2) + '\n');
       console.log(JSON.stringify({ passed: true, scenario: 'pending_load_read', call_id: call.session.callId, run_id: voice.voice.run_id }));
@@ -161,7 +162,7 @@ async function main() {
       assert.ok(!JSON.stringify({ searches, detail }).match(/MAX_BUY|max_cents|max_rate/));
       const final = await invoke('finalize_call', { outcome: 'conversation_complete', summary: 'City-only MCP discovery check completed with real TMS search and detail. No negotiation decision or booking.' });
       assert.equal(final.ok, true); assert.equal(final.booking_confirmed, false);
-      await writeFile('docs/city-first-mcp-evidence.json', JSON.stringify({ checked_at: new Date().toISOString(),
+      await writeFile('tmp/evidence/city-first-mcp-evidence.json', JSON.stringify({ checked_at: new Date().toISOString(),
         scope: 'Real MCP call bound to a provider run; no microphone/audio conversation',
         call_id: call.session.callId, run_id: voice.voice.run_id, searches, detail, final }, null, 2) + '\n');
       console.log(JSON.stringify({ passed: true, scenario: 'city_first', call_id: call.session.callId,

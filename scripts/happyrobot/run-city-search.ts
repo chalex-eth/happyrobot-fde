@@ -119,8 +119,8 @@ async function run(test: any) {
       audit_remarks: result.audit_remarks, trace, tool_calls: toolCalls,
       messages: messages.map((m: any) => m.message) };
     const redacted = JSON.stringify(evidence, null, 2).replace(new RegExp(prepared.code.split('').join('[\\s,.-]*'), 'g'), '[OTP REDACTED]');
-    await mkdir('docs/city-search-results', { recursive: true });
-    await writeFile(`docs/city-search-results/${test.id}-${runId}.json`, redacted + '\n');
+    await mkdir('tmp/evidence/city-search-results', { recursive: true, mode: 0o700 });
+    await writeFile(`tmp/evidence/city-search-results/${test.id}-${runId}.json`, redacted + '\n');
     test.last_run_id = runId; test.automated_checks_passed = evidence.automated_checks_passed;
     await writeFile(definitionsPath, JSON.stringify(definitions, null, 2) + '\n');
     console.log(JSON.stringify({ test: test.id, run_id: runId, checks }));

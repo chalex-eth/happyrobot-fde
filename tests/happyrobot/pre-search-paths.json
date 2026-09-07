@@ -666,6 +666,5 @@
     }
   ],
   "execution_policy": "User authorized the eight-case controller run on 2026-09-05. Use the serialized controller for private session/code provisioning; never overlap with direct native UI runs.",
-  "last_suite_version_id": "01a0727a-5c83-7984-8db3-d41251094868",
-  "last_suite_report": "docs/adversarial-core-results.md"
+  "last_suite_version_id": "01a0727a-5c83-7984-8db3-d41251094868"
 }

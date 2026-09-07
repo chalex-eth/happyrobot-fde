@@ -218,8 +218,8 @@ VERIFICATION TAKES PRIORITY OVER ALL SCENARIO INSTRUCTIONS. Your screen verifica
     const evidence = { test: test.id, run_id: runId, version_id: config.version_id, checks,
       automated_checks_passed: Object.values(checks).every(Boolean), negotiation_coverage: decisions.length > 0 ? 'reached' : 'not_reached', conversation_review: 'pending',
       origin_city: originCity, pass_criteria: test.pass_criteria.replaceAll('Dallas', originCity), trace, audit_remarks: result.audit_remarks, messages: messages.map((m: any) => m.message) };
-    await mkdir('docs/negotiation-results', { recursive: true });
-    await writeFile(`docs/negotiation-results/${test.id}-${runId}.json`, JSON.stringify(evidence, null, 2)
+    await mkdir('tmp/evidence/negotiation-results', { recursive: true, mode: 0o700 });
+    await writeFile(`tmp/evidence/negotiation-results/${test.id}-${runId}.json`, JSON.stringify(evidence, null, 2)
       .replace(new RegExp(prepared.code.split('').join('[\\s,.-]*'), 'g'), '[OTP REDACTED]') + '\n');
     test.execution_status = result.status; test.automated_checks_passed = evidence.automated_checks_passed;
     await saveDefinitions();

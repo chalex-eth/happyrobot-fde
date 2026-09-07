@@ -209,12 +209,12 @@ async function run(selectedCase?: string) {
       checkpoints, trace, transcript: messages.map((m: any) => ({ role: m.message.role,
         content: m.message.content.replace(new RegExp(code.split('').join('[\\s,.-]*'), 'g'), '[OTP REDACTED]')
           .replace(new RegExp(wrong.split('').join('[\\s,.-]*'), 'g'), '[WRONG OTP REDACTED]') })) };
-    await mkdir('docs/adversarial-results', { recursive: true });
+    await mkdir('tmp/evidence/adversarial-results', { recursive: true, mode: 0o700 });
     // Redact audit comments too: judges sometimes quote digits in their reasoning.
     const redacted = JSON.stringify(evidence, null, 2)
       .replace(new RegExp(code.split('').join('[\\s,.-]*'), 'g'), '[OTP REDACTED]')
       .replace(new RegExp(wrong.split('').join('[\\s,.-]*'), 'g'), '[WRONG OTP REDACTED]');
-    await writeFile(`docs/adversarial-results/${caseId}-${runId}.json`, redacted + '\n');
+    await writeFile(`tmp/evidence/adversarial-results/${caseId}-${runId}.json`, redacted + '\n');
     definition.execution_status = integrationPassed ? 'E2E_PASSED' : 'E2E_FAILED';
     definition.last_run_id = runId; definition.last_test_version_id = config.version_id;
     definition.delivery_mode = config.delivery_mode;

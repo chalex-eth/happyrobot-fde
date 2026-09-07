@@ -2,7 +2,7 @@
 // dialect boundary to newly generated public scratch tables. No app tables read.
 import assert from 'node:assert/strict';
 import { randomUUID, createHash } from 'node:crypto';
-import { readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { is, getTableName, getTableColumns, sql, eq } from 'drizzle-orm';
 import { PgTable } from 'drizzle-orm/pg-core';
 import * as schema from '../../src/db/schema/index.js';
@@ -213,8 +213,10 @@ try {
     }
   }
   report.finishedAt = new Date().toISOString();
+  const output = new URL('../../../../tmp/evidence/drizzle-twin-validation.json', import.meta.url);
+  await mkdir(new URL('./', output), { recursive: true, mode: 0o700 });
   await writeFile(
-    new URL('../../../../docs/drizzle-twin-validation.json', import.meta.url),
+    output,
     JSON.stringify(report, null, 2) + '\n',
   );
   console.log('Scratch cleanup:', report.cleanup.length, '/', report.tables.length);
