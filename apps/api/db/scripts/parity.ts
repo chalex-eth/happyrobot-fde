@@ -44,17 +44,10 @@ export async function runParity() {
   const env = await disposableDatabases();
   let comparisons = 0;
   try {
-    const baseline = await readFile(
-      new URL('../migrations/0001_initial_schema.sql', import.meta.url),
-      'utf8',
+    await env.sql(
+      'legacy',
+      await readFile(new URL('../tests/fixtures/legacy-snapshot.sql', import.meta.url), 'utf8'),
     );
-    const helper = baseline
-      .slice(
-        baseline.indexOf('CREATE FUNCTION poc_private.call_snapshot'),
-        baseline.indexOf('CREATE FUNCTION public.poc_read_call'),
-      )
-      .replace("'call',to_jsonb(c)", "'call',to_jsonb(c)||'{\"revision\":0}'::jsonb");
-    await env.sql('legacy', helper);
     for (const file of [
       'otp-transitions.sql',
       'call-transitions.sql',
@@ -78,12 +71,10 @@ export async function runParity() {
       last: [Data, Data] = [{}, {}];
       normalize = [normalizer(), normalizer()];
       async snapshot(side: 0 | 1): Promise<Snapshot> {
+        if (side === 1) return (await env.db.readCall({ id: this.id }))!;
         return SnapshotSchema.parse(
           JSON.parse(
-            await env.sql(
-              side === 0 ? 'legacy' : 'candidate',
-              `SELECT poc_private.call_snapshot(${literal(this.id)});`,
-            ),
+            await env.sql('legacy', `SELECT poc_private.call_snapshot(${literal(this.id)});`),
           ),
         );
       }
@@ -554,51 +545,55 @@ async function persistenceTests(
     'conflict',
   );
   const before = (await env.db.readCall({ id: p.id }))!;
+  // A valid typed command reaches PostgreSQL, then a genuine CHECK failure
+  // must roll back both the revision and source field.
   await assert.rejects(() =>
-    env.raw(
-      'candidate',
-      'poc_commit_call',
-      {
-        p_key: env.key,
-        p_command: {
-          ...command,
-          operationId: randomUUID(),
-          expectedRevision: before.call.revision,
-          changes: { call: { source: 'must rollback' }, negotiation: { call_id: p.id } },
+    env.db.commitCallOperation({
+      ...command,
+      operationId: randomUUID(),
+      expectedRevision: before.call.revision,
+      changes: {
+        call: { source: 'must rollback' },
+        negotiation: {
+          call_id: p.id,
+          authority_revision: 1,
+          load_id: 'BAD',
+          offer_id: randomUUID(),
+          listed_cents: 100,
+          max_cents: 50,
+          offered_cents: 100,
+          agreed_cents: null,
+          counter_rounds: 0,
+          status: 'offered',
+          expires_at: new Date(Date.now() + 60000).toISOString(),
         },
       },
-      true,
-    ),
+    }),
   );
   assert.equal((await env.db.readCall({ id: p.id }))!.call.source, 'integration_test');
+  assert.equal((await env.db.readCall({ id: p.id }))!.call.revision, before.call.revision);
   await assert.rejects(() =>
-    env.sql('candidate', `SET ROLE carrier_gateway; SELECT * FROM public.poc_calls;`),
+    env.sql('candidate', 'SET ROLE carrier_gateway; SELECT * FROM public.poc_calls;'),
   );
-  const unauthorized = await fetch(env.url + '/rpc/poc_read_call', {
-    method: 'POST',
-    body: JSON.stringify({ p_key: 'wrong', p_selector: { id: p.id } }),
-  });
-  assert.equal(unauthorized.status, 400);
   await assert.rejects(() =>
-    env.raw(
-      'candidate',
-      'poc_commit_call',
-      {
-        p_key: env.key,
-        p_command: {
-          ...command,
-          operationId: randomUUID(),
-          expectedRevision: before.call.revision,
-          changes: { call: { session_hash: 'f'.repeat(64) } },
-        },
-      },
-      true,
-    ),
+    env.sql('candidate', 'SET ROLE carrier_gateway; SELECT * FROM poc_private.operation_receipts;'),
+  );
+  const unauthorized = await fetch(env.url + '/twin/sql', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer wrong', 'Content-Type': 'application/json' },
+    body: JSON.stringify({ sql: 'SELECT 1' }),
+  });
+  assert.equal(unauthorized.status, 401);
+  await assert.rejects(() =>
+    env.db.commitCallOperation({
+      ...command,
+      changes: { call: { session_hash: 'f'.repeat(64) } },
+    } as unknown as Parameters<Persistence['commitCallOperation']>[0]),
   );
   const lost = new Persistence({
-    async request(name, args) {
-      const result = await env.transport.request(name, args);
-      if (name === 'poc_commit_call') throw Error('lost acknowledgement');
+    async query(source) {
+      const result = await env.transport.query(source);
+      if (source.includes('with prior as materialized')) throw Error('lost acknowledgement');
       return result;
     },
   });

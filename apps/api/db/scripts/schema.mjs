@@ -1,177 +1,145 @@
-// This command creates its own isolated database. It never reads .env files,
-// accepts a database URL, or connects to Twin. Docker removes the DB on exit.
-import { execFile as execFileCallback, spawn } from 'node:child_process';
+// Code-first schema generation and independent catalog verification. This never
+// loads environment files or accepts a remote database URL.
+import { execFile as execCallback, spawn } from 'node:child_process';
 import { promisify } from 'node:util';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
-import { createHash, randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
 import { setTimeout } from 'node:timers/promises';
-const execFile = promisify(execFileCallback);
-const dbRoot = new URL('../', import.meta.url);
-const generated = new URL('../../src/db/generated/', import.meta.url);
-const manifest = JSON.parse(await readFile(new URL('migrations/manifest.json', dbRoot), 'utf8'));
-const container = `carrier-schema-${randomUUID()}`;
+import assert from 'node:assert/strict';
+import { generateDrizzleJson, generateMigration } from 'drizzle-kit/api';
+import * as schema from '../../src/db/schema/index.ts';
+const exec = promisify(execCallback);
+const root = new URL('../', import.meta.url);
 const mode = process.argv[2] ?? 'check';
-if (!['generate', 'check', 'test'].includes(mode)) throw Error('Use generate, check or test.');
-const docker = (args) => execFile('docker', args, { maxBuffer: 16 * 1024 * 1024 });
-async function sql(source) {
+if (!['generate', 'check', 'test'].includes(mode)) throw Error('Use generate, check or test');
+const current = generateDrizzleJson(schema);
+const ddl = await generateMigration(generateDrizzleJson({}), current);
+const permissions = await readFile(new URL('permissions.sql', root), 'utf8');
+const baseline =
+  '-- Generated from the Drizzle schema. Fresh databases only.\n' +
+  '-- Schemas, domain tables, constraints, indexes, and permissions; no application functions.\nBEGIN;\n' +
+  ddl.join('\n--> statement-breakpoint\n') +
+  '\n\n-- Access permissions\n' +
+  permissions +
+  'COMMIT;\n';
+const migration = new URL('migrations/0001_initial_schema.sql', root);
+if (mode === 'generate') {
+  await writeFile(migration, baseline);
+  // Keep standard Drizzle Kit snapshots for future incremental migrations.
+  const snapshotPath = new URL('migrations/meta/0000_snapshot.json', root);
+  const previous = JSON.parse(await readFile(snapshotPath, 'utf8'));
+  current.id = previous.id;
+  current.prevId = previous.prevId;
+  await writeFile(snapshotPath, JSON.stringify(current, null, 2) + '\n');
+} else {
+  assert.equal(
+    await readFile(migration, 'utf8'),
+    baseline,
+    'Migration differs from Drizzle schema: run npm run db:generate',
+  );
+}
+const container = 'carrier-schema-' + randomUUID();
+const docker = (args) => exec('docker', args, { maxBuffer: 16 * 1024 * 1024 });
+async function sql(source, db = 'actual') {
   return new Promise((resolve, reject) => {
-    const child = spawn(
-      'docker',
-      [
-        'exec',
-        '-i',
-        container,
-        'psql',
-        '-X',
-        '-v',
-        'ON_ERROR_STOP=1',
-        '-U',
-        'postgres',
-        '-d',
-        'poc_test',
-        '-At',
-      ],
-      { stdio: ['pipe', 'pipe', 'pipe'] },
-    );
+    const child = spawn('docker', [
+      'exec',
+      '-i',
+      container,
+      'psql',
+      '-X',
+      '-qAt',
+      '-v',
+      'ON_ERROR_STOP=1',
+      '-U',
+      'postgres',
+      '-d',
+      db,
+    ]);
     let out = '',
       err = '';
     child.stdout.on('data', (b) => (out += b));
     child.stderr.on('data', (b) => (err += b));
     child.on('error', reject);
-    child.on('exit', (code) => (code === 0 ? resolve(out.trim()) : reject(Error(err))));
+    child.on('close', (code) => (code === 0 ? resolve(out.trim()) : reject(Error(err))));
     child.stdin.on('error', () => {});
     child.stdin.end(source);
   });
 }
-const typeMap = {
-  bool: 'boolean',
-  int2: 'number',
-  int4: 'number',
-  int8: 'number | string',
-  numeric: 'number | string',
-  float4: 'number',
-  float8: 'number',
-  text: 'string',
-  varchar: 'string',
-  bpchar: 'string',
-  uuid: 'string',
-  timestamptz: 'string',
-  timestamp: 'string',
-  date: 'string',
-  json: 'unknown',
-  jsonb: 'unknown',
-};
-function tsType(type) {
-  if (type.startsWith('_')) return `Array<${tsType(type.slice(1))}>`;
-  if (!(type in typeMap)) throw Error(`Unmapped PostgreSQL type: ${type}`);
-  return typeMap[type];
-}
-async function emit(name, text) {
-  const url = new URL(name, generated);
-  if (mode === 'generate') {
-    await mkdir(generated, { recursive: true });
-    await writeFile(url, text);
-  } else if ((await readFile(url, 'utf8').catch(() => null)) !== text)
-    throw Error(`Generated ${name} is stale. Run npm run db:generate.`);
-}
+const catalogSQL = `select jsonb_build_object(
+ 'columns',(select jsonb_agg(to_jsonb(x) order by x.schema,x.table,x.position) from (
+  select n.nspname as schema,c.relname as table,a.attnum as position,a.attname as name,
+   format_type(a.atttypid,a.atttypmod) as type,a.attnotnull as required,a.attidentity as identity,
+   pg_get_expr(d.adbin,d.adrelid) as default
+  from pg_attribute a join pg_class c on c.oid=a.attrelid join pg_namespace n on n.oid=c.relnamespace
+  left join pg_attrdef d on d.adrelid=c.oid and d.adnum=a.attnum
+  where c.relkind='r' and n.nspname in ('public','poc_private') and a.attnum>0 and not a.attisdropped) x),
+ 'constraints',(select jsonb_agg(to_jsonb(x) order by x.schema,x.table,x.name) from (
+  select n.nspname as schema,c.relname as table,k.conname as name,pg_get_constraintdef(k.oid) as definition
+  from pg_constraint k join pg_class c on c.oid=k.conrelid join pg_namespace n on n.oid=c.relnamespace
+  where n.nspname in ('public','poc_private')) x),
+ 'indexes',(select jsonb_agg(to_jsonb(x) order by x.schemaname,x.tablename,x.indexname) from (
+  select schemaname,tablename,indexname,indexdef from pg_indexes where schemaname in ('public','poc_private')) x),
+ 'functions',(select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname in ('public','poc_private'))
+)`;
 let started = false;
-async function cleanup() {
-  if (started) {
-    started = false;
-    await docker(['rm', '-f', container]).catch(() => {});
-  }
-}
-for (const signal of ['SIGINT', 'SIGTERM'])
-  process.once(signal, async () => {
-    await cleanup();
-    process.exit(1);
-  });
 try {
   await docker([
     'run',
-    '-d',
     '--rm',
+    '-d',
     '--name',
     container,
     '--network',
     'none',
     '-e',
     'POSTGRES_HOST_AUTH_METHOD=trust',
-    '-e',
-    'POSTGRES_DB=poc_test',
     'postgres:16-alpine',
   ]);
   started = true;
-  let ready = false;
-  for (let i = 0; i < 100; i++) {
+  for (let i = 0; ; i++) {
     try {
       await docker(['exec', container, 'pg_isready', '-h', '127.0.0.1', '-U', 'postgres']);
-      ready = true;
       break;
     } catch {
+      if (i === 100) throw Error('PostgreSQL not ready');
       await setTimeout(100);
     }
   }
-  if (!ready) throw Error('Disposable PostgreSQL did not start.');
-  await sql('CREATE EXTENSION IF NOT EXISTS pgcrypto;');
-  const migrationHashes = [];
-  for (const name of manifest) {
-    if (!/^(?:twin-m[\d.]+|0001_initial_schema)\.sql$/.test(name))
-      throw Error('Invalid migration path');
-    const source = await readFile(new URL(`migrations/${name}`, dbRoot), 'utf8');
-    await sql(source);
-    migrationHashes.push({ name, sha256: createHash('sha256').update(source).digest('hex') });
-  }
-  const tables = JSON.parse(
-    await sql(`SELECT coalesce(json_agg(row_to_json(x)),'[]') FROM (
-    SELECT n.nspname AS schema,c.relname AS name,a.attname AS column,t.typname AS type,a.attnotnull AS required,
-      (ad.oid IS NOT NULL OR a.attidentity <> '') AS has_default
-    FROM pg_attribute a JOIN pg_class c ON c.oid=a.attrelid JOIN pg_namespace n ON n.oid=c.relnamespace
-    JOIN pg_type t ON t.oid=a.atttypid LEFT JOIN pg_attrdef ad ON ad.adrelid=c.oid AND ad.adnum=a.attnum
-    WHERE c.relkind='r' AND n.nspname IN ('public','poc_private') AND a.attnum>0 AND NOT a.attisdropped
-    ORDER BY n.nspname,c.relname,a.attnum) x;`),
-  );
-  const functions = JSON.parse(
-    await sql(`SELECT coalesce(json_agg(row_to_json(x)),'[]') FROM (
-    SELECT p.proname AS name,rt.typname AS return_type,
-      coalesce((SELECT json_agg(json_build_object('name',p.proargnames[a.i],'type',t.typname,'has_default',a.i>p.pronargs-p.pronargdefaults) ORDER BY a.i)
-        FROM generate_series(1,p.pronargs) a(i) JOIN pg_type t ON t.oid=p.proargtypes[a.i-1]),'[]') AS args
-    FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace JOIN pg_type rt ON rt.oid=p.prorettype
-    WHERE n.nspname='public' AND p.proname LIKE 'poc_%' ORDER BY p.proname) x;`),
-  );
-  if (new Set(functions.map((f) => f.name)).size !== functions.length)
-    throw Error('Overloaded RPC names need explicit gateway mapping.');
-  const header =
-    '// Generated by npm run db:generate from the ordered SQL migrations. Do not edit.\n// JSON/JSONB stays unknown; validate it with the registered RPC schemas.\n';
-  let source = header + 'export interface DatabaseTables {\n';
-  for (const key of [...new Set(tables.map((t) => `${t.schema}.${t.name}`))]) {
-    source += `  ${JSON.stringify(key)}: {\n`;
-    for (const col of tables.filter((t) => `${t.schema}.${t.name}` === key))
-      source += `    ${JSON.stringify(col.column)}: ${tsType(col.type)}${col.required ? '' : ' | null'};\n`;
-    source += '  };\n';
-  }
-  source += '}\nexport interface DatabaseRpc {\n';
-  for (const f of functions) {
-    source += `  ${JSON.stringify(f.name)}: { Args: {\n`;
-    // PostgreSQL function parameters have no NOT NULL constraint. Runtime schemas
-    // refine required values; defaults mean omission is allowed, not non-nullness.
-    for (const a of f.args)
-      source += `    ${JSON.stringify(a.name)}${a.has_default ? '?' : ''}: ${tsType(a.type)}${a.type === 'jsonb' || a.type === 'json' ? '' : ' | null'};\n`;
-    source += `  }; Returns: ${tsType(f.return_type)} };\n`;
-  }
-  source += '}\n';
-  await emit('database.ts', source);
-  await emit(
-    'schema.json',
-    JSON.stringify({ migrations: migrationHashes, tables, functions }, null, 2) + '\n',
-  );
-  if (mode === 'test') {
-    const { runParity } = await import('./parity.ts');
-    await runParity();
-  }
+  await sql('CREATE DATABASE actual; CREATE DATABASE expected;', 'postgres');
+  await sql(await readFile(migration, 'utf8'));
+  await sql(ddl.join('\n'), 'expected');
+  const actual = JSON.parse(await sql(catalogSQL));
+  const expected = JSON.parse(await sql(catalogSQL, 'expected'));
+  assert.deepEqual(actual, expected, 'Migrated catalog must match the Drizzle definitions');
+  assert.equal(actual.functions, 0, 'Active migration must contain no SQL functions');
+  const generated = new URL('../../src/db/generated/', import.meta.url);
+  const output =
+    JSON.stringify(
+      {
+        migration: '0001_initial_schema.sql',
+        sha256: createHash('sha256').update(baseline).digest('hex'),
+        ...actual,
+      },
+      null,
+      2,
+    ) + '\n';
+  if (mode === 'generate') {
+    await mkdir(generated, { recursive: true });
+    await writeFile(new URL('schema.json', generated), output);
+  } else
+    assert.equal(
+      await readFile(new URL('schema.json', generated), 'utf8'),
+      output,
+      'Catalog evidence is stale',
+    );
   console.log(
-    `${mode}: ${manifest.length} migrations, ${new Set(tables.map((t) => t.schema + '.' + t.name)).size} tables, ${functions.length} RPCs verified in disposable PostgreSQL.`,
+    `${mode}: Drizzle schema, migration, actual PostgreSQL columns/defaults/constraints/indexes agree; zero SQL functions.`,
   );
 } finally {
-  await cleanup();
+  if (started) await docker(['rm', '-f', container]);
+}
+if (mode === 'test') {
+  const { runParity } = await import('./parity.ts');
+  await runParity();
 }

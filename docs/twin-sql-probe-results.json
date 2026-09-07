@@ -1,0 +1,513 @@
+{
+  "startedAt": "2026-09-06T19:49:21.612Z",
+  "endpoint": "https://platform.happyrobot.ai/api/v2/twin/sql",
+  "scratchTables": [
+    "codex_sql_probe_5b860b3106374fa0add9_state",
+    "codex_sql_probe_5b860b3106374fa0add9_events",
+    "codex_sql_probe_5b860b3106374fa0add9_receipts"
+  ],
+  "tests": [
+    {
+      "name": "authentication",
+      "status": "passed",
+      "evidence": {
+        "unauthenticatedStatus": 401,
+        "authenticatedStatus": 200
+      }
+    },
+    {
+      "name": "standalone write CTE support discovery",
+      "status": "passed",
+      "evidence": {
+        "httpStatus": 400,
+        "body": {
+          "error": "Bad Request",
+          "message": "WITH clause containing a data-modifying statement must be at the top level\nLocation: line 1, column 6",
+          "statusCode": 400
+        },
+        "supported": false,
+        "revision": 0
+      }
+    },
+    {
+      "name": "multi statement write CTE commits three related writes",
+      "status": "passed",
+      "evidence": {
+        "revision": 1,
+        "eventCount": 1,
+        "receiptCount": 1
+      }
+    },
+    {
+      "name": "constraint failure rolls back all related writes",
+      "status": "passed",
+      "evidence": {
+        "errorStatus": 400,
+        "revision": 0,
+        "eventCount": 0,
+        "receiptCount": 0
+      }
+    },
+    {
+      "name": "multi statement result and commit behavior",
+      "status": "passed",
+      "evidence": {
+        "httpStatus": 200,
+        "body": {
+          "command": "MULTI",
+          "rowCount": 1,
+          "fields": [
+            {
+              "name": "amount",
+              "dataTypeId": 23
+            }
+          ],
+          "rows": [
+            {
+              "amount": 2
+            }
+          ],
+          "truncated": false,
+          "truncationReason": null,
+          "limits": {
+            "maxRows": 500,
+            "maxResponseBytes": 1000000
+          },
+          "returnedRows": 1,
+          "schemaCacheReloadAttempted": false,
+          "schemaCacheReloaded": false
+        },
+        "amount": 2,
+        "eventCount": 1
+      }
+    },
+    {
+      "name": "multi statement error rollback behavior",
+      "status": "passed",
+      "evidence": {
+        "httpStatus": 400,
+        "amount": 0,
+        "body": {
+          "error": "Bad Request",
+          "message": "new row for relation \"codex_sql_probe_5b860b3106374fa0add9_events\" violates check constraint \"codex_sql_probe_5b860b3106374fa0add9_events_amount_check\"\nDetail: Failing row contains (multi-failure-op, multi-failure, -1).",
+          "statusCode": 400
+        }
+      }
+    },
+    {
+      "name": "bound parameter support discovery",
+      "status": "passed",
+      "evidence": {
+        "httpStatus": 400,
+        "body": {
+          "error": "Bad Request",
+          "message": "argument of LIMIT must be type bigint, not type text",
+          "statusCode": 400
+        },
+        "supported": false
+      }
+    },
+    {
+      "name": "text JSON and null round trip without SQL interpretation",
+      "status": "passed",
+      "evidence": {
+        "sampleCount": 6,
+        "encoding": "UTF-8 base64 decoded in SQL",
+        "nullPreserved": true
+      }
+    },
+    {
+      "name": "concurrent revision checks choose one writer",
+      "status": "passed",
+      "evidence": {
+        "rounds": [
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "revisionAndEventCountPerRound": 1
+      }
+    },
+    {
+      "name": "duplicate operation claims choose one acknowledged winner",
+      "status": "passed",
+      "evidence": {
+        "freshClaimRows": [
+          1,
+          0
+        ],
+        "amount": 1
+      }
+    },
+    {
+      "name": "lost HTTP response recovers receipt without repeating mutation",
+      "status": "passed",
+      "evidence": {
+        "downstreamConnectionDropped": true,
+        "recovered": {
+          "fingerprint": "same-intent",
+          "result": {
+            "revision": 1
+          }
+        },
+        "mutationRequests": 1,
+        "amount": 1,
+        "eventCount": 1
+      }
+    }
+  ],
+  "requests": [
+    {
+      "label": "unauthenticated",
+      "status": 401,
+      "milliseconds": 460
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 470
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 176
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 160
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 157
+    },
+    {
+      "label": "create state",
+      "status": 200,
+      "milliseconds": 158
+    },
+    {
+      "label": "create events",
+      "status": 200,
+      "milliseconds": 161
+    },
+    {
+      "label": "create receipts",
+      "status": 200,
+      "milliseconds": 160
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 153
+    },
+    {
+      "label": "sql",
+      "status": 400,
+      "milliseconds": 155
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 164
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 159
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 158
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 151
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 155
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 156
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 156
+    },
+    {
+      "label": "sql",
+      "status": 400,
+      "milliseconds": 156
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 157
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 155
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 150
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 150
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 155
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 151
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 155
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 152
+    },
+    {
+      "label": "sql",
+      "status": 400,
+      "milliseconds": 155
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 157
+    },
+    {
+      "label": "sql",
+      "status": 400,
+      "milliseconds": 157
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 158
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 159
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 159
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 161
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 155
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 155
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 151
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 152
+    },
+    {
+      "label": "concurrent revision",
+      "status": 200,
+      "milliseconds": 533
+    },
+    {
+      "label": "concurrent revision",
+      "status": 200,
+      "milliseconds": 533
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 158
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 153
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 156
+    },
+    {
+      "label": "concurrent revision",
+      "status": 200,
+      "milliseconds": 460
+    },
+    {
+      "label": "concurrent revision",
+      "status": 200,
+      "milliseconds": 467
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 156
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 158
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 159
+    },
+    {
+      "label": "concurrent revision",
+      "status": 200,
+      "milliseconds": 454
+    },
+    {
+      "label": "concurrent revision",
+      "status": 200,
+      "milliseconds": 458
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 156
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 159
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 199
+    },
+    {
+      "label": "claim A",
+      "status": 200,
+      "milliseconds": 568
+    },
+    {
+      "label": "claim B",
+      "status": 200,
+      "milliseconds": 568
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 156
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 157
+    },
+    {
+      "label": "dropped response upstream",
+      "status": 200,
+      "milliseconds": 155
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 153
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 155
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 154
+    },
+    {
+      "label": "cleanup",
+      "status": 200,
+      "milliseconds": 155
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 157
+    },
+    {
+      "label": "cleanup",
+      "status": 200,
+      "milliseconds": 168
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 159
+    },
+    {
+      "label": "cleanup",
+      "status": 200,
+      "milliseconds": 154
+    },
+    {
+      "label": "sql",
+      "status": 200,
+      "milliseconds": 150
+    }
+  ],
+  "cleanup": {
+    "codex_sql_probe_5b860b3106374fa0add9_receipts": "confirmed absent",
+    "codex_sql_probe_5b860b3106374fa0add9_events": "confirmed absent",
+    "codex_sql_probe_5b860b3106374fa0add9_state": "confirmed absent"
+  },
+  "limitations": [
+    "Synthetic capability tests, not application parity or production readiness.",
+    "No assumption of connection reuse across HTTP requests.",
+    "SQL values encoded as UTF-8 base64 in this probe; not a production query builder.",
+    "Lost-response test deliberately drops the downstream HTTP connection after the upstream response."
+  ],
+  "finishedAt": "2026-09-06T19:49:33.412Z",
+  "ok": true
+}

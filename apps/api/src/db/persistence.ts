@@ -1,6 +1,6 @@
 import { randomUUID, createHash } from 'node:crypto';
+import { eq as equal, sql } from 'drizzle-orm';
 import { z } from 'zod';
-import { twinConfig } from '../config/env.js';
 import { SessionError } from '../errors.js';
 import {
   CallSchema,
@@ -16,67 +16,17 @@ import {
   type CommitCommand,
   type Data,
 } from './model.js';
-import type { DatabaseRpc } from './generated/database.js';
-export type PersistenceRpc = Extract<
-  keyof DatabaseRpc,
-  'poc_read_call' | 'poc_read_receipt' | 'poc_query_calls' | 'poc_insert_call' | 'poc_commit_call'
->;
-export const persistenceInputs = {
-  poc_read_call: z.strictObject({
-    p_selector: z.union([
-      z.strictObject({ hash: z.string().min(1) }),
-      z.strictObject({ id: z.string().uuid() }),
-      z.strictObject({ runId: z.string().min(1) }),
-    ]),
-  }),
-  poc_read_receipt: z.strictObject({
-    p_call_id: z.string().uuid(),
-    p_operation_id: z.string().min(1),
-    p_phase: z.string().min(1),
-  }),
-  poc_query_calls: z.strictObject({
-    p_operator_key: z.string().min(1),
-    p_offset: z.number().int().nonnegative().optional(),
-  }),
-  poc_insert_call: z.strictObject({
-    p_call: CallSchema,
-    p_previous_hash: z.string().nullable(),
-    p_event: z.strictObject({
-      event: z.literal('call_started'),
-      metadata: DataSchema,
-      created_at: z.string(),
-    }),
-  }),
-  poc_commit_call: z.strictObject({ p_command: CommitSchema }),
-} satisfies { [K in PersistenceRpc]: z.ZodType<Omit<DatabaseRpc[K]['Args'], 'p_key'>> };
-export interface PersistenceTransport {
-  request(name: PersistenceRpc, args: Record<string, unknown>): Promise<unknown>;
-}
-export const twinTransport: PersistenceTransport = {
-  async request(name, args) {
-    const { TWIN_GATEWAY, TWIN_ORG_ID } = twinConfig();
-    const key = process.env.BACKEND_RPC_KEY;
-    if (!key || key.length < 32) throw new SessionError('BACKEND_NOT_CONFIGURED');
-    try {
-      const response = await fetch(new URL(`/rpc/${name}`, TWIN_GATEWAY), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-org-id': TWIN_ORG_ID },
-        body: JSON.stringify({ ...args, p_key: key }),
-        signal: AbortSignal.timeout(6000),
-        redirect: 'error',
-        cache: 'no-store',
-      });
-      if (!response.ok)
-        throw new SessionError(
-          response.status === 404 ? 'TWIN_SCHEMA_REQUIRED' : 'TWIN_UNAVAILABLE',
-        );
-      return await response.json();
-    } catch (error) {
-      if (error instanceof SessionError) throw error;
-      throw new SessionError('TWIN_UNAVAILABLE');
-    }
-  },
-};
+import { createDatabase, type TwinDialect } from './client.js';
+import { twinTransport, type SqlTransport } from './twin-driver.js';
+import { calls } from './schema/index.js';
+import { selectSnapshot, selectReceipt, selectOperatorCalls } from './queries.js';
+import { commitOperation, createCallOperation } from './atomic.js';
+
+export const CallSelectorSchema = z.union([
+  z.strictObject({ hash: z.string().min(1) }),
+  z.strictObject({ id: z.string().uuid() }),
+  z.strictObject({ runId: z.string().min(1) }),
+]);
 const CommitResultSchema = z.discriminatedUnion('code', [
   z.object({ code: z.enum(['committed', 'replayed']), result: DataSchema }),
   z.object({
@@ -84,62 +34,106 @@ const CommitResultSchema = z.discriminatedUnion('code', [
   }),
 ]);
 const ReceiptSchema = z.object({ fingerprint: z.string(), result: DataSchema }).nullable();
+export type CommitResult = z.infer<typeof CommitResultSchema>;
+function parse<S extends z.ZodType>(schema: S, value: unknown): z.output<S> {
+  const result = schema.safeParse(value);
+  if (!result.success) throw new SessionError('TWIN_INVALID_RESPONSE');
+  return result.data;
+}
+// Drizzle wraps driver errors with the SQL text. Strip that wrapper at the
+// persistence boundary so private values never enter public errors or logs.
+async function run<T>(action: () => Promise<T>): Promise<T> {
+  try {
+    return await action();
+  } catch (error) {
+    let cause: unknown = error;
+    for (let i = 0; i < 5 && cause instanceof Error; i++, cause = cause.cause) {
+      if (cause instanceof SessionError) throw cause;
+    }
+    throw new SessionError('TWIN_UNAVAILABLE');
+  }
+}
 export class Persistence {
-  constructor(private readonly transport: PersistenceTransport = twinTransport) {}
-  private async request<K extends PersistenceRpc, S extends z.ZodType>(
-    name: K,
-    args: Omit<DatabaseRpc[K]['Args'], 'p_key'>,
-    schema: S,
-  ): Promise<z.output<S>> {
-    const checked = persistenceInputs[name].parse(args);
-    const value = await this.transport.request(name, checked);
-    const parsed = schema.safeParse(value);
-    if (!parsed.success) throw new SessionError('TWIN_INVALID_RESPONSE');
-    return parsed.data;
+  private readonly db;
+  constructor(transport: SqlTransport = twinTransport, dialect?: TwinDialect) {
+    this.db = createDatabase(transport, dialect);
   }
-  readCall(selector: { hash: string } | { id: string } | { runId: string }) {
-    return this.request('poc_read_call', { p_selector: selector }, SnapshotSchema.nullable());
+  async readCall(selector: { hash: string } | { id: string } | { runId: string }) {
+    const checked = CallSelectorSchema.parse(selector);
+    const where =
+      'id' in checked
+        ? equal(calls.id, checked.id)
+        : 'hash' in checked
+          ? equal(calls.session_hash, checked.hash)
+          : equal(calls.voice_run_id, checked.runId);
+    return run(async () => {
+      const rows = await selectSnapshot(this.db, where);
+      return parse(SnapshotSchema.nullable(), rows[0]?.snapshot ?? null);
+    });
   }
-  readOperationReceipt(callId: string, operationId: string, phase: string) {
-    return this.request(
-      'poc_read_receipt',
-      { p_call_id: callId, p_operation_id: operationId, p_phase: phase },
-      ReceiptSchema,
+  async readOperationReceipt(callId: string, operationId: string, phase: string) {
+    z.string().uuid().parse(callId);
+    z.string().min(1).parse(operationId);
+    z.string().min(1).parse(phase);
+    return run(async () =>
+      parse(ReceiptSchema, (await selectReceipt(this.db, callId, operationId, phase))[0] ?? null),
     );
   }
-  createCall(call: Call, previousHash: string | null) {
-    return this.request(
-      'poc_insert_call',
-      {
-        p_call: CallSchema.parse(call),
-        p_previous_hash: previousHash,
-        p_event: { event: 'call_started', metadata: {}, created_at: call.created_at },
-      },
-      SnapshotSchema,
-    );
+  async createCall(call: Call, previousHash: string | null) {
+    const checked = CallSchema.parse(call);
+    const hash = z.string().nullable().parse(previousHash);
+    try {
+      return await run(async () => {
+        const rows = await this.db.execute<{ snapshot: unknown }>(
+          createCallOperation(this.db, checked, hash),
+        );
+        return parse(SnapshotSchema, rows[0]?.snapshot);
+      });
+    } catch (error) {
+      const recovered = await this.readCall({ id: checked.id }).catch(() => null);
+      if (recovered?.call.session_hash === checked.session_hash) return recovered;
+      throw error;
+    }
   }
   async queryCalls(operatorKey: string, offset: number) {
-    const result = await this.request(
-      'poc_query_calls',
-      { p_operator_key: operatorKey, p_offset: offset },
-      z.union([z.array(SnapshotSchema), z.object({ error: z.literal('OPERATOR_AUTH_REQUIRED') })]),
-    );
-    if (!Array.isArray(result)) throw new SessionError(result.error);
-    return result;
+    z.string().min(1).parse(operatorKey);
+    z.number().int().parse(offset);
+    return run(async () => {
+      const rows = await this.db.execute<{ result: unknown }>(
+        selectOperatorCalls(this.db, operatorKey, offset),
+      );
+      const result = parse(
+        z.union([
+          z.array(SnapshotSchema),
+          z.object({ error: z.literal('OPERATOR_AUTH_REQUIRED') }),
+        ]),
+        rows[0]?.result,
+      );
+      if (!Array.isArray(result)) throw new SessionError(result.error);
+      return result;
+    });
   }
-  async commitCallOperation(command: CommitCommand) {
-    const parsed = CommitSchema.parse(command);
+  async commitCallOperation(command: CommitCommand): Promise<CommitResult> {
+    const checked = CommitSchema.parse(command);
+    // Build before execution so invalid cross-call changes cannot trigger recovery.
+    const batch = commitOperation(this.db, checked);
     try {
-      return await this.request('poc_commit_call', { p_command: parsed }, CommitResultSchema);
+      return await run(async () => {
+        const rows = await this.db.execute<{ result: unknown }>(sql`${batch}`);
+        return parse(CommitResultSchema, rows[0]?.result);
+      });
     } catch (error) {
-      // Recovery is a read, never a repeated write or a grant to send externally.
+      if (error instanceof SessionError && error.message === 'BOOKING_REVIEW_REQUIRED')
+        return { code: 'BOOKING_REVIEW_REQUIRED' };
       const receipt = await this.readOperationReceipt(
         command.callId,
         command.operationId,
         command.phase,
       ).catch(() => null);
-      if (receipt && receipt.fingerprint === command.fingerprint)
-        return { code: 'replayed' as const, result: receipt.result };
+      if (receipt)
+        return receipt.fingerprint === command.fingerprint
+          ? { code: 'replayed', result: receipt.result }
+          : { code: 'OPERATION_CHANGED' };
       throw error;
     }
   }

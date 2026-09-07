@@ -5,7 +5,9 @@ import { readFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { setTimeout } from 'node:timers/promises';
-import { Persistence, type PersistenceTransport } from '../../src/db/persistence.js';
+import { Persistence } from '../../src/db/persistence.js';
+import { Pool, type QueryResult } from 'pg';
+import { createTwinTransport } from '../../src/db/twin-driver.js';
 const exec = promisify(execCallback);
 export const literal = (v: unknown): string =>
   v == null
@@ -53,8 +55,8 @@ export async function disposableDatabases() {
       '-d',
       '--name',
       name,
-      '--network',
-      'none',
+      '-p',
+      '127.0.0.1::5432',
       '-e',
       'POSTGRES_HOST_AUTH_METHOD=trust',
       'postgres:16-alpine',
@@ -70,7 +72,7 @@ export async function disposableDatabases() {
     }
     await sql(
       'postgres',
-      'CREATE DATABASE legacy; CREATE DATABASE candidate; CREATE ROLE carrier_gateway;',
+      'CREATE DATABASE legacy; CREATE DATABASE candidate; CREATE ROLE carrier_gateway; CREATE ROLE carrier_backend;',
     );
     const root = new URL('../', import.meta.url);
     await sql('legacy', 'CREATE EXTENSION pgcrypto;');
@@ -84,20 +86,15 @@ export async function disposableDatabases() {
     );
     await sql(
       'candidate',
-      `INSERT INTO poc_private.backend_access VALUES(encode(sha256(convert_to(${literal(key)},'UTF8')),'hex'));`,
+      `GRANT USAGE ON SCHEMA public,poc_private TO carrier_backend;
+      GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public,poc_private TO carrier_backend;
+      GRANT USAGE,SELECT ON ALL SEQUENCES IN SCHEMA public TO carrier_backend;`,
     );
     for (const db of ['legacy', 'candidate'])
       await sql(
         db,
         `INSERT INTO poc_private.operator_access VALUES(encode(sha256(convert_to('parity-operator','UTF8')),'hex'));`,
       );
-    const names = new Set([
-      'poc_read_call',
-      'poc_read_receipt',
-      'poc_query_calls',
-      'poc_insert_call',
-      'poc_commit_call',
-    ]);
     const raw = async (db: string, rpc: string, args: Record<string, unknown>, role = false) => {
       if (!/^poc_[a-z_]+$/.test(rpc) || Object.keys(args).some((k) => !/^p_[a-z_]+$/.test(k)))
         throw Error('Invalid test RPC');
@@ -110,37 +107,60 @@ export async function disposableDatabases() {
       );
       return result === '' ? null : (JSON.parse(result) as unknown);
     };
-    // Local HTTP test gateway uses the actual restricted DB role and named SQL
-    // arguments. It is not a Twin deployment or a PostgREST implementation test.
+    const port = Number((await docker(['port', name, '5432/tcp'])).stdout.trim().split(':').at(-1));
+    const pool = new Pool({
+      host: '127.0.0.1',
+      port,
+      user: 'postgres',
+      database: 'candidate',
+      max: 16,
+    });
+    // Reproduce the observed SQL HTTP contract using a restricted backend role.
+    // Every request gets one transaction; only the final result is serialized.
     const server = createServer(async (req, res) => {
-      const rpc = req.url?.replace('/rpc/', '') ?? '';
-      if (req.method !== 'POST' || !names.has(rpc)) {
-        res.writeHead(404).end();
+      res.setHeader('Content-Type', 'application/json');
+      if (req.url !== '/twin/sql' || req.method !== 'POST') {
+        res.writeHead(404).end('{}');
         return;
       }
+      if (req.headers.authorization !== `Bearer ${key}`) {
+        res.writeHead(401).end('{}');
+        return;
+      }
+      const client = await pool.connect();
       try {
         let body = '';
         for await (const b of req) body += b;
-        const result = await raw('candidate', rpc, JSON.parse(body), true);
-        res.setHeader('Content-Type', 'application/json');
-        res.end(JSON.stringify(result));
-      } catch {
-        res.writeHead(400).end(JSON.stringify({ error: 'DATABASE_REQUEST_REJECTED' }));
+        const { sql: source } = JSON.parse(body);
+        if (typeof source !== 'string') throw Error('Invalid SQL body');
+        await client.query('BEGIN');
+        await client.query('SET LOCAL ROLE carrier_backend');
+        const results = await client.query(source);
+        const result = (Array.isArray(results) ? results.at(-1) : results) as QueryResult;
+        await client.query('COMMIT');
+        res.end(
+          JSON.stringify({
+            command: result.command,
+            rowCount: result.rowCount,
+            rows: result.rows,
+            fields: result.fields.map(({ name, dataTypeID }) => ({ name, dataTypeId: dataTypeID })),
+            truncated: false,
+          }),
+        );
+      } catch (error) {
+        if (process.env.DEBUG_PARITY)
+          console.error('Disposable SQL:', error instanceof Error ? error.message : 'Rejected');
+        await client.query('ROLLBACK');
+        res
+          .writeHead(400)
+          .end(JSON.stringify({ message: error instanceof Error ? error.message : 'Rejected' }));
+      } finally {
+        client.release();
       }
     });
     await new Promise<void>((r) => server.listen(0, '127.0.0.1', r));
     const url = 'http://127.0.0.1:' + (server.address() as AddressInfo).port;
-    const transport: PersistenceTransport = {
-      async request(name, args) {
-        const response = await fetch(url + '/rpc/' + name, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...args, p_key: key }),
-        });
-        if (!response.ok) throw Error('Test database request rejected: ' + name);
-        return response.json();
-      },
-    };
+    const transport = createTwinTransport({ endpoint: url + '/twin/sql', key: () => key });
     return {
       name,
       key,
@@ -151,6 +171,7 @@ export async function disposableDatabases() {
       db: new Persistence(transport),
       async cleanup() {
         await new Promise<void>((r, e) => server.close((err) => (err ? e(err) : r())));
+        await pool.end();
         await docker(['rm', '-f', name]);
       },
     };

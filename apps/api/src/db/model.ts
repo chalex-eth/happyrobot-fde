@@ -1,5 +1,12 @@
 import { z } from 'zod';
-import type { DatabaseTables } from './generated/database.js';
+import type {
+  calls,
+  negotiations,
+  reviews,
+  events,
+  otpReceipts,
+  offerReceipts,
+} from './schema/index.js';
 export type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 export type Data = { [key: string]: Json };
 export const JsonSchema: z.ZodType<Json> = z.lazy(() =>
@@ -92,7 +99,7 @@ export const CallSchema = z.strictObject({
   end_evidence: z.string().nullable(),
   load_snapshots: DataSchema,
   revision: integer,
-}) satisfies z.ZodType<DatabaseTables['public.poc_calls']>;
+}) satisfies z.ZodType<typeof calls.$inferSelect>;
 export type Call = z.output<typeof CallSchema>;
 export const NegotiationRowSchema = z.strictObject({
   call_id: z.string().uuid(),
@@ -106,7 +113,7 @@ export const NegotiationRowSchema = z.strictObject({
   counter_rounds: z.number().int().min(0).max(3),
   status: z.string(),
   expires_at: z.string().refine((v) => Number.isFinite(Date.parse(v))),
-}) satisfies z.ZodType<DatabaseTables['poc_private.negotiations']>;
+}) satisfies z.ZodType<typeof negotiations.$inferSelect>;
 export type NegotiationRow = z.output<typeof NegotiationRowSchema>;
 export const ReviewSchema = z.strictObject({
   id: z.string().uuid(),
@@ -124,7 +131,7 @@ export const ReviewSchema = z.strictObject({
     .string()
     .refine((v) => Number.isFinite(Date.parse(v)))
     .nullable(),
-}) satisfies z.ZodType<DatabaseTables['public.poc_reviews']>;
+}) satisfies z.ZodType<typeof reviews.$inferSelect>;
 export type Review = z.output<typeof ReviewSchema>;
 export const EventSchema = z.strictObject({
   id: integer,
@@ -132,7 +139,7 @@ export const EventSchema = z.strictObject({
   event: z.string(),
   created_at: z.string().refine((v) => Number.isFinite(Date.parse(v))),
   metadata: DataSchema,
-}) satisfies z.ZodType<DatabaseTables['public.poc_call_events']>;
+}) satisfies z.ZodType<typeof events.$inferSelect>;
 export type Event = z.output<typeof EventSchema>;
 export const OtpReceiptSchema = z.strictObject({
   call_id: z.string().uuid(),
@@ -140,14 +147,14 @@ export const OtpReceiptSchema = z.strictObject({
   authority_revision: z.number().int(),
   fingerprint: z.string(),
   result: DataSchema,
-}) satisfies z.ZodType<DatabaseTables['poc_private.otp_receipts']>;
+}) satisfies z.ZodType<typeof otpReceipts.$inferSelect>;
 export type OtpReceipt = z.output<typeof OtpReceiptSchema>;
 export const OfferReceiptSchema = z.strictObject({
   call_id: z.string().uuid(),
   offer_id: z.string().uuid(),
   fingerprint: DataSchema,
   result: DataSchema,
-}) satisfies z.ZodType<DatabaseTables['poc_private.offer_receipts']>;
+}) satisfies z.ZodType<typeof offerReceipts.$inferSelect>;
 export type OfferReceipt = z.output<typeof OfferReceiptSchema>;
 export const SnapshotSchema = z.strictObject({
   call: CallSchema,

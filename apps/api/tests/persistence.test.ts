@@ -1,32 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { z } from 'zod';
 import { randomUUID } from 'node:crypto';
-import {
-  Persistence,
-  persistenceInputs,
-  twinTransport,
-  type PersistenceRpc,
-} from '../src/db/persistence.js';
-import type { DatabaseRpc } from '../src/db/generated/database.js';
+import { sql } from 'drizzle-orm';
+import { Persistence, CallSelectorSchema, type CommitResult } from '../src/db/persistence.js';
+import { createTwinTransport, type SqlResponse } from '../src/db/twin-driver.js';
+import { createDatabase, TwinDialect } from '../src/db/client.js';
+import { calls } from '../src/db/schema/index.js';
 import { buildInitialCall } from '../src/modules/calls/index.js';
-import type { Snapshot } from '../src/db/model.js';
-type Assert<T extends true> = T;
-type Match<K extends PersistenceRpc> =
-  Exclude<
-    keyof z.input<(typeof persistenceInputs)[K]>,
-    keyof Omit<DatabaseRpc[K]['Args'], 'p_key'>
-  > extends never
-    ? Exclude<
-        keyof Omit<DatabaseRpc[K]['Args'], 'p_key'>,
-        keyof z.input<(typeof persistenceInputs)[K]>
-      > extends never
-      ? true
-      : false
-    : false;
-export type GeneratedPersistenceSignatureCheck = Assert<
-  { [K in PersistenceRpc]: Match<K> }[PersistenceRpc]
->;
+import { CommitSchema, type CommitCommand, type Snapshot } from '../src/db/model.js';
 function snapshot(): Snapshot {
   const now = new Date().toISOString();
   return {
@@ -39,82 +20,82 @@ function snapshot(): Snapshot {
     offerReceipts: [],
   };
 }
-test('Twin persistence uses only the new RPC protocol and fails clearly against an old schema', async (t) => {
-  const keys = ['TWIN_GATEWAY', 'TWIN_ORG_ID', 'BACKEND_RPC_KEY'] as const;
-  const old = keys.map((k) => process.env[k]);
-  Object.assign(process.env, {
-    TWIN_GATEWAY: 'https://twin.example.invalid',
-    TWIN_ORG_ID: 'test-org',
-    BACKEND_RPC_KEY: 'k'.repeat(32),
-  });
-  t.after(() =>
-    keys.forEach((key, i) => {
-      if (old[i] === undefined) delete process.env[key];
-      else process.env[key] = old[i];
-    }),
-  );
-  let calls = 0;
-  t.mock.method(globalThis, 'fetch', async (url: URL, init: RequestInit) => {
-    calls++;
-    assert.equal(url.pathname, '/rpc/poc_read_call');
-    assert.equal(new Headers(init.headers).get('x-org-id'), 'test-org');
-    assert.deepEqual(JSON.parse(String(init.body)), {
-      p_selector: { hash: 'hash' },
-      p_key: 'k'.repeat(32),
-    });
-    return new Response('', { status: 404 });
+const response = (row: Record<string, unknown>): SqlResponse => ({
+  command: 'SELECT',
+  rowCount: 1,
+  rows: [row],
+  fields: Object.keys(row).map((name) => ({ name, dataTypeId: 3802 })),
+  truncated: false,
+});
+test('Twin SQL transport authenticates, serializes and rejects incompatible schemas without retry', async () => {
+  let requests = 0;
+  const transport = createTwinTransport({
+    key: () => 'private-key',
+    fetch: async (_input, init) => {
+      requests++;
+      assert.equal(new Headers(init?.headers).get('Authorization'), 'Bearer private-key');
+      const body = JSON.parse(String(init?.body));
+      assert.deepEqual(Object.keys(body), ['sql']);
+      assert.ok(body.sql.includes('poc_calls'));
+      return new Response(JSON.stringify({ message: 'column revision does not exist' }), {
+        status: 400,
+      });
+    },
   });
   await assert.rejects(
-    () => new Persistence(twinTransport).readCall({ hash: 'hash' }),
+    () => new Persistence(transport).readCall({ hash: 'hash' }),
     /TWIN_SCHEMA_REQUIRED/,
   );
-  assert.equal(calls, 1);
+  assert.equal(requests, 1);
 });
-test('persistence rejects malformed rows and malformed commit acknowledgements', async () => {
+test('persistence rejects malformed rows and commit acknowledgements', async () => {
   const malformed = snapshot();
   Reflect.set(malformed.call, 'otp_failures', 9);
   await assert.rejects(
-    () => new Persistence({ request: async () => malformed }).readCall({ hash: 'hash' }),
+    () =>
+      new Persistence({ query: async () => response({ snapshot: malformed }) }).readCall({
+        hash: 'hash',
+      }),
     /TWIN_INVALID_RESPONSE/,
   );
-  const s = snapshot();
   const db = new Persistence({
-    request: async (name) => (name === 'poc_read_receipt' ? null : { code: 'committed' }),
+    query: async (source) =>
+      source.includes('with prior as materialized')
+        ? response({ result: { code: 'committed' } })
+        : { ...response({}), rows: [], fields: [] },
   });
   await assert.rejects(
     () =>
       db.commitCallOperation({
-        callId: s.call.id,
+        callId: snapshot().call.id,
         operationId: 'op',
         phase: 'test',
         fingerprint: 'fp',
         expectedRevision: 0,
         preconditions: { activeSession: true },
-        changes: { call: { source: 'integration_test' } },
+        changes: { call: { source: 'test' } },
         result: { ok: true },
       }),
     /TWIN_INVALID_RESPONSE/,
   );
 });
-test('decision retries are bounded and recompute against fresh revisions', async () => {
+test('pure decisions recompute against fresh revisions and stop after three recalculations', async () => {
   let reads = 0,
     writes = 0;
   const s = snapshot();
-  const db = new Persistence({
-    async request(name, args) {
-      if (name === 'poc_read_call') {
-        s.call.revision = reads++;
-        return structuredClone(s);
-      }
-      assert.equal(name, 'poc_commit_call');
-      const command = persistenceInputs.poc_commit_call.parse(args).p_command;
+  class Conflicts extends Persistence {
+    override async readCall() {
+      s.call.revision = reads++;
+      return structuredClone(s);
+    }
+    override async commitCallOperation(command: CommitCommand): Promise<CommitResult> {
       assert.equal(command.expectedRevision, writes++);
       return { code: 'conflict' };
-    },
-  });
+    }
+  }
   await assert.rejects(
     () =>
-      db.execute({ id: s.call.id }, { action: 'test' }, (draft) => {
+      new Conflicts().execute({ id: s.call.id }, { action: 'test' }, (draft) => {
         draft.call.source = 'test';
         return { result: { ok: true } };
       }),
@@ -123,16 +104,10 @@ test('decision retries are bounded and recompute against fresh revisions', async
   assert.equal(reads, 4);
   assert.equal(writes, 4);
 });
-test('the persistence request schema rejects arbitrary fields and executable changes', () => {
-  assert.equal(
-    persistenceInputs.poc_read_call.safeParse({
-      p_selector: { id: randomUUID(), hash: 'another-call' },
-    }).success,
-    false,
-  );
-  const s = snapshot();
+test('commit commands reject arbitrary fields and cross-call writes', async () => {
+  assert.equal(CallSelectorSchema.safeParse({ id: randomUUID(), hash: 'another' }).success, false);
   const command = {
-    callId: s.call.id,
+    callId: randomUUID(),
     operationId: 'op',
     phase: 'test',
     fingerprint: 'fp',
@@ -145,10 +120,86 @@ test('the persistence request schema rejects arbitrary fields and executable cha
     { call: { session_hash: 'b'.repeat(64) } },
     { call: { revision: 999 } },
   ])
-    assert.equal(
-      persistenceInputs.poc_commit_call.safeParse({ p_command: { ...command, changes } }).success,
-      false,
-    );
+    assert.equal(CommitSchema.safeParse({ ...command, changes }).success, false);
+  const db = new Persistence({
+    query: async () => {
+      throw Error('must not reach transport');
+    },
+  });
+  await assert.rejects(
+    () =>
+      db.commitCallOperation({
+        ...command,
+        changes: {
+          otpReceipts: [
+            {
+              call_id: randomUUID(),
+              operation_id: 'other',
+              authority_revision: 0,
+              fingerprint: 'fp',
+              result: {},
+            },
+          ],
+        },
+      }),
+    /INVALID_CALL_ID/,
+  );
+});
+test('Drizzle literals use syntax-tree encoding with no placeholder substitution', () => {
+  const dialect = new TwinDialect();
+  const value = "quote' backslash\\ $1 -- ;";
+  const compiled = dialect.sqlToQuery(sql`select ${value}::text`);
+  assert.equal(compiled.params.length, 0);
+  assert.ok(compiled.sql.includes("E'quote''"));
+  assert.ok(compiled.sql.includes('$1 -- ;'));
+  assert.throws(() => dialect.sqlToQuery(sql`select ${'\0'}`), /INVALID_DATABASE_TEXT/);
+  assert.throws(() => dialect.sqlToQuery(sql`select ${'\ud800'}`), /INVALID_DATABASE_TEXT/);
+});
+test('Drizzle maps result columns in server field order', async () => {
+  const db = createDatabase({
+    query: async () => ({
+      command: 'SELECT',
+      rowCount: 1,
+      truncated: false,
+      fields: [
+        { name: 'id', dataTypeId: 2950 },
+        { name: 'source', dataTypeId: 25 },
+      ],
+      rows: [{ source: 'test', id: 'id' }],
+    }),
+  });
+  assert.deepEqual(await db.select({ id: calls.id, source: calls.source }).from(calls), [
+    { id: 'id', source: 'test' },
+  ]);
+  await assert.rejects(
+    () => db.transaction(async () => undefined),
+    /Transactions are not supported/,
+  );
+});
+test('Twin transport rejects truncation, duplicate columns and unsafe bigint results', async () => {
+  for (const [body, error] of [
+    [{ ...response({ id: 1 }), truncated: true }, 'TWIN_RESULT_TRUNCATED'],
+    [
+      {
+        ...response({ id: 1 }),
+        fields: [
+          { name: 'id', dataTypeId: 23 },
+          { name: 'id', dataTypeId: 23 },
+        ],
+      },
+      'TWIN_AMBIGUOUS_COLUMNS',
+    ],
+    [
+      { ...response({ id: 9007199254740992 }), fields: [{ name: 'id', dataTypeId: 20 }] },
+      'TWIN_INVALID_RESPONSE',
+    ],
+  ] as const) {
+    const transport = createTwinTransport({
+      key: () => 'key',
+      fetch: async () => new Response(JSON.stringify(body)),
+    });
+    await assert.rejects(() => transport.query('SELECT test'), new RegExp(error));
+  }
 });
 
 test('operator filters preserve SQL wildcard escaping and empty source semantics', async () => {

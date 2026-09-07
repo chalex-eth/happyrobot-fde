@@ -1,741 +1,1051 @@
 {
-  "migrations": [
+  "migration": "0001_initial_schema.sql",
+  "sha256": "c434730de68dd76820ebb2cd98541ced7a2324bfb668e636f484971665d0b769",
+  "columns": [
     {
-      "name": "0001_initial_schema.sql",
-      "sha256": "cbd703785a5b0780b856041c94cf1ea2313280213cc8c1c335e535888eea9612"
+      "name": "call_id",
+      "type": "uuid",
+      "table": "negotiations",
+      "schema": "poc_private",
+      "default": null,
+      "identity": "",
+      "position": 1,
+      "required": true
+    },
+    {
+      "name": "authority_revision",
+      "type": "integer",
+      "table": "negotiations",
+      "schema": "poc_private",
+      "default": null,
+      "identity": "",
+      "position": 2,
+      "required": true
+    },
+    {
+      "name": "load_id",
+      "type": "text",
+      "table": "negotiations",
+      "schema": "poc_private",
+      "default": null,
+      "identity": "",
+      "position": 3,
+      "required": true
+    },
+    {
+      "name": "offer_id",
+      "type": "uuid",
+      "table": "negotiations",
+      "schema": "poc_private",
+      "default": "gen_random_uuid()",
+      "identity": "",
+      "position": 4,
+      "required": true
+    },
+    {
+      "name": "listed_cents",
+      "type": "bigint",
+      "table": "negotiations",
+      "schema": "poc_private",
+      "default": null,
+      "identity": "",
+      "position": 5,
+      "required": true
+    },
+    {
+      "name": "max_cents",
+      "type": "bigint",
+      "table": "negotiations",
+      "schema": "poc_private",
+      "default": null,
+      "identity": "",
+      "position": 6,
+      "required": true
+    },
+    {
+      "name": "offered_cents",
+      "type": "bigint",
+      "table": "negotiations",
+      "schema": "poc_private",
+      "default": null,
+      "identity": "",
+      "position": 7,
+      "required": true
+    },
+    {
+      "name": "agreed_cents",
+      "type": "bigint",
+      "table": "negotiations",
+      "schema": "poc_private",
+      "default": null,
+      "identity": "",
+      "position": 8,
+      "required": false
+    },
+    {
+      "name": "counter_rounds",
+      "type": "integer",
+      "table": "negotiations",
+      "schema": "poc_private",
+      "default": "0",
+      "identity": "",
+      "position": 9,
+      "required": true
+    },
+    {
+      "name": "status",
+      "type": "text",
+      "table": "negotiations",
+      "schema": "poc_private",
+      "default": "'offered'::text",
+      "identity": "",
+      "position": 10,
+      "required": true
+    },
+    {
+      "name": "expires_at",
+      "type": "timestamp with time zone",
+      "table": "negotiations",
+      "schema": "poc_private",
+      "default": null,
+      "identity": "",
+      "position": 11,
+      "required": true
+    },
+    {
+      "name": "call_id",
+      "type": "uuid",
+      "table": "offer_receipts",
+      "schema": "poc_private",
+      "default": null,
+      "identity": "",
+      "position": 1,
+      "required": true
+    },
+    {
+      "name": "offer_id",
+      "type": "uuid",
+      "table": "offer_receipts",
+      "schema": "poc_private",
+      "default": null,
+      "identity": "",
+      "position": 2,
+      "required": true
+    },
+    {
+      "name": "fingerprint",
+      "type": "jsonb",
+      "table": "offer_receipts",
+      "schema": "poc_private",
+      "default": null,
+      "identity": "",
+      "position": 3,
+      "required": true
+    },
+    {
+      "name": "result",
+      "type": "jsonb",
+      "table": "offer_receipts",
+      "schema": "poc_private",
+      "default": null,
+      "identity": "",
+      "position": 4,
+      "required": true
+    },
+    {
+      "name": "call_id",
+      "type": "uuid",
+      "table": "operation_receipts",
+      "schema": "poc_private",
+      "default": null,
+      "identity": "",
+      "position": 1,
+      "required": true
+    },
+    {
+      "name": "operation_id",
+      "type": "text",
+      "table": "operation_receipts",
+      "schema": "poc_private",
+      "default": null,
+      "identity": "",
+      "position": 2,
+      "required": true
+    },
+    {
+      "name": "phase",
+      "type": "text",
+      "table": "operation_receipts",
+      "schema": "poc_private",
+      "default": null,
+      "identity": "",
+      "position": 3,
+      "required": true
+    },
+    {
+      "name": "fingerprint",
+      "type": "text",
+      "table": "operation_receipts",
+      "schema": "poc_private",
+      "default": null,
+      "identity": "",
+      "position": 4,
+      "required": true
+    },
+    {
+      "name": "result",
+      "type": "jsonb",
+      "table": "operation_receipts",
+      "schema": "poc_private",
+      "default": null,
+      "identity": "",
+      "position": 5,
+      "required": true
+    },
+    {
+      "name": "key_hash",
+      "type": "text",
+      "table": "operator_access",
+      "schema": "poc_private",
+      "default": null,
+      "identity": "",
+      "position": 1,
+      "required": true
+    },
+    {
+      "name": "call_id",
+      "type": "uuid",
+      "table": "otp_receipts",
+      "schema": "poc_private",
+      "default": null,
+      "identity": "",
+      "position": 1,
+      "required": true
+    },
+    {
+      "name": "operation_id",
+      "type": "text",
+      "table": "otp_receipts",
+      "schema": "poc_private",
+      "default": null,
+      "identity": "",
+      "position": 2,
+      "required": true
+    },
+    {
+      "name": "authority_revision",
+      "type": "integer",
+      "table": "otp_receipts",
+      "schema": "poc_private",
+      "default": null,
+      "identity": "",
+      "position": 3,
+      "required": true
+    },
+    {
+      "name": "fingerprint",
+      "type": "text",
+      "table": "otp_receipts",
+      "schema": "poc_private",
+      "default": null,
+      "identity": "",
+      "position": 4,
+      "required": true
+    },
+    {
+      "name": "result",
+      "type": "jsonb",
+      "table": "otp_receipts",
+      "schema": "poc_private",
+      "default": null,
+      "identity": "",
+      "position": 5,
+      "required": true
+    },
+    {
+      "name": "id",
+      "type": "bigint",
+      "table": "poc_call_events",
+      "schema": "public",
+      "default": null,
+      "identity": "a",
+      "position": 1,
+      "required": true
+    },
+    {
+      "name": "call_id",
+      "type": "uuid",
+      "table": "poc_call_events",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 2,
+      "required": true
+    },
+    {
+      "name": "event",
+      "type": "text",
+      "table": "poc_call_events",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 3,
+      "required": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "poc_call_events",
+      "schema": "public",
+      "default": "now()",
+      "identity": "",
+      "position": 4,
+      "required": true
+    },
+    {
+      "name": "metadata",
+      "type": "jsonb",
+      "table": "poc_call_events",
+      "schema": "public",
+      "default": "'{}'::jsonb",
+      "identity": "",
+      "position": 5,
+      "required": true
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 1,
+      "required": true
+    },
+    {
+      "name": "session_hash",
+      "type": "text",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 2,
+      "required": true
+    },
+    {
+      "name": "authority_check",
+      "type": "jsonb",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 3,
+      "required": false
+    },
+    {
+      "name": "authority_passed",
+      "type": "boolean",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 4,
+      "required": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": "now()",
+      "identity": "",
+      "position": 5,
+      "required": true
+    },
+    {
+      "name": "session_expires_at",
+      "type": "timestamp with time zone",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": "(now() + '01:00:00'::interval)",
+      "identity": "",
+      "position": 6,
+      "required": true
+    },
+    {
+      "name": "otp_state",
+      "type": "text",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": "'not_sent'::text",
+      "identity": "",
+      "position": 7,
+      "required": true
+    },
+    {
+      "name": "challenge_id",
+      "type": "uuid",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 8,
+      "required": false
+    },
+    {
+      "name": "otp_digest",
+      "type": "text",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 9,
+      "required": false
+    },
+    {
+      "name": "otp_expires_at",
+      "type": "timestamp with time zone",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 10,
+      "required": false
+    },
+    {
+      "name": "otp_attempts",
+      "type": "integer",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": "0",
+      "identity": "",
+      "position": 11,
+      "required": true
+    },
+    {
+      "name": "otp_verified_at",
+      "type": "timestamp with time zone",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 12,
+      "required": false
+    },
+    {
+      "name": "demo_recipient",
+      "type": "text",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 13,
+      "required": false
+    },
+    {
+      "name": "authority_revision",
+      "type": "integer",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": "0",
+      "identity": "",
+      "position": 14,
+      "required": true
+    },
+    {
+      "name": "available_load_ids",
+      "type": "jsonb",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": "'[]'::jsonb",
+      "identity": "",
+      "position": 15,
+      "required": true
+    },
+    {
+      "name": "selected_load_id",
+      "type": "text",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 16,
+      "required": false
+    },
+    {
+      "name": "voice_run_id",
+      "type": "text",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 17,
+      "required": false
+    },
+    {
+      "name": "voice_state",
+      "type": "text",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": "'idle'::text",
+      "identity": "",
+      "position": 18,
+      "required": true
+    },
+    {
+      "name": "finalized_at",
+      "type": "timestamp with time zone",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 19,
+      "required": false
+    },
+    {
+      "name": "final_outcome",
+      "type": "text",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 20,
+      "required": false
+    },
+    {
+      "name": "final_summary",
+      "type": "text",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 21,
+      "required": false
+    },
+    {
+      "name": "final_result",
+      "type": "jsonb",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 22,
+      "required": false
+    },
+    {
+      "name": "revision",
+      "type": "bigint",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": "0",
+      "identity": "",
+      "position": 23,
+      "required": true
+    },
+    {
+      "name": "otp_failures",
+      "type": "integer",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": "0",
+      "identity": "",
+      "position": 24,
+      "required": true
+    },
+    {
+      "name": "booking",
+      "type": "jsonb",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 25,
+      "required": false
+    },
+    {
+      "name": "booking_terms",
+      "type": "jsonb",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 26,
+      "required": false
+    },
+    {
+      "name": "load_statuses",
+      "type": "jsonb",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": "'{}'::jsonb",
+      "identity": "",
+      "position": 27,
+      "required": true
+    },
+    {
+      "name": "load_interest",
+      "type": "jsonb",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 28,
+      "required": false
+    },
+    {
+      "name": "source",
+      "type": "text",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": "'unknown'::text",
+      "identity": "",
+      "position": 29,
+      "required": true
+    },
+    {
+      "name": "last_activity_at",
+      "type": "timestamp with time zone",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": "now()",
+      "identity": "",
+      "position": 30,
+      "required": true
+    },
+    {
+      "name": "reported_end_reason",
+      "type": "text",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 31,
+      "required": false
+    },
+    {
+      "name": "ended_at",
+      "type": "timestamp with time zone",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 32,
+      "required": false
+    },
+    {
+      "name": "end_evidence",
+      "type": "text",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 33,
+      "required": false
+    },
+    {
+      "name": "load_snapshots",
+      "type": "jsonb",
+      "table": "poc_calls",
+      "schema": "public",
+      "default": "'{}'::jsonb",
+      "identity": "",
+      "position": 34,
+      "required": true
+    },
+    {
+      "name": "id",
+      "type": "uuid",
+      "table": "poc_reviews",
+      "schema": "public",
+      "default": "gen_random_uuid()",
+      "identity": "",
+      "position": 1,
+      "required": true
+    },
+    {
+      "name": "call_id",
+      "type": "uuid",
+      "table": "poc_reviews",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 2,
+      "required": true
+    },
+    {
+      "name": "reason",
+      "type": "text",
+      "table": "poc_reviews",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 3,
+      "required": true
+    },
+    {
+      "name": "status",
+      "type": "text",
+      "table": "poc_reviews",
+      "schema": "public",
+      "default": "'open'::text",
+      "identity": "",
+      "position": 4,
+      "required": true
+    },
+    {
+      "name": "detail",
+      "type": "text",
+      "table": "poc_reviews",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 5,
+      "required": true
+    },
+    {
+      "name": "callback_number",
+      "type": "text",
+      "table": "poc_reviews",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 6,
+      "required": false
+    },
+    {
+      "name": "source_key",
+      "type": "text",
+      "table": "poc_reviews",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 7,
+      "required": true
+    },
+    {
+      "name": "revision",
+      "type": "uuid",
+      "table": "poc_reviews",
+      "schema": "public",
+      "default": "gen_random_uuid()",
+      "identity": "",
+      "position": 8,
+      "required": true
+    },
+    {
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "table": "poc_reviews",
+      "schema": "public",
+      "default": "now()",
+      "identity": "",
+      "position": 9,
+      "required": true
+    },
+    {
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "table": "poc_reviews",
+      "schema": "public",
+      "default": "now()",
+      "identity": "",
+      "position": 10,
+      "required": true
+    },
+    {
+      "name": "resolution_note",
+      "type": "text",
+      "table": "poc_reviews",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 11,
+      "required": false
+    },
+    {
+      "name": "reviewed_at",
+      "type": "timestamp with time zone",
+      "table": "poc_reviews",
+      "schema": "public",
+      "default": null,
+      "identity": "",
+      "position": 12,
+      "required": false
     }
   ],
-  "tables": [
+  "indexes": [
     {
-      "schema": "poc_private",
-      "name": "backend_access",
-      "column": "key_hash",
-      "type": "text",
-      "required": true,
-      "has_default": false
+      "indexdef": "CREATE UNIQUE INDEX negotiations_pkey ON poc_private.negotiations USING btree (call_id)",
+      "indexname": "negotiations_pkey",
+      "tablename": "negotiations",
+      "schemaname": "poc_private"
     },
     {
-      "schema": "poc_private",
-      "name": "negotiations",
-      "column": "call_id",
-      "type": "uuid",
-      "required": true,
-      "has_default": false
+      "indexdef": "CREATE UNIQUE INDEX offer_receipts_call_id_offer_id_pk ON poc_private.offer_receipts USING btree (call_id, offer_id)",
+      "indexname": "offer_receipts_call_id_offer_id_pk",
+      "tablename": "offer_receipts",
+      "schemaname": "poc_private"
     },
     {
-      "schema": "poc_private",
-      "name": "negotiations",
-      "column": "authority_revision",
-      "type": "int4",
-      "required": true,
-      "has_default": false
+      "indexdef": "CREATE UNIQUE INDEX operation_receipts_call_id_operation_id_phase_pk ON poc_private.operation_receipts USING btree (call_id, operation_id, phase)",
+      "indexname": "operation_receipts_call_id_operation_id_phase_pk",
+      "tablename": "operation_receipts",
+      "schemaname": "poc_private"
     },
     {
-      "schema": "poc_private",
-      "name": "negotiations",
-      "column": "load_id",
-      "type": "text",
-      "required": true,
-      "has_default": false
+      "indexdef": "CREATE UNIQUE INDEX operator_access_pkey ON poc_private.operator_access USING btree (key_hash)",
+      "indexname": "operator_access_pkey",
+      "tablename": "operator_access",
+      "schemaname": "poc_private"
     },
     {
-      "schema": "poc_private",
-      "name": "negotiations",
-      "column": "offer_id",
-      "type": "uuid",
-      "required": true,
-      "has_default": true
+      "indexdef": "CREATE UNIQUE INDEX otp_receipts_call_id_operation_id_pk ON poc_private.otp_receipts USING btree (call_id, operation_id)",
+      "indexname": "otp_receipts_call_id_operation_id_pk",
+      "tablename": "otp_receipts",
+      "schemaname": "poc_private"
     },
     {
-      "schema": "poc_private",
-      "name": "negotiations",
-      "column": "listed_cents",
-      "type": "int8",
-      "required": true,
-      "has_default": false
+      "indexdef": "CREATE UNIQUE INDEX poc_call_events_pkey ON public.poc_call_events USING btree (id)",
+      "indexname": "poc_call_events_pkey",
+      "tablename": "poc_call_events",
+      "schemaname": "public"
     },
     {
-      "schema": "poc_private",
-      "name": "negotiations",
-      "column": "max_cents",
-      "type": "int8",
-      "required": true,
-      "has_default": false
+      "indexdef": "CREATE INDEX poc_events_call_time ON public.poc_call_events USING btree (call_id, created_at)",
+      "indexname": "poc_events_call_time",
+      "tablename": "poc_call_events",
+      "schemaname": "public"
     },
     {
-      "schema": "poc_private",
-      "name": "negotiations",
-      "column": "offered_cents",
-      "type": "int8",
-      "required": true,
-      "has_default": false
+      "indexdef": "CREATE INDEX poc_events_send_time ON public.poc_call_events USING btree (created_at) WHERE (event = 'otp_requested'::text)",
+      "indexname": "poc_events_send_time",
+      "tablename": "poc_call_events",
+      "schemaname": "public"
     },
     {
-      "schema": "poc_private",
-      "name": "negotiations",
-      "column": "agreed_cents",
-      "type": "int8",
-      "required": false,
-      "has_default": false
+      "indexdef": "CREATE UNIQUE INDEX poc_booking_load_claim ON public.poc_calls USING btree (((booking ->> 'load_id'::text))) WHERE (((booking ->> 'status'::text) = ANY (ARRAY['pending'::text, 'confirmed'::text, 'uncertain'::text])) AND (COALESCE((booking ->> 'simulated'::text), 'false'::text) <> 'true'::text))",
+      "indexname": "poc_booking_load_claim",
+      "tablename": "poc_calls",
+      "schemaname": "public"
     },
     {
-      "schema": "poc_private",
-      "name": "negotiations",
-      "column": "counter_rounds",
-      "type": "int4",
-      "required": true,
-      "has_default": true
+      "indexdef": "CREATE UNIQUE INDEX poc_calls_pkey ON public.poc_calls USING btree (id)",
+      "indexname": "poc_calls_pkey",
+      "tablename": "poc_calls",
+      "schemaname": "public"
     },
     {
-      "schema": "poc_private",
-      "name": "negotiations",
-      "column": "status",
-      "type": "text",
-      "required": true,
-      "has_default": true
+      "indexdef": "CREATE INDEX poc_calls_recent ON public.poc_calls USING btree (created_at DESC NULLS LAST, id)",
+      "indexname": "poc_calls_recent",
+      "tablename": "poc_calls",
+      "schemaname": "public"
     },
     {
-      "schema": "poc_private",
-      "name": "negotiations",
-      "column": "expires_at",
-      "type": "timestamptz",
-      "required": true,
-      "has_default": false
+      "indexdef": "CREATE UNIQUE INDEX poc_calls_session_hash_unique ON public.poc_calls USING btree (session_hash)",
+      "indexname": "poc_calls_session_hash_unique",
+      "tablename": "poc_calls",
+      "schemaname": "public"
     },
     {
-      "schema": "poc_private",
-      "name": "offer_receipts",
-      "column": "call_id",
-      "type": "uuid",
-      "required": true,
-      "has_default": false
+      "indexdef": "CREATE UNIQUE INDEX poc_calls_voice_run_id_unique ON public.poc_calls USING btree (voice_run_id)",
+      "indexname": "poc_calls_voice_run_id_unique",
+      "tablename": "poc_calls",
+      "schemaname": "public"
     },
     {
-      "schema": "poc_private",
-      "name": "offer_receipts",
-      "column": "offer_id",
-      "type": "uuid",
-      "required": true,
-      "has_default": false
+      "indexdef": "CREATE UNIQUE INDEX poc_reviews_call_id_reason_key ON public.poc_reviews USING btree (call_id, reason)",
+      "indexname": "poc_reviews_call_id_reason_key",
+      "tablename": "poc_reviews",
+      "schemaname": "public"
     },
     {
-      "schema": "poc_private",
-      "name": "offer_receipts",
-      "column": "fingerprint",
-      "type": "jsonb",
-      "required": true,
-      "has_default": false
+      "indexdef": "CREATE INDEX poc_reviews_open ON public.poc_reviews USING btree (updated_at DESC NULLS LAST) WHERE (status = 'open'::text)",
+      "indexname": "poc_reviews_open",
+      "tablename": "poc_reviews",
+      "schemaname": "public"
     },
     {
-      "schema": "poc_private",
-      "name": "offer_receipts",
-      "column": "result",
-      "type": "jsonb",
-      "required": true,
-      "has_default": false
-    },
-    {
-      "schema": "poc_private",
-      "name": "operation_receipts",
-      "column": "call_id",
-      "type": "uuid",
-      "required": true,
-      "has_default": false
-    },
-    {
-      "schema": "poc_private",
-      "name": "operation_receipts",
-      "column": "operation_id",
-      "type": "text",
-      "required": true,
-      "has_default": false
-    },
-    {
-      "schema": "poc_private",
-      "name": "operation_receipts",
-      "column": "phase",
-      "type": "text",
-      "required": true,
-      "has_default": false
-    },
-    {
-      "schema": "poc_private",
-      "name": "operation_receipts",
-      "column": "fingerprint",
-      "type": "text",
-      "required": true,
-      "has_default": false
-    },
-    {
-      "schema": "poc_private",
-      "name": "operation_receipts",
-      "column": "result",
-      "type": "jsonb",
-      "required": true,
-      "has_default": false
-    },
-    {
-      "schema": "poc_private",
-      "name": "operator_access",
-      "column": "key_hash",
-      "type": "text",
-      "required": true,
-      "has_default": false
-    },
-    {
-      "schema": "poc_private",
-      "name": "otp_receipts",
-      "column": "call_id",
-      "type": "uuid",
-      "required": true,
-      "has_default": false
-    },
-    {
-      "schema": "poc_private",
-      "name": "otp_receipts",
-      "column": "operation_id",
-      "type": "text",
-      "required": true,
-      "has_default": false
-    },
-    {
-      "schema": "poc_private",
-      "name": "otp_receipts",
-      "column": "authority_revision",
-      "type": "int4",
-      "required": true,
-      "has_default": false
-    },
-    {
-      "schema": "poc_private",
-      "name": "otp_receipts",
-      "column": "fingerprint",
-      "type": "text",
-      "required": true,
-      "has_default": false
-    },
-    {
-      "schema": "poc_private",
-      "name": "otp_receipts",
-      "column": "result",
-      "type": "jsonb",
-      "required": true,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_call_events",
-      "column": "id",
-      "type": "int8",
-      "required": true,
-      "has_default": true
-    },
-    {
-      "schema": "public",
-      "name": "poc_call_events",
-      "column": "call_id",
-      "type": "uuid",
-      "required": true,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_call_events",
-      "column": "event",
-      "type": "text",
-      "required": true,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_call_events",
-      "column": "created_at",
-      "type": "timestamptz",
-      "required": true,
-      "has_default": true
-    },
-    {
-      "schema": "public",
-      "name": "poc_call_events",
-      "column": "metadata",
-      "type": "jsonb",
-      "required": true,
-      "has_default": true
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "id",
-      "type": "uuid",
-      "required": true,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "session_hash",
-      "type": "text",
-      "required": true,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "authority_check",
-      "type": "jsonb",
-      "required": false,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "authority_passed",
-      "type": "bool",
-      "required": true,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "created_at",
-      "type": "timestamptz",
-      "required": true,
-      "has_default": true
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "session_expires_at",
-      "type": "timestamptz",
-      "required": true,
-      "has_default": true
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "otp_state",
-      "type": "text",
-      "required": true,
-      "has_default": true
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "challenge_id",
-      "type": "uuid",
-      "required": false,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "otp_digest",
-      "type": "text",
-      "required": false,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "otp_expires_at",
-      "type": "timestamptz",
-      "required": false,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "otp_attempts",
-      "type": "int4",
-      "required": true,
-      "has_default": true
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "otp_verified_at",
-      "type": "timestamptz",
-      "required": false,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "demo_recipient",
-      "type": "text",
-      "required": false,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "authority_revision",
-      "type": "int4",
-      "required": true,
-      "has_default": true
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "available_load_ids",
-      "type": "jsonb",
-      "required": true,
-      "has_default": true
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "selected_load_id",
-      "type": "text",
-      "required": false,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "voice_run_id",
-      "type": "text",
-      "required": false,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "voice_state",
-      "type": "text",
-      "required": true,
-      "has_default": true
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "finalized_at",
-      "type": "timestamptz",
-      "required": false,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "final_outcome",
-      "type": "text",
-      "required": false,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "final_summary",
-      "type": "text",
-      "required": false,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "final_result",
-      "type": "jsonb",
-      "required": false,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "revision",
-      "type": "int8",
-      "required": true,
-      "has_default": true
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "otp_failures",
-      "type": "int4",
-      "required": true,
-      "has_default": true
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "booking",
-      "type": "jsonb",
-      "required": false,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "booking_terms",
-      "type": "jsonb",
-      "required": false,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "load_statuses",
-      "type": "jsonb",
-      "required": true,
-      "has_default": true
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "load_interest",
-      "type": "jsonb",
-      "required": false,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "source",
-      "type": "text",
-      "required": true,
-      "has_default": true
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "last_activity_at",
-      "type": "timestamptz",
-      "required": true,
-      "has_default": true
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "reported_end_reason",
-      "type": "text",
-      "required": false,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "ended_at",
-      "type": "timestamptz",
-      "required": false,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "end_evidence",
-      "type": "text",
-      "required": false,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_calls",
-      "column": "load_snapshots",
-      "type": "jsonb",
-      "required": true,
-      "has_default": true
-    },
-    {
-      "schema": "public",
-      "name": "poc_reviews",
-      "column": "id",
-      "type": "uuid",
-      "required": true,
-      "has_default": true
-    },
-    {
-      "schema": "public",
-      "name": "poc_reviews",
-      "column": "call_id",
-      "type": "uuid",
-      "required": true,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_reviews",
-      "column": "reason",
-      "type": "text",
-      "required": true,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_reviews",
-      "column": "status",
-      "type": "text",
-      "required": true,
-      "has_default": true
-    },
-    {
-      "schema": "public",
-      "name": "poc_reviews",
-      "column": "detail",
-      "type": "text",
-      "required": true,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_reviews",
-      "column": "callback_number",
-      "type": "text",
-      "required": false,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_reviews",
-      "column": "source_key",
-      "type": "text",
-      "required": true,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_reviews",
-      "column": "revision",
-      "type": "uuid",
-      "required": true,
-      "has_default": true
-    },
-    {
-      "schema": "public",
-      "name": "poc_reviews",
-      "column": "created_at",
-      "type": "timestamptz",
-      "required": true,
-      "has_default": true
-    },
-    {
-      "schema": "public",
-      "name": "poc_reviews",
-      "column": "updated_at",
-      "type": "timestamptz",
-      "required": true,
-      "has_default": true
-    },
-    {
-      "schema": "public",
-      "name": "poc_reviews",
-      "column": "resolution_note",
-      "type": "text",
-      "required": false,
-      "has_default": false
-    },
-    {
-      "schema": "public",
-      "name": "poc_reviews",
-      "column": "reviewed_at",
-      "type": "timestamptz",
-      "required": false,
-      "has_default": false
+      "indexdef": "CREATE UNIQUE INDEX poc_reviews_pkey ON public.poc_reviews USING btree (id)",
+      "indexname": "poc_reviews_pkey",
+      "tablename": "poc_reviews",
+      "schemaname": "public"
     }
   ],
-  "functions": [
+  "functions": 0,
+  "constraints": [
     {
-      "name": "poc_commit_call",
-      "return_type": "jsonb",
-      "args": [
-        {
-          "name": "p_key",
-          "type": "text",
-          "has_default": false
-        },
-        {
-          "name": "p_command",
-          "type": "jsonb",
-          "has_default": false
-        }
-      ]
+      "name": "negotiations_agreed_within_max",
+      "table": "negotiations",
+      "schema": "poc_private",
+      "definition": "CHECK (((agreed_cents > 0) AND (agreed_cents <= max_cents)))"
     },
     {
-      "name": "poc_insert_call",
-      "return_type": "jsonb",
-      "args": [
-        {
-          "name": "p_key",
-          "type": "text",
-          "has_default": false
-        },
-        {
-          "name": "p_call",
-          "type": "jsonb",
-          "has_default": false
-        },
-        {
-          "name": "p_previous_hash",
-          "type": "text",
-          "has_default": false
-        },
-        {
-          "name": "p_event",
-          "type": "jsonb",
-          "has_default": false
-        }
-      ]
+      "name": "negotiations_call_id_poc_calls_id_fk",
+      "table": "negotiations",
+      "schema": "poc_private",
+      "definition": "FOREIGN KEY (call_id) REFERENCES poc_calls(id)"
     },
     {
-      "name": "poc_query_calls",
-      "return_type": "jsonb",
-      "args": [
-        {
-          "name": "p_key",
-          "type": "text",
-          "has_default": false
-        },
-        {
-          "name": "p_operator_key",
-          "type": "text",
-          "has_default": false
-        },
-        {
-          "name": "p_offset",
-          "type": "int4",
-          "has_default": true
-        }
-      ]
+      "name": "negotiations_counter_rounds_check",
+      "table": "negotiations",
+      "schema": "poc_private",
+      "definition": "CHECK (((counter_rounds >= 0) AND (counter_rounds <= 3)))"
     },
     {
-      "name": "poc_read_call",
-      "return_type": "jsonb",
-      "args": [
-        {
-          "name": "p_key",
-          "type": "text",
-          "has_default": false
-        },
-        {
-          "name": "p_selector",
-          "type": "jsonb",
-          "has_default": false
-        }
-      ]
+      "name": "negotiations_listed_cents_check",
+      "table": "negotiations",
+      "schema": "poc_private",
+      "definition": "CHECK ((listed_cents > 0))"
     },
     {
-      "name": "poc_read_receipt",
-      "return_type": "jsonb",
-      "args": [
-        {
-          "name": "p_key",
-          "type": "text",
-          "has_default": false
-        },
-        {
-          "name": "p_call_id",
-          "type": "uuid",
-          "has_default": false
-        },
-        {
-          "name": "p_operation_id",
-          "type": "text",
-          "has_default": false
-        },
-        {
-          "name": "p_phase",
-          "type": "text",
-          "has_default": false
-        }
-      ]
+      "name": "negotiations_max_at_least_listed",
+      "table": "negotiations",
+      "schema": "poc_private",
+      "definition": "CHECK ((max_cents >= listed_cents))"
+    },
+    {
+      "name": "negotiations_offered_within_max",
+      "table": "negotiations",
+      "schema": "poc_private",
+      "definition": "CHECK (((offered_cents > 0) AND (offered_cents <= max_cents)))"
+    },
+    {
+      "name": "negotiations_pkey",
+      "table": "negotiations",
+      "schema": "poc_private",
+      "definition": "PRIMARY KEY (call_id)"
+    },
+    {
+      "name": "negotiations_status_check",
+      "table": "negotiations",
+      "schema": "poc_private",
+      "definition": "CHECK ((status = ANY (ARRAY['idle'::text, 'offered'::text, 'agreed'::text, 'rejected'::text, 'failed'::text])))"
+    },
+    {
+      "name": "offer_receipts_call_id_offer_id_pk",
+      "table": "offer_receipts",
+      "schema": "poc_private",
+      "definition": "PRIMARY KEY (call_id, offer_id)"
+    },
+    {
+      "name": "offer_receipts_call_id_poc_calls_id_fk",
+      "table": "offer_receipts",
+      "schema": "poc_private",
+      "definition": "FOREIGN KEY (call_id) REFERENCES poc_calls(id)"
+    },
+    {
+      "name": "operation_receipts_call_id_operation_id_phase_pk",
+      "table": "operation_receipts",
+      "schema": "poc_private",
+      "definition": "PRIMARY KEY (call_id, operation_id, phase)"
+    },
+    {
+      "name": "operation_receipts_call_id_poc_calls_id_fk",
+      "table": "operation_receipts",
+      "schema": "poc_private",
+      "definition": "FOREIGN KEY (call_id) REFERENCES poc_calls(id)"
+    },
+    {
+      "name": "operator_access_pkey",
+      "table": "operator_access",
+      "schema": "poc_private",
+      "definition": "PRIMARY KEY (key_hash)"
+    },
+    {
+      "name": "otp_receipts_call_id_operation_id_pk",
+      "table": "otp_receipts",
+      "schema": "poc_private",
+      "definition": "PRIMARY KEY (call_id, operation_id)"
+    },
+    {
+      "name": "otp_receipts_call_id_poc_calls_id_fk",
+      "table": "otp_receipts",
+      "schema": "poc_private",
+      "definition": "FOREIGN KEY (call_id) REFERENCES poc_calls(id)"
+    },
+    {
+      "name": "poc_call_events_call_id_poc_calls_id_fk",
+      "table": "poc_call_events",
+      "schema": "public",
+      "definition": "FOREIGN KEY (call_id) REFERENCES poc_calls(id)"
+    },
+    {
+      "name": "poc_call_events_pkey",
+      "table": "poc_call_events",
+      "schema": "public",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "poc_calls_otp_failures_check",
+      "table": "poc_calls",
+      "schema": "public",
+      "definition": "CHECK (((otp_failures >= 0) AND (otp_failures <= 2)))"
+    },
+    {
+      "name": "poc_calls_otp_state_check",
+      "table": "poc_calls",
+      "schema": "public",
+      "definition": "CHECK ((otp_state = ANY (ARRAY['not_sent'::text, 'dispatching'::text, 'pending'::text, 'failed'::text, 'expired'::text, 'locked'::text, 'verified'::text])))"
+    },
+    {
+      "name": "poc_calls_pkey",
+      "table": "poc_calls",
+      "schema": "public",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "poc_calls_revision_check",
+      "table": "poc_calls",
+      "schema": "public",
+      "definition": "CHECK ((revision >= 0))"
+    },
+    {
+      "name": "poc_calls_session_hash_check",
+      "table": "poc_calls",
+      "schema": "public",
+      "definition": "CHECK ((session_hash ~ '^[a-f0-9]{64}$'::text))"
+    },
+    {
+      "name": "poc_calls_session_hash_unique",
+      "table": "poc_calls",
+      "schema": "public",
+      "definition": "UNIQUE (session_hash)"
+    },
+    {
+      "name": "poc_calls_voice_run_id_unique",
+      "table": "poc_calls",
+      "schema": "public",
+      "definition": "UNIQUE (voice_run_id)"
+    },
+    {
+      "name": "poc_calls_voice_state_check",
+      "table": "poc_calls",
+      "schema": "public",
+      "definition": "CHECK ((voice_state = ANY (ARRAY['idle'::text, 'creating'::text, 'ready'::text, 'failed'::text])))"
+    },
+    {
+      "name": "poc_reviews_call_id_poc_calls_id_fk",
+      "table": "poc_reviews",
+      "schema": "public",
+      "definition": "FOREIGN KEY (call_id) REFERENCES poc_calls(id)"
+    },
+    {
+      "name": "poc_reviews_call_id_reason_key",
+      "table": "poc_reviews",
+      "schema": "public",
+      "definition": "UNIQUE (call_id, reason)"
+    },
+    {
+      "name": "poc_reviews_pkey",
+      "table": "poc_reviews",
+      "schema": "public",
+      "definition": "PRIMARY KEY (id)"
+    },
+    {
+      "name": "poc_reviews_status_check",
+      "table": "poc_reviews",
+      "schema": "public",
+      "definition": "CHECK ((status = ANY (ARRAY['open'::text, 'reviewed'::text])))"
     }
   ]
 }

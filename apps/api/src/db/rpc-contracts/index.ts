@@ -47,7 +47,7 @@ export type TrackAction = z.infer<typeof TrackActionSchema>;
 export type RpcName = keyof DatabaseRpc;
 
 // Compatibility command contracts. Actual Twin persistence signatures are
-// generated separately and refined by persistenceInputs in persistence.ts.
+// defined by Drizzle; runtime row validation is in db/model.ts.
 export const rpcInputs = {
   poc_start_call: z.strictObject({
     p_id: text,

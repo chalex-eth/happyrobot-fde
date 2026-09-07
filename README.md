@@ -1,5 +1,7 @@
 # Carrier sales — local POC
 
+**Current branch:** backend persistence uses Drizzle and the Twin SQL API with `TWIN_API_KEY`. Its fresh baseline has not been applied to shared Twin. Complete the separate schema/data/credential rollout before restarting this branch against that database. See [architecture](docs/architecture.md).
+
 ## One-command local startup
 
 With Docker Desktop running, use `npm run local:up`, then open **http://localhost:3000**. This starts the web app, API, MCP proxy and stable ngrok tunnel, then verifies the HappyRobot development connection. Use `npm run local:down` to stop them. See [Docker setup and troubleshooting](docs/local-docker.md) for one-time configuration.

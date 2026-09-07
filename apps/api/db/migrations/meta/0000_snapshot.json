@@ -1,0 +1,898 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.poc_calls": {
+      "name": "poc_calls",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "session_hash": {
+          "name": "session_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "authority_check": {
+          "name": "authority_check",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "authority_passed": {
+          "name": "authority_passed",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "session_expires_at": {
+          "name": "session_expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now() + interval '1 hour'"
+        },
+        "otp_state": {
+          "name": "otp_state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'not_sent'"
+        },
+        "challenge_id": {
+          "name": "challenge_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "otp_digest": {
+          "name": "otp_digest",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "otp_expires_at": {
+          "name": "otp_expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "otp_attempts": {
+          "name": "otp_attempts",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "otp_verified_at": {
+          "name": "otp_verified_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "demo_recipient": {
+          "name": "demo_recipient",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "authority_revision": {
+          "name": "authority_revision",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "available_load_ids": {
+          "name": "available_load_ids",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'[]'::jsonb"
+        },
+        "selected_load_id": {
+          "name": "selected_load_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "voice_run_id": {
+          "name": "voice_run_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "voice_state": {
+          "name": "voice_state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'idle'"
+        },
+        "finalized_at": {
+          "name": "finalized_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "final_outcome": {
+          "name": "final_outcome",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "final_summary": {
+          "name": "final_summary",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "final_result": {
+          "name": "final_result",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "revision": {
+          "name": "revision",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "otp_failures": {
+          "name": "otp_failures",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "booking": {
+          "name": "booking",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "booking_terms": {
+          "name": "booking_terms",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "load_statuses": {
+          "name": "load_statuses",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        },
+        "load_interest": {
+          "name": "load_interest",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source": {
+          "name": "source",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'unknown'"
+        },
+        "last_activity_at": {
+          "name": "last_activity_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "reported_end_reason": {
+          "name": "reported_end_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ended_at": {
+          "name": "ended_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "end_evidence": {
+          "name": "end_evidence",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "load_snapshots": {
+          "name": "load_snapshots",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        }
+      },
+      "indexes": {
+        "poc_calls_recent": {
+          "name": "poc_calls_recent",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "poc_booking_load_claim": {
+          "name": "poc_booking_load_claim",
+          "columns": [
+            {
+              "expression": "(\"booking\"->>'load_id')",
+              "asc": true,
+              "isExpression": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"poc_calls\".\"booking\"->>'status' in ('pending','confirmed','uncertain') and coalesce(\"poc_calls\".\"booking\"->>'simulated','false') <> 'true'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "poc_calls_session_hash_unique": {
+          "name": "poc_calls_session_hash_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "session_hash"
+          ]
+        },
+        "poc_calls_voice_run_id_unique": {
+          "name": "poc_calls_voice_run_id_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "voice_run_id"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "poc_calls_revision_check": {
+          "name": "poc_calls_revision_check",
+          "value": "\"poc_calls\".\"revision\" >= 0"
+        },
+        "poc_calls_otp_failures_check": {
+          "name": "poc_calls_otp_failures_check",
+          "value": "\"poc_calls\".\"otp_failures\" between 0 and 2"
+        },
+        "poc_calls_session_hash_check": {
+          "name": "poc_calls_session_hash_check",
+          "value": "\"poc_calls\".\"session_hash\" ~ '^[a-f0-9]{64}$'"
+        },
+        "poc_calls_otp_state_check": {
+          "name": "poc_calls_otp_state_check",
+          "value": "\"poc_calls\".\"otp_state\" in ('not_sent','dispatching','pending','failed','expired','locked','verified')"
+        },
+        "poc_calls_voice_state_check": {
+          "name": "poc_calls_voice_state_check",
+          "value": "\"poc_calls\".\"voice_state\" in ('idle','creating','ready','failed')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "public.poc_call_events": {
+      "name": "poc_call_events",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "bigint",
+          "primaryKey": true,
+          "notNull": true,
+          "identity": {
+            "type": "always",
+            "name": "poc_call_events_id_seq",
+            "schema": "public",
+            "increment": "1",
+            "startWith": "1",
+            "minValue": "1",
+            "maxValue": "9223372036854775807",
+            "cache": "1",
+            "cycle": false
+          }
+        },
+        "call_id": {
+          "name": "call_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event": {
+          "name": "event",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'{}'::jsonb"
+        }
+      },
+      "indexes": {
+        "poc_events_call_time": {
+          "name": "poc_events_call_time",
+          "columns": [
+            {
+              "expression": "call_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "poc_events_send_time": {
+          "name": "poc_events_send_time",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"poc_call_events\".\"event\" = 'otp_requested'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "poc_call_events_call_id_poc_calls_id_fk": {
+          "name": "poc_call_events_call_id_poc_calls_id_fk",
+          "tableFrom": "poc_call_events",
+          "tableTo": "poc_calls",
+          "columnsFrom": [
+            "call_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "poc_private.negotiations": {
+      "name": "negotiations",
+      "schema": "poc_private",
+      "columns": {
+        "call_id": {
+          "name": "call_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "authority_revision": {
+          "name": "authority_revision",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "load_id": {
+          "name": "load_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "offer_id": {
+          "name": "offer_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "listed_cents": {
+          "name": "listed_cents",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "max_cents": {
+          "name": "max_cents",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "offered_cents": {
+          "name": "offered_cents",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "agreed_cents": {
+          "name": "agreed_cents",
+          "type": "bigint",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "counter_rounds": {
+          "name": "counter_rounds",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'offered'"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "negotiations_call_id_poc_calls_id_fk": {
+          "name": "negotiations_call_id_poc_calls_id_fk",
+          "tableFrom": "negotiations",
+          "tableTo": "poc_calls",
+          "columnsFrom": [
+            "call_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "negotiations_max_at_least_listed": {
+          "name": "negotiations_max_at_least_listed",
+          "value": "\"poc_private\".\"negotiations\".\"max_cents\" >= \"poc_private\".\"negotiations\".\"listed_cents\""
+        },
+        "negotiations_offered_within_max": {
+          "name": "negotiations_offered_within_max",
+          "value": "\"poc_private\".\"negotiations\".\"offered_cents\" > 0 and \"poc_private\".\"negotiations\".\"offered_cents\" <= \"poc_private\".\"negotiations\".\"max_cents\""
+        },
+        "negotiations_agreed_within_max": {
+          "name": "negotiations_agreed_within_max",
+          "value": "\"poc_private\".\"negotiations\".\"agreed_cents\" > 0 and \"poc_private\".\"negotiations\".\"agreed_cents\" <= \"poc_private\".\"negotiations\".\"max_cents\""
+        },
+        "negotiations_counter_rounds_check": {
+          "name": "negotiations_counter_rounds_check",
+          "value": "\"poc_private\".\"negotiations\".\"counter_rounds\" between 0 and 3"
+        },
+        "negotiations_listed_cents_check": {
+          "name": "negotiations_listed_cents_check",
+          "value": "\"poc_private\".\"negotiations\".\"listed_cents\" > 0"
+        },
+        "negotiations_status_check": {
+          "name": "negotiations_status_check",
+          "value": "\"poc_private\".\"negotiations\".\"status\" in ('idle','offered','agreed','rejected','failed')"
+        }
+      },
+      "isRLSEnabled": false
+    },
+    "poc_private.offer_receipts": {
+      "name": "offer_receipts",
+      "schema": "poc_private",
+      "columns": {
+        "call_id": {
+          "name": "call_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "offer_id": {
+          "name": "offer_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fingerprint": {
+          "name": "fingerprint",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "result": {
+          "name": "result",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "offer_receipts_call_id_poc_calls_id_fk": {
+          "name": "offer_receipts_call_id_poc_calls_id_fk",
+          "tableFrom": "offer_receipts",
+          "tableTo": "poc_calls",
+          "columnsFrom": [
+            "call_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "offer_receipts_call_id_offer_id_pk": {
+          "name": "offer_receipts_call_id_offer_id_pk",
+          "columns": [
+            "call_id",
+            "offer_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "poc_private.operation_receipts": {
+      "name": "operation_receipts",
+      "schema": "poc_private",
+      "columns": {
+        "call_id": {
+          "name": "call_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "operation_id": {
+          "name": "operation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "phase": {
+          "name": "phase",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fingerprint": {
+          "name": "fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "result": {
+          "name": "result",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "operation_receipts_call_id_poc_calls_id_fk": {
+          "name": "operation_receipts_call_id_poc_calls_id_fk",
+          "tableFrom": "operation_receipts",
+          "tableTo": "poc_calls",
+          "columnsFrom": [
+            "call_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "operation_receipts_call_id_operation_id_phase_pk": {
+          "name": "operation_receipts_call_id_operation_id_phase_pk",
+          "columns": [
+            "call_id",
+            "operation_id",
+            "phase"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "poc_private.operator_access": {
+      "name": "operator_access",
+      "schema": "poc_private",
+      "columns": {
+        "key_hash": {
+          "name": "key_hash",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "poc_private.otp_receipts": {
+      "name": "otp_receipts",
+      "schema": "poc_private",
+      "columns": {
+        "call_id": {
+          "name": "call_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "operation_id": {
+          "name": "operation_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "authority_revision": {
+          "name": "authority_revision",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fingerprint": {
+          "name": "fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "result": {
+          "name": "result",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "otp_receipts_call_id_poc_calls_id_fk": {
+          "name": "otp_receipts_call_id_poc_calls_id_fk",
+          "tableFrom": "otp_receipts",
+          "tableTo": "poc_calls",
+          "columnsFrom": [
+            "call_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "otp_receipts_call_id_operation_id_pk": {
+          "name": "otp_receipts_call_id_operation_id_pk",
+          "columns": [
+            "call_id",
+            "operation_id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.poc_reviews": {
+      "name": "poc_reviews",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "call_id": {
+          "name": "call_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "reason": {
+          "name": "reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'open'"
+        },
+        "detail": {
+          "name": "detail",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "callback_number": {
+          "name": "callback_number",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "source_key": {
+          "name": "source_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "revision": {
+          "name": "revision",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "resolution_note": {
+          "name": "resolution_note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "reviewed_at": {
+          "name": "reviewed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "poc_reviews_open": {
+          "name": "poc_reviews_open",
+          "columns": [
+            {
+              "expression": "updated_at",
+              "isExpression": false,
+              "asc": false,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"poc_reviews\".\"status\" = 'open'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "poc_reviews_call_id_poc_calls_id_fk": {
+          "name": "poc_reviews_call_id_poc_calls_id_fk",
+          "tableFrom": "poc_reviews",
+          "tableTo": "poc_calls",
+          "columnsFrom": [
+            "call_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "poc_reviews_call_id_reason_key": {
+          "name": "poc_reviews_call_id_reason_key",
+          "nullsNotDistinct": false,
+          "columns": [
+            "call_id",
+            "reason"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {
+        "poc_reviews_status_check": {
+          "name": "poc_reviews_status_check",
+          "value": "\"poc_reviews\".\"status\" in ('open','reviewed')"
+        }
+      },
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {
+    "poc_private": "poc_private"
+  },
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "id": "76f8dfbc-6a33-42b2-88f8-aeab736f0d4c",
+  "prevId": "00000000-0000-0000-0000-000000000000"
+}

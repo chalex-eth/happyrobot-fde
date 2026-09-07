@@ -25,7 +25,7 @@ try {
     if (!domain || !/^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\.[a-z]{2,}$/i.test(domain)) throw Error('Set NGROK_DOMAIN to your assigned hostname, without https:// or a path.');
     if (process.env.MCP_PUBLIC_URL !== `https://${domain}/api/mcp`) throw Error('MCP_PUBLIC_URL must be https://NGROK_DOMAIN/api/mcp. Update .env.local before starting.');
     if (process.env.HAPPYROBOT_ENVIRONMENT !== 'development') throw Error('HAPPYROBOT_ENVIRONMENT must be development.');
-    for (const key of ['NGROK_AUTHTOKEN', 'MCP_AUTH_TOKEN', 'HAPPYROBOT_API_KEY', 'HAPPYROBOT_WORKFLOW_ID', 'HAPPYROBOT_MCP_SERVER_NAME', 'OTP_HASH_SECRET', 'TWIN_GATEWAY', 'TWIN_ORG_ID', 'TMS_HOST', 'TMS_PORT', 'TMS_TOKEN', 'FMCSA_API_KEY']) {
+    for (const key of ['NGROK_AUTHTOKEN', 'MCP_AUTH_TOKEN', 'HAPPYROBOT_API_KEY', 'HAPPYROBOT_WORKFLOW_ID', 'HAPPYROBOT_MCP_SERVER_NAME', 'OTP_HASH_SECRET', 'TWIN_API_KEY', 'TMS_HOST', 'TMS_PORT', 'TMS_TOKEN', 'FMCSA_API_KEY']) {
       if (!process.env[key]) throw Error(`Missing ${key}.`);
     }
     if (process.env.OTP_DEMO_MODE !== 'true' || process.env.OTP_DELIVERY_MODE !== 'mock') throw Error('This local stack requires OTP_DEMO_MODE=true and OTP_DELIVERY_MODE=mock.');

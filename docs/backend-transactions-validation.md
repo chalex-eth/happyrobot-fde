@@ -1,3 +1,5 @@
+> Historical validation of the intermediate RPC persistence implementation. The current branch uses Drizzle and a schema-only baseline; see [current validation](drizzle-backend-validation.md).
+
 # Backend transaction refactor validation
 
 Branch: `codex/backend-transactions-baseline`.
