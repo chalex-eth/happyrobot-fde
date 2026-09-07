@@ -1,82 +1,92 @@
-# One-command local development
+# Local Docker setup
 
-From the repository root, with Docker Desktop running:
+With Docker Desktop running, configure the two ignored environment files and
+start the complete development stack:
 
-```sh
+~~~sh
+cp .env.example .env.local
+cp .env.docker.example .env.docker.local
+npm ci
 npm run local:up
-```
+~~~
 
-Open **http://localhost:3000**. The command builds the current source, starts the three containers, waits for app/proxy readiness, discovers the eight tools over the public HTTPS endpoint, and checks the live HappyRobot development version. It exits unsuccessfully if the saved connection, tool bindings, or run header do not match. The check never creates a call or publishes a workflow. A failed check leaves the containers running for diagnosis.
+Open http://localhost:3000.
 
-```sh
-npm run local:status  # Container status
-npm run local:check   # Repeat public MCP discovery and live workflow checks
-npm run local:logs    # Follow recent service logs; Ctrl-C stops log viewing
-npm run local:down    # Stop this stack and its tunnel
-```
+## Commands
 
-To keep the tunnel running while working on the app:
+~~~sh
+npm run local:status   # Container status
+npm run local:check    # Repeat startup and MCP checks
+npm run local:logs     # Follow service logs
+npm run app:stop       # Stop web and API only
+npm run app:restart    # Rebuild and restart web and API
+npm run local:down     # Stop the whole stack
+~~~
 
-```sh
-npm run app:stop      # Stop only the app; keep ngrok and the proxy running
-npm run app:restart   # Rebuild/recreate only the app, then verify the connection
-```
+Use one lifecycle at a time. Do not run the manual dev/proxy/tunnel commands
+while the Compose stack owns ports 3000, 3002, and 4040.
 
-Start the full stack once with `local:up`. `app:restart` applies current source and environment changes without restarting the proxy or ngrok. During an app stop/restart, the public URL stays the same but MCP tool calls fail until the app is healthy again. The proxy may show unhealthy while the app is stopped; it recovers when the app returns. Your Mac and Docker must remain running to keep this local tunnel online. Use `local:down` only when you also want to stop the tunnel. These commands use the normal configuration, not the optional evaluation overlay.
+## Configuration
 
-`local:up` is also the command to apply source or environment changes. It uses the Docker build cache. Ordinary restarts reuse the same ngrok domain and saved HappyRobot credential. Docker restarts the containers after a daemon restart unless they were explicitly stopped; run `local:check` to verify the external configuration again.
+Set the service credentials in .env.local:
 
-## One-time configuration
+- TMS_HOST, TMS_PORT, TMS_TOKEN
+- FMCSA_API_KEY
+- TWIN_API_KEY
+- HAPPYROBOT_API_KEY and HAPPYROBOT_WORKFLOW_ID
+- MCP_AUTH_TOKEN and MCP_PUBLIC_URL
+- HAPPYROBOT_MCP_SERVER_NAME
+- OTP_HASH_SECRET
 
-The current machine uses its existing `.env.local` plus an ignored `.env.docker.local`. Credentials are injected at runtime and excluded from the Docker build context. The ngrok token is only passed to the ngrok container. Do not commit either file or paste the output of `docker compose config` (without `--quiet`), which can contain expanded secrets.
+Set NGROK_DOMAIN and NGROK_AUTHTOKEN in .env.docker.local. The public MCP URL
+must be exactly:
 
-For another machine:
+    https://NGROK_DOMAIN/api/mcp
 
-1. Install Docker Desktop and Node 22. Copy `.env.example` to `.env.local` and fill the existing service credentials. Use `HAPPYROBOT_ENVIRONMENT=development`, `OTP_DEMO_MODE=true`, `OTP_DELIVERY_MODE=mock`, and the negotiation setting appropriate to the existing Twin workspace. Do not rerun shared migrations.
-2. Copy `.env.docker.example` to `.env.docker.local`. Set `NGROK_DOMAIN` to the hostname assigned to your ngrok account and `NGROK_AUTHTOKEN` to that account's tunnel token.
-3. Set `MCP_PUBLIC_URL=https://NGROK_DOMAIN/api/mcp` in `.env.local` using the actual hostname. Set `HAPPYROBOT_MCP_SERVER_NAME` to the saved normal development MCP connection's name.
-4. The saved HappyRobot connection must use the same URL/token, and the live development version must use it on every Tool/MCP Call pair with `x-happyrobot-run-id` mapped to **Current > Run ID**. Provisioning or changing that connection is a separate explicit operation using the [agent runbook](happyrobot-agent-runbook.md); startup does not rewrite HappyRobot configuration.
+Use HAPPYROBOT_ENVIRONMENT=development. Local Docker pins OTP to demo mode and
+booking to mock mode. Never commit either environment file or print expanded
+Compose configuration.
 
-The stable domain configured for this checkout is `nonissuably-overgreasy-georgiann.ngrok-free.dev`. It is already assigned to the user's ngrok account; no paid domain was purchased.
+## Services
 
-As checked on 6 September, development uses **Version 18: Local app — normal MCP restored**, connection **Carrier sales Docker development MCP**. This replaces isolated Version 16, which had caused HTTP 404 on normal app calls by pointing to the disabled `/api/mcp/adversarial` route. Exact IDs and validation scope are recorded in [repair evidence](mcp-repair-validation.json); [original Docker rollout evidence](local-docker-validation.json) describes the earlier seven-tool Version 13. Start a fresh app call after changing the live version.
+~~~text
+Browser -> app:3000 -> api:3001
+HappyRobot -> ngrok -> mcp-proxy:3002 -> api:3001/api/mcp
+~~~
 
-## Services and boundaries
+- app runs Next.js and binds only to loopback on the host.
+- api owns credentials, business rules, integrations, and Twin access.
+- mcp-proxy exposes only the normal authenticated MCP path.
+- ngrok provides the public HTTPS endpoint for HappyRobot.
 
-```text
-Browser → localhost:3000 → app (web) → api:3001
-HappyRobot → stable HTTPS domain → ngrok → mcp-proxy:3002 → api:3001/api/mcp
-```
+The Compose project does not start or migrate a database. Twin must already
+contain the schema required by the configured features. The fresh Drizzle
+baseline must not be replayed against an existing shared workspace.
 
-- `app`: Node 22 / Next development server; host port 3000 is bound only to `127.0.0.1`. Development mode is required by the local console and screen OTP. This is a local demo, not a production deployment.
-- `api`: independent Node HTTP/MCP server; owns all integration credentials and Twin calls, with no published host port.
-- `mcp-proxy`: private container port 3002, reachable by ngrok through Docker service DNS. Only exact `/api/mcp` is exposed in this stack; cookies and unrelated headers are stripped. The proxy itself has no application credentials.
-- `ngrok`: fixed account domain, inspection disabled, diagnostic API bound to host `127.0.0.1:4040`. The image is pinned by digest. The endpoint requires `MCP_AUTH_TOKEN` independently of ngrok authentication.
-- HappyRobot, Twin, FMCSA and the TMS remain external dependencies. This Compose project does not start or migrate a database. Any VPN/network access those services require must also work from Docker Desktop.
+## Verification
 
-The normal stack explicitly disables adversarial sessions and the proxy's adversarial path. Native conversation evals still use their separate controller and test draft; do not publish those drafts for browser calls. Stop this Compose stack before reverting to the manual dev/proxy/tunnel commands, since ports 3000 and 4040 would conflict. Never kill unrelated containers or remove an active evaluation lock.
+Startup checks public MCP discovery, the saved connection, tool bindings, and
+the Current > Run ID header. It does not prove microphone, audio, or complete
+spoken conversation behavior.
 
-## Verification and limitations
+For an explicit backend smoke test:
 
-`local:check` is read-only: public authenticated discovery plus remote configuration checks. It validates every tool's credential, the action credential, the Current Run ID header, and argument references against persistent tool IDs. It does not prove microphone/TTS quality or full agent conversation behavior.
+~~~sh
+npm run verify:mcp
+~~~
 
-For an explicit real backend smoke test, run:
+The smoke creates its own call and provider run, exercises authenticated
+FMCSA/OTP/TMS paths, finalizes the call, and cleans up its provider run. It does
+not use the operator's browser call and does not prove audio quality.
 
-```sh
-docker compose --env-file .env.local --env-file .env.docker.local exec -T api \
-  node --import tsx scripts/verify-mcp.ts --city-first
-```
+## Troubleshooting
 
-This creates and finalizes its own Twin call, creates/cancels its own provider run, and exercises real FMCSA, OTP and TMS queries through ngrok. It does not negotiate or book. Evidence is written inside the API container at `/app/docs/city-first-mcp-evidence.json`; copy it out before recreating the container if needed.
+- Missing environment files: copy both examples and fill every required key.
+- Startup configuration failure: check NGROK_DOMAIN, MCP_PUBLIC_URL, the saved
+  HappyRobot connection, and development environment selection.
+- Port conflict: stop the other local lifecycle before running local:up.
+- API or proxy unhealthy: inspect local:status and local:logs, then retry
+  local:check after the app is healthy.
 
-For a production-build compatibility check, use an isolated container so build files do not interfere with the running dev server:
-
-```sh
-docker run --rm -e NODE_ENV=production carrier-sales-local:dev npm run build
-```
-
-If the startup check fails, read the specific error and inspect `local:status` / `local:logs`. Common causes are occupied host ports, a stopped Docker daemon, an unavailable domain/token, a changed HappyRobot live version, or a workflow still using an isolated test connection. A running container alone is not a verified integration.
-
-## Simulated booking in local tests
-
-The API service pins `BOOKING_TMS_MODE=mock`. `book_load` saves a simulated booking in Twin and never sends `LOAD_BOOK`; real TMS searches and OPEN-load checks continue. Mock confirmation uses a `MOCK-…` reference and the final disposition `booking_simulated`. Restart with `npm run app:restart` after changing application code. Existing PENDING inventory is not reset.
+The local stack is a demo environment. It does not provide production
+deployment, real OTP delivery, outbound callbacks, or real booking writes.

@@ -1,175 +1,194 @@
 ---
-name: Carrier sales POC
-description: Light ink-and-teal workspace for carrier calls and brokerage operations.
+name: HappyRobot Logistics operations
+description: Warm paper, black ink and signal color for a HappyRobot-inspired carrier operations desk.
 colors:
-  ink: "#203d39"
-  muted: "#526760"
-  line: "#d9e2dc"
-  paper: "#f6f8f5"
-  teal: "#205c50"
-  teal-hover: "#16483e"
-  white: "#ffffff"
-  focus: "#297d70"
-  route-open: "#2c7c68"
-  route-pending: "#ab702e"
-  route-selected: "#173c8b"
+  ink: "#1d211f"
+  ink-soft: "#303834"
+  muted: "#66716b"
+  line: "#d5d7cf"
+  paper: "#f3f0e8"
+  surface: "#fffdf8"
+  surface-2: "#ebe9e1"
+  teal: "#0f5a4d"
+  gold: "#e6b333"
+  orange: "#ee704a"
+  orange-deep: "#a9462e"
+  slate: "#263633"
+  focus: "#087662"
 typography:
   display:
     fontFamily: "Georgia, 'Times New Roman', serif"
-    fontSize: "clamp(27px, 2.8vw, 38px)"
+    fontSize: "clamp(48px, 6vw, 84px)"
     fontWeight: 500
-    lineHeight: 1.16
-    letterSpacing: "-.025em"
-  headline:
+    lineHeight: 0.95
+    letterSpacing: "-.055em"
+  section:
     fontFamily: "Georgia, 'Times New Roman', serif"
-    fontSize: "30px"
+    fontSize: "clamp(42px, 5vw, 72px)"
     fontWeight: 500
-    letterSpacing: "-.025em"
-  title:
-    fontFamily: "Arial, Helvetica, sans-serif"
-    fontSize: "20px"
-    fontWeight: 600
-    letterSpacing: "-.025em"
+    lineHeight: 0.98
+    letterSpacing: "-.03em"
   body:
-    fontFamily: "Arial, Helvetica, sans-serif"
+    fontFamily: "'Helvetica Neue', Helvetica, sans-serif"
     lineHeight: 1.55
   label:
-    fontFamily: "Arial, Helvetica, sans-serif"
+    fontFamily: "'Helvetica Neue', Helvetica, sans-serif"
     fontSize: "12px"
-    fontWeight: 600
+    fontWeight: 700
+    letterSpacing: ".02em"
 rounded:
-  badge: "4px"
-  field: "7px"
-  button: "8px"
-  panel: "14px"
-  banner: "16px"
+  button: "0"
+  field: "0"
+  panel: "0"
 spacing:
   compact: "8px"
   small: "12px"
-  medium: "16px"
-  large: "24px"
-  section: "32px"
-  wide: "40px"
+  medium: "18px"
+  large: "28px"
+  section: "54px"
+  wide: "82px"
 components:
   button-primary:
-    backgroundColor: "{colors.teal}"
-    textColor: "{colors.white}"
+    backgroundColor: "{colors.ink}"
+    textColor: "{colors.paper}"
     rounded: "{rounded.button}"
     padding: "11px 18px"
   button-primary-hover:
-    backgroundColor: "{colors.teal-hover}"
+    backgroundColor: "{colors.orange}"
+    textColor: "{colors.ink}"
   button-secondary:
-    backgroundColor: "{colors.white}"
+    backgroundColor: "transparent"
     textColor: "{colors.ink}"
     rounded: "{rounded.button}"
     padding: "11px 18px"
-  button-text:
-    backgroundColor: "transparent"
-    textColor: "{colors.muted}"
-    padding: "8px"
   field:
-    backgroundColor: "{colors.white}"
+    backgroundColor: "{colors.surface}"
     textColor: "{colors.ink}"
     rounded: "{rounded.field}"
     padding: "11px 12px"
-  panel:
-    backgroundColor: "{colors.white}"
-    rounded: "{rounded.panel}"
-  badge:
-    rounded: "{rounded.badge}"
-    padding: "4px 7px"
+  state:
+    open: "{colors.teal}"
+    pending: "{colors.orange}"
+    selected: "#164f88"
 ---
 
-# Design System: Carrier sales POC
+# Design System: HappyRobot Logistics operations
 
 ## Overview
 
-**Creative North Star: "The operations desk"**
+**Creative North Star: "The carrier timetable"**
 
-The existing interface pairs light paper and white surfaces with dark green ink and a restrained teal action color. Serif page headings separate major groups; compact sans-serif controls and records support operational reading. The north star uses the implemented section title, rather than introducing a new brand concept.
+The operator dashboard translates HappyRobot's warm editorial brand into a working
+surface for logistics operations. The page is a ruled schedule board: the live call is the
+dark anchor, the TMS map and lane list are the current network, and the review queue
+is the next set of decisions. The reference site's confident serif scale and black
+ink are carried into the app without turning an operational tool into a marketing
+page.
 
-This is a source-derived record of the incumbent POC, grounded in `apps/web/src/app/globals.css` and the call, map and operator components. Surface-specific composition remains in `docs/m5-design.md`; product scope remains in `PRODUCT.md`.
-
-**Key Characteristics:**
-- Light surfaces, green ink and restrained borders.
-- Serif section headings with practical sans-serif data and controls.
-- Spacious groups around compact operational records.
-- Explicit state labels and visible keyboard focus.
+The design also borrows the discipline of a pocket timetable: a continuous paper
+ground, flat panels, strong rules, compact state labels and a small signal palette.
+The layout may become dense when the data is dense, but the current task remains
+visible at the top and the next action is always labeled.
 
 ## Colors
 
-### Primary
+Warm paper is the page ground and pale ivory is the working surface. Black-green ink
+anchors headings and primary actions. The lane list and performance panel share the
+same pale working surface as the rest of the dashboard, keeping the workspace light
+and readable. Teal means an available or confirmed operational path; orange marks the
+live demo, waiting work and pending routes; gold highlights the selected summary
+state and important demo cues. Blue is reserved for a selected or focused route.
 
-Teal marks primary actions, links and detail affordances. Its deeper hover tone provides immediate feedback. The focus color gives keyboard users a separate, conspicuous outline.
-
-### Neutral
-
-Ink carries headings and primary facts; muted green carries supporting text. Paper forms the page background, white forms panels and fields, and the line color divides related records without heavy frames.
-
-Route colors encode open, pending/other and selected states. Pending routes also use dashes, and selection also increases line weight. Success, danger and simulation badges use distinct pale fills with readable dark labels; preserve the source variants rather than treating their colors as new brand accents.
+All state colors retain a text label. Error and partial-data notices keep a separate
+warm error treatment and explain the recovery action.
 
 ## Typography
 
-Georgia with Times New Roman fallback supplies display and section headings. Arial with Helvetica fallback supplies the body, forms and records. Identifiers alone use monospace; times, OTP output and counts use tabular numerals.
-
-The headline role drops to 26px on mobile. Operational text mostly uses 11–15px according to density, with 16px headings inside expanded details. OTP digits use a bold 30px treatment, increasing to 32px on mobile. Keep their letter spacing and single-line presentation. Long detail paragraphs are capped at 75ch.
+Georgia supplies the editorial display voice for the call prompt and operations
+heading. Helvetica Neue carries controls, records, labels and metadata. Large headings stay
+short and balanced; data uses tabular numerals and identifiers use monospace only
+when the identifier itself is the content. Labels are uppercase where they function
+as timetable headers, not as decorative kicker text.
 
 ## Layout
 
-The centered page is capped at 1440px with 40px horizontal padding, changing to 52px above 1500px, 24px at 1100px and 16px at 760px. Reuse the observed spacing steps rather than adding a new scale.
+The page is a single operator workspace capped at 1500px, with generous paper around
+the live call and a strong rule starting the operations section. The first viewport
+exposes the live call trigger and verification-code area before the TMS workspace.
+Desktop coverage uses a map and a light lane list side by side. Calls remain a ruled
+table on wide screens and become two-column records on mobile. The three summary
+filters form one connected row instead of separate floating cards. The performance
+panel closes the page as a light ruled instrument.
 
-At desktop widths, the call banner uses two columns, and lane coverage uses a wider map beside a load list. At 1100px, OTP stacks directly below the call controls. At 760px, the banner, map/list and call-detail columns stack; OTP remains in the call interaction group. Mobile call rows become two-column records and the desktop table heading disappears. The search form occupies a full row and its input can shrink within the viewport.
+At 1100px the call interaction stacks its code area below the controls. At 760px the
+banner, coverage, queue and performance panel stack; the map remains bounded to its
+container and the lane list remains scrollable. Search fields, filters, review notes
+and manager actions preserve full-width touch targets.
 
-Scrollable lists have bounded height. The map fits the mobile container; zoom can create a scrollable map. City-label sizing is computed from rendered SVG width to retain approximately 12 screen pixels, including during zoom. Alaska and Hawaii have labeled insets. Dense network views label the hovered, focused or selected city; city, equipment and availability filters share one network snapshot. City selection includes incoming and outgoing lanes; marker and dropdown share the same city/state identity. Selecting a lane shows its equipment type and status below the map.
+## Elevation, borders and shape
 
-## Elevation & Depth
-
-The system is flat at rest. White and pale green surfaces, borders and background changes establish groups and interaction states. The selected load row uses an inset two-pixel accent outline; it is a selection indicator, not a raised card shadow. There are no ambient drop shadows.
-
-## Shapes
-
-Small-radius badges, gently rounded fields and buttons, and larger-radius panels form the shape vocabulary in the frontmatter. Record rows remain rectangular and edge-aligned inside panels. Borders are generally one pixel. Avoid rounding each table record into a separate floating card.
+The surface is flat at rest. One-pixel rules establish relationships and black rules
+separate the primary work areas. Panels, fields and buttons are square-edged to echo
+printed timetable cards and to avoid treating every record as a floating object. The
+dark call banner supplies contrast while the lane list and performance panel stay light
+and share the working surface.
 
 ## Components
 
-### Buttons
+### Live call banner
 
-Primary buttons are solid teal; secondary buttons are white with restrained borders; text actions are muted and underlined. Standard actions have a 44px minimum height. Map controls and pagination use smaller explicit variants. Hover transitions affect background and border over 150ms. Disabled actions reduce opacity and change the cursor. All keyboard-focusable controls share a three-pixel outline with a three-pixel offset, except map routes, whose focus changes the route itself. Reduced-motion preference disables transitions.
+The call banner is the first product action, not a marketing hero. It uses a dark ink
+ground, warm serif prompt, orange live rule and gold demo cues. The voice controls
+stay adjacent to the OTP area. Loading, permission, connection, muted, ending and
+error states keep their existing labels and behavior.
 
-### Inputs / Fields
+### Coverage map and lane list
 
-Fields use white backgrounds, a visible green-gray stroke and a minimum height of 44px. Labels sit above fields with a seven-pixel gap. Textareas are vertically resizable and at least 82px tall. Error notices use a warm pale background, visible border and dark error text; keep the accompanying message explicit.
+The map keeps route direction and mapped/unmapped counts visible; its geography remains
+an approximate network view rather than vehicle tracking. Open routes are teal, pending
+routes are orange and selected/focused routes use blue. The lane list shares the pale
+working surface, with compact rows that end at an explicit open or pending badge; deeper
+dates and booking activity remain in the review flow. Filters remain native selects with
+readable labels.
 
-### Cards / Containers
+### Summary and review queue
 
-Coverage and calls share white panels with restrained borders, larger corners and clipped contents. Headings, lists and footers use dividers. The pale call banner is a separate, larger-radius grouping. Expanded call details use a faint tinted surface and two columns where space permits.
+Summary filters are a single ruled strip with a gold selected state. The review queue
+keeps received time, carrier, load, agreed rate and action-needed reasons visible
+before expansion. Expanded details separate the load and negotiation facts from
+review-required work with a responsive divider. When multiple review types exist,
+the outer label stays generic while each item keeps its specific state, such as
+interrupted request or awaiting approval. Review notes and decision comments explain
+their requirements beside the fields; manager decisions, simulation labels and
+recovery states remain explicit.
 
-### Navigation
+### Performance panel
 
-The header uses an ink wordmark with a divided subtitle; the workspace label disappears on mobile. Within calls, text tabs sit together and the active tab has a pale green fill. Review counts remain attached to the tab label.
+Business performance is a restrained light closing panel. Metrics use teal for the
+values, gray bars for requests and teal bars for confirmed bookings. The chart remains
+a compact operational comparison, not a decorative analytics surface.
 
-### Chips
+## Interaction and accessibility
 
-Status badges are compact, softly rounded and text-labeled. Booked, uncertain/error and simulation states have separate variants. Allow labels to wrap; retain the explicit simulation wording.
-
-### Lane map and coordinated records
-
-Geographic outlines, city endpoints and curved routes explain lane coverage. Open routes are solid; pending/other routes are dashed; selection and focus use a stronger blue line. Hovering or focusing a city highlights its connected routes while unrelated routes remain visible at 18% opacity. Clicking the selected city again restores all cities. Clicking or keyboard-activating a route selects its matching load row, which receives a pale fill and inset outline. Keep unmapped counts and coordinate-unavailable messages visible. Attribution and the approximate-location disclaimer belong with the map.
-
-### Calls and operator review
-
-Call rows expose the carrier, lane, outcome and open review reasons before expansion. Expanded details separate conversation context from review work. Review notes and actions remain adjacent. Loading, empty, unavailable and stale-data states use plain text in the affected panel.
+Buttons and fields remain at least 44px high. All interactive routes, city markers,
+summary filters, tabs, review rows and form controls retain keyboard focus. The
+global focus ring is teal and clearly offset. Scrollbars, selection, caret and
+reduced-motion behavior are themed as part of the system. Empty, loading, partial,
+error, simulated and confirmed states are always described in text.
 
 ## Do's and Don'ts
 
-### Do:
-- **Do** extend the incumbent light ink-and-teal system.
-- **Do** preserve visible text labels alongside status colors.
-- **Do** keep OTP adjacent to call controls as the layout stacks.
-- **Do** retain geographic attribution, unmapped states and simulation labels.
-- **Do** preserve readable records and keyboard focus at narrow widths.
+### Do
 
-### Don't:
-- **Don't** imply vehicle tracking or fabricate geographic positions.
-- **Don't** hide review reasons until the call is expanded.
-- **Don't** add raised-card shadows to the flat operational panels.
+- Do keep the live call, OTP and demo cues adjacent and immediately findable.
+- Do preserve TMS, Twin, approximate geography and simulation truth in the interactions.
+- Do use rules, weight and contrast to make dense records scannable.
+- Do keep teal, orange, gold and blue state meanings consistent.
+- Do test the network view and review queue at mobile width.
+
+### Don't
+
+- Don't disclose the private rate ceiling or imply vehicle tracking.
+- Don't hide review reasons or simulation labels behind visual styling.
+- Don't add marketing claims, decorative imagery or generic dashboard widgets.
+- Don't use shadows, pill-shaped cards or color-only statuses as shortcuts.
