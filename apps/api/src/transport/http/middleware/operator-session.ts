@@ -89,7 +89,8 @@ export function createOperatorSession() {
 
 function cookieAttributes(maxAge: number) {
   const secure = runtimeConfig().nodeEnv === 'production' ? '; Secure' : '';
-  return `Path=${COOKIE_PATH}; Max-Age=${maxAge}; HttpOnly; SameSite=Strict${secure}`;
+  const path = runtimeConfig().hostedDemo.enabled ? '/api' : COOKIE_PATH;
+  return `Path=${path}; Max-Age=${maxAge}; HttpOnly; SameSite=Strict${secure}`;
 }
 
 export function operatorSessionCookie(value: string) {

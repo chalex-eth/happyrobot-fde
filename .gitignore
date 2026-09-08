@@ -7,6 +7,7 @@ node_modules/
 !.env.docker.example
 !.env.eval.example
 !.env.email.example
+!.env.production.example
 *.tsbuildinfo
 references/
 tmp/

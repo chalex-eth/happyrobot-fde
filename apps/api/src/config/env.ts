@@ -17,6 +17,8 @@ const envBoolean = z
 
 const runtimeSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  HOSTED_DEMO_ENABLED: envBoolean,
+  APP_PUBLIC_URL: optionalString,
   API_HOST: z.string().default('127.0.0.1'),
   API_PORT: z.coerce.number().int().min(1).max(65535).default(3001),
   TMS_HOST: optionalString,
@@ -51,6 +53,7 @@ const runtimeSchema = z.object({
 
 export type RuntimeConfig = {
   nodeEnv: 'development' | 'test' | 'production';
+  hostedDemo: { enabled: boolean; publicUrl?: string };
   server: { host: string; port: number };
   tms: { host?: string; port?: number; token?: string };
   local: { apiToken?: string; baseUrl: string };
@@ -90,6 +93,7 @@ export function runtimeConfig(): RuntimeConfig {
   const env = runtimeSchema.parse(process.env);
   return {
     nodeEnv: env.NODE_ENV,
+    hostedDemo: { enabled: env.HOSTED_DEMO_ENABLED, publicUrl: env.APP_PUBLIC_URL },
     server: { host: env.API_HOST, port: env.API_PORT },
     tms: { host: env.TMS_HOST, port: env.TMS_PORT, token: env.TMS_TOKEN },
     local: {

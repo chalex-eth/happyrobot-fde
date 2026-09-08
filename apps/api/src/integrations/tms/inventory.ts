@@ -7,7 +7,10 @@ export const ORIGIN_STATES =
   'AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY'.split(
     ' ',
   );
-export async function readNetworkInventory(query: typeof runTms = runTms) {
+export async function readNetworkInventory(
+  query: typeof runTms = runTms,
+  signal: AbortSignal = AbortSignal.timeout(50_000),
+) {
   const records = new Map<string, PublicLoad>();
   const failedStates: string[] = [],
     cappedStates: string[] = [];
@@ -17,10 +20,14 @@ export async function readNetworkInventory(query: typeof runTms = runTms) {
       Array.from({ length: 4 }, async () => {
         while (cursor < states.length) {
           const state = states[cursor++];
+          if (signal.aborted) {
+            failedStates.push(state);
+            continue;
+          }
           try {
             const result = await query(
               { command: 'LOAD_QUERY', fields: { ORIG_STATE: state, MAX_RESULTS: '20' } },
-              AbortSignal.timeout(10000),
+              AbortSignal.any([signal, AbortSignal.timeout(10000)]),
             );
             if (!result.ok) {
               failedStates.push(state);

@@ -27,11 +27,17 @@ const need = (key: string) => {
 async function main() {
   if (mode === 'dry-run') {
     console.log(JSON.stringify({ tools: Object.keys(toolSpecs), runtime_header: 'x-happyrobot-run-id ← Current > Run ID',
-      environment: 'development', note: 'Preserve voice/model. Sync edits an explicit draft only; publish is separate.', prompt }, null, 2));
+      environment: configured.happyrobot.environment ?? 'development', note: 'Preserve voice/model. Sync edits an explicit draft only; publish is separate.', prompt }, null, 2));
     return;
   }
   if (!['connect','fork','sync','rewire','inspect','review-results','publish'].includes(mode)) throw Error('Unknown command');
-  if (need('HAPPYROBOT_ENVIRONMENT') !== 'development') throw Error('This local connector is development-only');
+  const environment = configured.happyrobot.environment;
+  if (!environment) throw Error('Missing HAPPYROBOT_ENVIRONMENT');
+  if (environment !== 'development' &&
+    (!process.argv.includes('--environment') || arg('--environment') !== environment))
+    throw Error(`Explicit --environment ${environment} is required`);
+  if (environment !== 'development' && !configured.mcp.serverName.toLowerCase().includes(environment))
+    throw Error('Use a separate MCP connection named for the target environment');
   const client = new HappyRobotClient({ apiKey: need('HAPPYROBOT_API_KEY'), cluster: 'us', maxRetries: 0, timeout: 30_000 });
   const workflowId = need('HAPPYROBOT_WORKFLOW_ID');
   if (mode === 'connect') {
@@ -61,16 +67,23 @@ async function main() {
     console.log(JSON.stringify(forked)); return;
   }
   if (mode === 'publish') {
+    if (version.is_published || version.is_live) throw Error('Publish an explicit unpublished draft');
+    if (/eval|adversarial|custom.?test/i.test(version.name ?? '')) throw Error('Do not publish an evaluation draft');
     const connections = (await client.mcp.list()).data.filter((s: {server_name: string}) => s.server_name === mcpServerName);
-    if (connections.length !== 1 || (connections[0].development_server_url || connections[0].server_url) !== need('MCP_PUBLIC_URL')) {
-      throw Error('Normal development MCP connection does not match local configuration');
+    if (connections.length !== 1 || (environment === 'development'
+      ? connections[0].development_server_url || connections[0].server_url
+      : connections[0].server_url) !== need('MCP_PUBLIC_URL')) {
+      throw Error('Normal MCP connection does not match the target configuration');
     }
     const summaries = (await client.nodes.list(versionId)).data as Node[];
     const stored = await Promise.all(summaries.map(n => client.nodes.get(versionId, n.id).then(r => r.data)));
     validateLocalWiring(stored, connections[0].id);
     const replacement = process.argv.includes('--replace') ? arg('--replace') : undefined;
-    if (replacement && !versions.data.some((v: {id:string})=>v.id===replacement)) throw Error('Replacement is outside this workflow');
-    const result = await client.versions.publish(versionId, { environment: 'development', ...(replacement ? {unpublish_version_id:replacement} : {}) });
+    if (replacement && !versions.data.some((v: { id: string; environment: string; is_live: boolean }) => v.id === replacement && v.environment === environment && v.is_live))
+      throw Error('Replacement must be the live version in the target environment');
+    const live = versions.data.filter((v: { environment: string; is_live: boolean }) => v.environment === environment && v.is_live);
+    if (live.length && !replacement) throw Error('Provide --replace for the live target version');
+    const result = await client.versions.publish(versionId, { environment, ...(replacement ? {unpublish_version_id:replacement} : {}) });
     console.log(JSON.stringify({ version_id:result.id,live:result.is_live,environment:result.environment,
       missing_variable_count: result.missing_variables?.length ?? 0, test_error_count: result.test_errors?.length ?? 0 })); return;
   }

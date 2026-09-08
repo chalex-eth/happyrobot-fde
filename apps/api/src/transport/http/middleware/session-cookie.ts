@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { SessionError } from '../../../errors.js';
+import { runtimeConfig } from '../../../config/env.js';
 const COOKIE = 'carrier_session';
 const sha256 = (value: string) => createHash('sha256').update(value).digest('hex');
 
@@ -14,6 +15,6 @@ export function sessionHash(request: Request): string {
   return sha256(token);
 }
 export const sessionCookie = (token: string) =>
-  `${COOKIE}=${token}; HttpOnly; SameSite=Strict; Path=/api/local; Max-Age=3600`;
+  `${COOKIE}=${token}; HttpOnly; SameSite=Strict; Path=/api/local; Max-Age=3600${runtimeConfig().nodeEnv === 'production' ? '; Secure' : ''}`;
 export const clearSessionCookie = () =>
-  `${COOKIE}=; HttpOnly; SameSite=Strict; Path=/api/local; Max-Age=0`;
+  `${COOKIE}=; HttpOnly; SameSite=Strict; Path=/api/local; Max-Age=0${runtimeConfig().nodeEnv === 'production' ? '; Secure' : ''}`;

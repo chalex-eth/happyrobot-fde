@@ -26,7 +26,8 @@ function otpConfig() {
 export function mockOtpEnabled() {
   const config = runtimeConfig();
   return (
-    config.nodeEnv === 'development' &&
+    (config.nodeEnv === 'development' ||
+      (config.nodeEnv === 'production' && config.hostedDemo.enabled)) &&
     config.otp.demoMode &&
     config.otp.deliveryMode === 'mock'
   );

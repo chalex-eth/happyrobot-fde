@@ -8,9 +8,12 @@ import {
 } from '../../../middleware/operator-session.js';
 import { operatorError, operatorResponse } from '../../../operator-response.js';
 import { readJson } from '../../../read-json.js';
+import { runtimeConfig } from '../../../../../config/env.js';
+import { checkHostedDemoOrigin } from '../../../middleware/hosted-demo.js';
 
 export async function POST(request: Request) {
   try {
+    if (runtimeConfig().hostedDemo.enabled) checkHostedDemoOrigin(request);
     const input = await readJson(request, 1024);
     if (!verifyOperatorPassword(input.password))
       throw new SessionError('OPERATOR_AUTH_REQUIRED', 401);
@@ -30,8 +33,13 @@ export async function GET(request: Request) {
   }
 }
 
-export async function DELETE(_request: Request) {
-  const response = operatorResponse({ ok: true });
-  response.headers.set('Set-Cookie', clearOperatorSessionCookie());
-  return response;
+export async function DELETE(request: Request) {
+  try {
+    if (runtimeConfig().hostedDemo.enabled) checkHostedDemoOrigin(request);
+    const response = operatorResponse({ ok: true });
+    response.headers.set('Set-Cookie', clearOperatorSessionCookie());
+    return response;
+  } catch (error) {
+    return operatorError(error);
+  }
 }

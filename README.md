@@ -1,12 +1,17 @@
 # Carrier sales POC
 
-A local carrier-sales voice application built with Next.js, a Node API, Twin
+A carrier-sales voice application built with Next.js, a Node API, Twin
 persistence, live FMCSA/TMS reads, HappyRobot MCP tools, and an operator
 dashboard.
 
-This is a development demo. The voice flow uses screen-only OTP delivery,
+This is a demo. The voice flow uses screen-only OTP delivery,
 booking is simulated by default, manager approval uses a local adapter, and no outbound callback or
 notification is sent.
+
+The [hosted demo](https://happyrobot-fde.vercel.app) runs on Vercel US East with
+the normal HappyRobot production agent and authenticated MCP. See the
+[production runbook](docs/production.md) for configuration, release steps, and
+verification. Operator login is required to access the workspace.
 
 ## Quick start
 

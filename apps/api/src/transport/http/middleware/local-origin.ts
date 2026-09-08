@@ -1,6 +1,9 @@
 import { runtimeConfig } from '../../../config/env.js';
+import { SessionError } from '../../../errors.js';
+import { requireOperatorSession } from './operator-session.js';
+import { checkHostedDemoOrigin } from './hosted-demo.js';
 
-// Local operator convenience endpoints are never enabled in a production build.
+// Local development or an explicitly enabled, authenticated hosted demo.
 export function rejectNonLocalRequest(request: Request): Response | undefined {
   const reject = (status: number, error: string) =>
     Response.json(
@@ -10,6 +13,17 @@ export function rejectNonLocalRequest(request: Request): Response | undefined {
         headers: { 'Cache-Control': 'no-store' },
       },
     );
+  if (runtimeConfig().hostedDemo.enabled) {
+    try {
+      checkHostedDemoOrigin(request);
+      requireOperatorSession(request);
+      return;
+    } catch (error) {
+      return error instanceof SessionError
+        ? reject(error.status, error.code)
+        : reject(503, 'HOSTED_DEMO_NOT_CONFIGURED');
+    }
+  }
   if (runtimeConfig().nodeEnv !== 'development') return reject(404, 'LOCAL_CONSOLE_DISABLED');
   try {
     const origin = new URL(request.headers.get('origin') ?? '');

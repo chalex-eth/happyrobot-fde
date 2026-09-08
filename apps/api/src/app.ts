@@ -12,6 +12,8 @@ import * as operatorInventory from './transport/http/routes/operator/inventory/r
 import * as operatorReview from './transport/http/routes/operator/review/route.js';
 import * as operatorAuth from './transport/http/routes/operator/auth/route.js';
 import * as tms from './transport/http/routes/tms/route.js';
+import { checkHostedDemoConfiguration } from './transport/http/middleware/hosted-demo.js';
+import { SessionError } from './errors.js';
 type Handler = (request: Request) => Promise<Response>;
 const routes: Record<string, Partial<Record<string, Handler>>> = {
   '/api/local/calls': { POST: localCalls.POST },
@@ -38,6 +40,12 @@ const routes: Record<string, Partial<Record<string, Handler>>> = {
   '/api/tms': { POST: tms.POST },
 };
 export async function handleRequest(request: Request): Promise<Response> {
+  try {
+    checkHostedDemoConfiguration();
+  } catch (error) {
+    return Response.json({ ok: false, error: error instanceof SessionError ? error.code : 'INVALID_CONFIGURATION' },
+      { status: 503, headers: { 'Cache-Control': 'no-store' } });
+  }
   const path = new URL(request.url).pathname.replace(/\/$/, '');
   if (path === '/health' && request.method === 'GET') return Response.json({ ok: true });
   const route = routes[path];

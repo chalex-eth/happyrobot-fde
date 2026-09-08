@@ -1,7 +1,7 @@
 # HappyRobot agent runbook
 
 This is the short operating guide for changing and validating the HappyRobot
-development workflow. Read it before changing the prompt, MCP tools, workflow
+workflow. Read it before changing the prompt, MCP tools, workflow
 bindings, or native conversation tests.
 
 For the evaluation design and backend-session mechanics, see
@@ -83,10 +83,33 @@ Before publication:
 - Validate every tool mapping against persistent tool IDs.
 - Confirm the Current > Run ID header and complete result visibility.
 - Read back the stored prompt and tool configuration.
-- Publish only to development, explicitly replacing the intended version.
+- The commands above target development. Explicitly replace the intended live
+  version in that environment. Production uses the separate procedure below.
 
 Never edit the live version in place, publish an isolated test draft, or use a
 normal workflow draft for adversarial tests.
+
+### Hosted demo production
+
+See [production deployment](production.md) for Vercel configuration and verification.
+Keep the production credentials in ignored `.env.production.local`, separate from
+local development and eval files. The normal production MCP connection points to
+the permanent HTTPS `/api/mcp` endpoint. Use a new unpublished fork of the normal
+agent; preserve its voice/model, OTP demo wording and simulated booking behavior.
+
+~~~sh
+node --env-file=.env.production.local --import tsx scripts/happyrobot/mcp-connect.ts connect --environment production
+node --env-file=.env.production.local --import tsx scripts/happyrobot/mcp-connect.ts fork --version SOURCE_VERSION_ID --environment production
+node --env-file=.env.production.local --import tsx scripts/happyrobot/mcp-connect.ts rewire --version DRAFT_VERSION_ID --environment production
+node --env-file=.env.production.local --import tsx scripts/happyrobot/mcp-connect.ts inspect --version DRAFT_VERSION_ID --environment production
+node --env-file=.env.production.local --import tsx scripts/happyrobot/mcp-connect.ts publish --version DRAFT_VERSION_ID --environment production
+~~~
+
+When replacing an existing production version, append `--replace LIVE_VERSION_ID`.
+Publication rejects an evaluation-named draft, mismatched connection, or replacement
+from another environment. Read back complete MCP results and run-ID bindings before
+publishing. `rewire` preserves the prompt and result visibility; `sync` also updates
+the prompt and formatting criterion and is unnecessary for a deployment-only change.
 
 For prompt-only changes that must preserve eval definitions, update only the
 draft prompt node's `prompt_md` through the SDK. The general `sync` command also
