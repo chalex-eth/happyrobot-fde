@@ -12,7 +12,6 @@
     "start": "node scripts/local/dev.mjs --production",
     "typecheck": "npm run typecheck --workspaces && tsc --noEmit -p tsconfig.scripts.json",
     "test": "node --import tsx --test apps/api/tests/*.test.ts apps/web/tests/*.test.ts",
-    "verify:local": "node --env-file=.env.local scripts/verify-local.mjs",
     "start:local": "node scripts/local/dev.mjs --production",
     "verify:fmcsa": "node scripts/verify-fmcsa.mjs",
     "mcp:proxy": "node scripts/mcp-proxy.mjs",

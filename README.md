@@ -108,7 +108,6 @@ With the local stack running:
 
 ~~~sh
 npm run local:check
-npm run verify:local
 npm run verify:mcp
 ~~~
 

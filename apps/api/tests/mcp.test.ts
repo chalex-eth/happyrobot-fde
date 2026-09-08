@@ -251,7 +251,7 @@ test('MCP-only proxy cannot publish operator routes, assets or alternate paths',
   for (const path of [
     '/',
     '/api/local/calls',
-    '/api/tms',
+    '/api/operator/calls',
     '/_next/test',
     '/api/mcp?path=/api/local/calls',
     '/api/mcp/',

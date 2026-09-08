@@ -11,7 +11,6 @@ import * as operatorCalls from './transport/http/routes/operator/calls/route.js'
 import * as operatorInventory from './transport/http/routes/operator/inventory/route.js';
 import * as operatorReview from './transport/http/routes/operator/review/route.js';
 import * as operatorAuth from './transport/http/routes/operator/auth/route.js';
-import * as tms from './transport/http/routes/tms/route.js';
 import { checkHostedDemoConfiguration } from './transport/http/middleware/hosted-demo.js';
 import { SessionError } from './errors.js';
 type Handler = (request: Request) => Promise<Response>;
@@ -37,7 +36,6 @@ const routes: Record<string, Partial<Record<string, Handler>>> = {
     GET: operatorAuth.GET,
     DELETE: operatorAuth.DELETE,
   },
-  '/api/tms': { POST: tms.POST },
 };
 export async function handleRequest(request: Request): Promise<Response> {
   try {

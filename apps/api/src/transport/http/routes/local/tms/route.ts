@@ -5,8 +5,16 @@ import { SessionError } from '../../../../../errors.js';
 import { sessionHash } from '../../../middleware/session-cookie.js';
 import { loadsForCall } from '../../../../../modules/loads/index.js';
 import { runTms, TmsError, validateRequest } from '../../../../../integrations/tms/client.js';
-import { upstreamStatus } from '../../../tms.js';
 import { runtimeConfig } from '../../../../../config/env.js';
+
+const upstreamStatus = (code: string) =>
+  code === 'TMS_TIMEOUT'
+    ? 504
+    : ['TMS_NOT_CONFIGURED', 'CANCELLED'].includes(code)
+      ? 503
+      : code === 'INTERNAL_ERROR'
+        ? 500
+        : 502;
 
 export async function POST(request: Request) {
   const rejected = rejectNonLocalRequest(request);

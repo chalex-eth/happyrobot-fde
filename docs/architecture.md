@@ -99,7 +99,6 @@ they are also used by workflow tooling. They are distinct from browser response 
 | `POST /api/operator/auth`, `DELETE /api/operator/auth` | Establish or clear the HttpOnly shared operator session |
 | `GET /api/operator/calls`, `/api/operator/inventory` | Operator projections and live inventory; shared session plus server-side feature/configuration checks |
 | `POST /api/operator/review` | Shared session, matching browser Origin, and server-side operator key |
-| `POST /api/tms` | Separate diagnostic/read adapter protected by `LOCAL_API_TOKEN`; not the caller authorization path |
 
 The local cookie is opaque, HttpOnly, SameSite=Strict, scoped to `/api/local`,
 and valid for one hour. Twin stores its SHA-256 hash. The model cannot choose
@@ -333,7 +332,7 @@ coverage and the session-controller design.
 | Business rules and transport behavior | `npm test`; focused suites under [API tests](../apps/api/tests) |
 | Schema or conditional writes | `npm run db:generate`, `npm run db:check`, `npm run db:test`, `npm run db:parity` |
 | Web/API packaging | `npm run build`; proxy checks under [web tests](../apps/web/tests) |
-| Local connectivity and saved MCP wiring | `npm run local:check`, `npm run verify:local`, `npm run verify:mcp` |
+| Local connectivity and saved MCP wiring | `npm run local:check`, `npm run verify:mcp` |
 | Agent behavior | Isolated sequential native controllers; [runbook](happyrobot-agent-runbook.md) |
 | Spoken call and hangup | A real microphone/audio call plus provider terminal-state evidence |
 
