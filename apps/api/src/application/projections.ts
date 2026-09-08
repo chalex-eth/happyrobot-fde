@@ -1,3 +1,4 @@
+import { callOutcome } from './call-outcome.js';
 import { publicLoadFields } from '@carrier/contracts/loads';
 import { data, type Snapshot, type Data, type Event } from '../db/model.js';
 export function toPublicNegotiation(s: Snapshot): Data | null {
@@ -76,6 +77,7 @@ export function toOperatorCall(s: Snapshot): Data {
     run_id: c.voice_run_id,
     finalized_at: c.finalized_at,
     outcome: c.final_outcome,
+    call_outcome: callOutcome(s, bookingView(s), toPublicNegotiation(s)),
     summary: c.final_summary,
     reported_end_reason: c.reported_end_reason,
     ended_at: c.ended_at,

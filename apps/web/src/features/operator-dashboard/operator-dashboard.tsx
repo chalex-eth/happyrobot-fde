@@ -23,6 +23,7 @@ import { negotiationHistory } from './negotiation-history';
 import {
   label,
   bookingStatus,
+  callOutcomeView,
   reviewLabel,
   reviewAction,
   loadDate,
@@ -56,6 +57,8 @@ const time = (s: string | null) =>
     : '—';
 const message = (code: string) =>
   ({
+    OPERATOR_AUTH_REQUIRED: 'Your operator session has expired. Reload to sign in again.',
+    OPERATOR_AUTH_NOT_CONFIGURED: 'Operator access has not been configured on the server.',
     OPERATOR_NOT_CONFIGURED: 'Operator access has not been configured on the server.',
     REVIEW_CHANGED: 'This review changed. Refresh the call and try again.',
     INVALID_REVIEW: 'This action is unavailable. Check the comment and refresh the request.',
@@ -446,7 +449,21 @@ function CallDetail({ id, onChange }: { id: string; onChange: () => Promise<void
           </section>
         </div>
         <div>
-          <h3>{hasManagerReview && c.reviews.length === 1 ? 'Awaiting approval' : 'Review required'}</h3>
+          <h3>Call outcome</h3>
+          <p>
+            <strong>{callOutcomeView(c).label}</strong>
+          </p>
+          <p className="hint">{callOutcomeView(c).detail}</p>
+          {callOutcomeView(c).ending && <p className="hint">{callOutcomeView(c).ending?.label}</p>}
+          {c.reviews.length > 0 && (
+            <h3>
+              {c.reviews.some((r) => r.status === 'open')
+                ? hasManagerReview && c.reviews.length === 1
+                  ? 'Awaiting approval'
+                  : 'Follow-up required'
+                : 'Follow-up history'}
+            </h3>
+          )}
           {c.reviews.length ? (
             [...c.reviews]
               .sort((a, b) => Number(a.status === 'reviewed') - Number(b.status === 'reviewed'))
@@ -827,7 +844,7 @@ export function OperatorDashboard() {
             <span>Carrier</span>
             <span>Load</span>
             <span>Agreed rate</span>
-            <span>Action needed</span>
+            <span>Outcome / follow-up</span>
             <span />
           </div>
           {!calls && !callError && (
@@ -872,6 +889,7 @@ export function OperatorDashboard() {
                   {c.booking && <small>{bookingStatus(c)}</small>}
                 </span>
                 <span className="reason-list">
+                  <strong>{callOutcomeView(c).label}</strong>
                   {c.reviews
                     .filter((r) => r.status === 'open' && r.reason !== 'senior_rep_confirmation')
                     .map((r) => (
@@ -893,7 +911,7 @@ export function OperatorDashboard() {
                   )}
                   {!c.reviews.some((r) => r.status === 'open') && <small>No action needed</small>}
                 </span>
-                <span className="expand-label">{expanded === c.id ? 'Hide' : 'Review'}</span>
+                <span className="expand-label">{expanded === c.id ? 'Hide' : 'Details'}</span>
               </button>
               {expanded === c.id && <CallDetail id={c.id} onChange={loadCalls} />}
             </article>

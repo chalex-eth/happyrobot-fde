@@ -109,3 +109,11 @@ export function bookingStatus(call: OperatorCall): string {
     rejected: 'Rejected',
   }[b.manager_status ?? 'awaiting_approval'];
 }
+
+export const callOutcomeView = (call: OperatorCall) =>
+  call.call_outcome ?? {
+    code: 'reason_not_recorded',
+    label: 'Call outcome not recorded',
+    detail: 'No structured call outcome is available for this record.',
+    ending: null,
+  };
