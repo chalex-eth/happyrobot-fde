@@ -509,6 +509,11 @@ export function OperatorDashboard() {
     [search, setSearch] = useState(''),
     [offset, setOffset] = useState(0),
     [expanded, setExpanded] = useState<string | null>(null);
+  const [receivedOrder, setReceivedOrder] = useState<'default' | 'newest' | 'oldest'>('default');
+  const changeReceivedOrder = (value: 'default' | 'newest' | 'oldest') => {
+    setReceivedOrder(value);
+    setOffset(0);
+  };
   const [coverageView, setCoverageView] = useState('all');
   const [summaryFilter, setSummaryFilter] = useState<QueueFilter>('all');
   const [city, setCity] = useState('ALL');
@@ -581,9 +586,13 @@ export function OperatorDashboard() {
           `${c.mc ?? ''} ${c.selected_load_id ?? ''}`.toLowerCase().includes(search.toLowerCase())),
     )
     .sort((a, b) =>
-      reviewOnly
-        ? Number(urgent(b)) - Number(urgent(a)) || waitingSince(a) - waitingSince(b)
-        : Date.parse(b.created_at) - Date.parse(a.created_at),
+      receivedOrder === 'oldest'
+        ? Date.parse(a.created_at) - Date.parse(b.created_at)
+        : receivedOrder === 'newest'
+          ? Date.parse(b.created_at) - Date.parse(a.created_at)
+          : reviewOnly
+            ? Number(urgent(b)) - Number(urgent(a)) || waitingSince(a) - waitingSince(b)
+            : Date.parse(b.created_at) - Date.parse(a.created_at),
     );
   const pageCalls = filteredCalls.slice(offset, offset + 30);
   const selectSummary = (value: QueueFilter) => {
@@ -775,7 +784,9 @@ export function OperatorDashboard() {
             <h3 id="calls-title">Bookings & follow-up</h3>
             <p>
               Confirm bookings and resolve requests that need attention.{' '}
-              {reviewOnly ? 'Sorted by pickup urgency, then longest wait.' : ''}
+              {receivedOrder === 'default' && reviewOnly
+                ? 'Sorted by pickup urgency, then longest wait.'
+                : `Sorted by received date, ${receivedOrder === 'oldest' ? 'oldest' : 'newest'} first.`}
             </p>
           </div>
           <button className="secondary" onClick={() => void loadCalls()} disabled={callBusy}>
@@ -810,6 +821,19 @@ export function OperatorDashboard() {
             </button>
           </div>
           <div className="call-filters">
+            <label className="received-sort-label">
+              Sort by
+              <select
+                value={receivedOrder}
+                onChange={(event) =>
+                  changeReceivedOrder(event.target.value as 'default' | 'newest' | 'oldest')
+                }
+              >
+                <option value="default">Default order</option>
+                <option value="newest">Received: newest first</option>
+                <option value="oldest">Received: oldest first</option>
+              </select>
+            </label>
             {summaryFilter !== 'all' && (
               <button className="secondary" onClick={() => selectSummary('all')}>
                 Clear summary filter
@@ -843,7 +867,27 @@ export function OperatorDashboard() {
         )}
         <div className="call-list" role="tabpanel">
           <div className="call-table-heading">
-            <span>Received</span>
+            <button
+              type="button"
+              className="received-sort"
+              aria-label={`Received: ${receivedOrder === 'default' && reviewOnly ? 'default order' : receivedOrder === 'oldest' ? 'oldest first' : 'newest first'}. Sort ${receivedOrder === 'newest' || (receivedOrder === 'default' && !reviewOnly) ? 'oldest' : 'newest'} first`}
+              onClick={() =>
+                changeReceivedOrder(
+                  receivedOrder === 'newest' || (receivedOrder === 'default' && !reviewOnly)
+                    ? 'oldest'
+                    : 'newest',
+                )
+              }
+            >
+              Received{' '}
+              <span aria-hidden="true">
+                {receivedOrder === 'default' && reviewOnly
+                  ? '↕'
+                  : receivedOrder === 'oldest'
+                    ? '↑'
+                    : '↓'}
+              </span>
+            </button>
             <span>Carrier</span>
             <span>Load</span>
             <span>Agreed rate</span>
