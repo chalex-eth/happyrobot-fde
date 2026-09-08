@@ -107,10 +107,13 @@ a call ID or session hash in tool arguments. The MCP server rejects browser
 Origin headers and supports stateless JSON responses to POST; GET/DELETE return
 405 rather than opening an SSE session.
 
-Operator access is intentionally shared in this demo. The API supplies
-`OPERATOR_RPC_KEY` and persistence validates its digest against
-`poc_private.operator_access`; this is not individual user authentication or
-role-based access control. The local network exposure is part of the trust boundary.
+Operator access is intentionally shared in this demo. The browser authenticates
+with `OPERATOR_PASSWORD` and receives an HMAC-signed, HttpOnly session using
+`OPERATOR_SESSION_SECRET`, scoped only to `/api/operator`; every operator route verifies it before reaching the
+server-only `OPERATOR_RPC_KEY` RPC boundary. Everyone with the password receives
+the full demo surface: this is a single shared operator role, not individual
+user authentication or enterprise role-based access control. Rotate the session
+secret to invalidate existing sessions.
 
 ## Carrier call lifecycle
 
@@ -313,8 +316,9 @@ Negotiation, booking and operations have feature flags. The normal stack uses
 are documented in [the email example](../.env.email.example). Setup and lifecycle
 commands belong in [local-docker.md](local-docker.md).
 
-This topology is a development demo. Production needs an authenticated operator
-surface, an appropriate browser/session policy, validated external delivery and
+This topology is a development demo. Production needs an appropriate browser/session
+policy and secret-management policy in addition to the authenticated operator
+surface, validated external delivery and
 booking configuration, and hosting that supports the TMS TCP connection. A
 frontend deployment alone does not provide the API or its integrations.
 

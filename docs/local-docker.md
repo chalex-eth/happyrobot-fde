@@ -37,6 +37,7 @@ Set the service credentials in .env.local:
 - MCP_AUTH_TOKEN and MCP_PUBLIC_URL
 - HAPPYROBOT_MCP_SERVER_NAME
 - OTP_HASH_SECRET
+- OPERATOR_PASSWORD and OPERATOR_SESSION_SECRET
 
 The normal stack does not load evaluation or email overlays. Copy
 `.env.eval.example` to `.env.eval.local` only for native adversarial or

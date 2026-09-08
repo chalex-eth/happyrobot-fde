@@ -1,7 +1,8 @@
 # Operator dashboard
 
-The local dashboard opens at http://localhost:3000 without a login. It is a
-development operator surface, not an authentication system. A Demo environment
+The local dashboard opens at http://localhost:3000 behind a shared password
+gate. This is a lightweight access boundary for the private demo, not an
+individual identity or enterprise authentication system. A Demo environment
 label identifies the workspace.
 
 For component ownership and persistence guarantees, see the
@@ -57,15 +58,16 @@ through this workflow.
 - Senior-representative follow-up is a review state, not proof of contact.
 - No outbound callback, notification, document collection, sentiment analysis,
   transcript analysis, or provider reconciliation runs in the background.
-- Operator access is shared and direct; there are no manager identities or role
-  controls.
+- Operator access is shared: everyone with the password receives the full demo
+  surface. There are no individual manager identities or role controls.
 
 ## Enabling the operator surface
 
 The API must have OPERATIONS_ENABLED=true and a valid server-only
-OPERATOR_RPC_KEY. Register only its SHA-256 digest in Twin. The configured Twin
-workspace must already contain the operations schema; do not replay the fresh
-Drizzle baseline on shared data.
+OPERATOR_RPC_KEY. It must also have OPERATOR_PASSWORD and a random
+OPERATOR_SESSION_SECRET of at least 32 characters. Register only the RPC key's
+SHA-256 digest in Twin. The configured Twin workspace must already contain the
+operations schema; do not replay the fresh Drizzle baseline on shared data.
 
 After changing configuration:
 
@@ -74,4 +76,7 @@ npm run app:restart
 npm run local:check
 ~~~
 
-Keep the operator key out of browser code, logs, commits, and MCP results.
+Keep the operator password, session secret, and RPC key out of browser code,
+logs, commits, and MCP results. FMCSA requests still require the provider's
+webKey query parameter, so application diagnostics redact it; also configure
+proxy/access logs and secret rotation outside the application.
