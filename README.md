@@ -74,14 +74,17 @@ This starts the web app and API without the Docker MCP proxy and tunnel.
 
 ```mermaid
 flowchart LR
-  Browser[Browser] --> Web[Next.js]
-  Web --> API[Node API]
-  HR[HappyRobot] --> MCP[HTTPS MCP proxy]
-  MCP --> API
+  Browser[Browser] --> Vercel[Vercel HTTPS routing]
+  HR[HappyRobot production agent] -->|/api/mcp| Vercel
+  Vercel -->|Pages| Web[Next.js service]
+  Vercel -->|/api/*| API[Node API service]
   API --> Twin[(Twin)]
   API --> FMCSA[FMCSA]
-  API --> TMS[TMS]
+  API --> TMS[TMS reads]
 ```
+
+Hosted API requests route directly to the Node service. The Next.js proxy and
+ngrok are used by the local development stack. See [production setup](docs/production.md).
 
 - apps/web contains the interface and same-origin API proxy.
 - apps/api owns business decisions, integrations, MCP dispatch, and persistence.
@@ -115,6 +118,7 @@ These checks do not replace a spoken microphone/audio acceptance call.
 
 ## Documentation
 
+- [Deployment overview](docs/production.md) — required services, configuration and deployment sequence
 - [Architecture](docs/architecture.md) — how components, state and integrations work
 - [Testing strategy](docs/tests.md) — Northstars, scenario coverage and backend-session controllers
 - [Local Docker setup](docs/local-docker.md)

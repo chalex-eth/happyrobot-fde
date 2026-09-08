@@ -1,79 +1,142 @@
-# Hosted demo on Vercel
+# Deployment overview
 
-The deployment serves the existing demo with a normal HappyRobot production
-workflow. FMCSA and TMS reads are live; OTP delivery is on screen, bookings and
-manager submission are simulated, and no callback or notification is sent.
+Deploying this project means hosting the web application and API, providing access
+to the external services, and connecting a published HappyRobot agent to the API.
+This guide describes what someone needs to prepare and the order of setup.
 
-## Hosting
+The application is a hosted demo: carrier verification and load searches use live
+services, while OTP delivery happens on screen and booking submission is simulated.
+Hosting it in production does not enable real bookings or outbound notifications.
 
-`vercel.json` defines a Next.js web service and the existing Node API service.
-Both use US East (`iad1`). `/api/*` and `/health` route directly to the API;
-other paths route to Next.js. The localhost web proxy remains useful locally.
-Each service installs the root npm workspace, including build dependencies.
-Node 22 is required. Inventory scans have a 50-second total budget and report
-incomplete coverage if they cannot finish; cached inventory is process-local.
+## What you need
 
-The dashboard requests up to 1,000 call summaries at once and prevents overlapping
-refreshes. Unchanged reviews do not trigger a second history scan. Twin requests
-retry only explicit HTTP 429 refusals, at most twice within a 10-second total
-budget while respecting `Retry-After`. Network failures and 5xx responses are
-never automatically replayed because a database write may have committed.
+| Component | Purpose | What to prepare |
+| --- | --- | --- |
+| Vercel | Hosts the web interface and Node API | An account, a project connected to your copy of the repository, and a production branch |
+| HappyRobot | Runs the voice agent and calls the application's MCP tools | Access to a US workspace, an API key, and a normal carrier-sales workflow |
+| Twin | Stores calls, verification state, negotiations, bookings and reviews | A workspace with the application schema installed and operator access configured |
+| FMCSA | Checks carrier operating authority | An API key |
+| TMS | Supplies load inventory and pricing | A reachable TCP host and port, plus its authentication token |
+| Application access | Protects the demo and the MCP endpoint | An operator password, independent signing secrets, and an MCP bearer token |
+| Public HTTPS address | Connects browsers and HappyRobot to the deployed API | A stable deployment domain; a custom domain is optional |
 
-The project is `chalexlab/happyrobot-fde`, connected to GitHub with production
-branch `main`. The stable domain is `https://happyrobot-fde.vercel.app`.
-Development Docker and ngrok are not production dependencies.
+Vercel does not provision the HappyRobot workflow, Twin database, FMCSA access or
+TMS service. Those dependencies must be available separately.
 
-## Configuration
+## How the services connect
 
-`.env.production.example` lists the required settings. Values belong in Vercel
-environment settings and an ignored `.env.production.local` used by release tools.
-Never upload environment files or log secrets. `.vercelignore` excludes them.
+```mermaid
+flowchart LR
+  Browser -->|HTTPS|Web[Web interface]
+  Browser -->|HTTPS|API[Node API]
+  Browser -->|Audio|HappyRobot[HappyRobot agent]
+  HappyRobot -->|Authenticated MCP|API
+  API -->|HTTPS|Twin[(Twin)]
+  API -->|HTTPS|FMCSA[FMCSA]
+  API -->|Authenticated TCP|TMS[TMS]
+```
 
-Keep `NODE_ENV=production`, `HOSTED_DEMO_ENABLED=true`, mock OTP and mock booking.
-The runtime rejects hosted mode with live booking or adversarial MCP enabled.
-`APP_PUBLIC_URL` must be an exact HTTPS origin. The current deployment's Vercel
-URL is also accepted; arbitrary preview domains are not trusted.
+The browser and agent reach the same deployed API through different authenticated
+routes. The API owns the external credentials and business rules; browsers do not
+connect directly to Twin, FMCSA or TMS.
 
-The demo uses a shared operator password. Its signed, secure, HttpOnly cookie
-covers `/api`, protecting both operator endpoints and browser call endpoints.
-The separate caller cookie binds the current call. MCP uses its own bearer token
-and the HappyRobot run ID, not browser cookies. Public deployment access must
-allow HappyRobot to reach `/api/mcp` without an interactive Vercel login.
+## Deployment sequence
 
-The existing Twin schema and operator RPC key are reused. Local/evaluation and
-hosted-demo records therefore share this workspace; this is not tenant isolation.
-Do not reset Twin during a deployment. User records and mutation receipts must
-survive process restarts and app rollbacks.
+### 1. Prepare the external services
 
-## Release
+Obtain the provider credentials and choose the HappyRobot workflow to deploy.
+Prepare Twin with the application's database schema and an authorized operator
+key. Use a separate workspace if you need separation from development or test data.
 
-1. Run `npm test`, `npm run typecheck`, `npm run check:boundaries`, and `npm run build`.
-2. Set the Vercel project to Node 22 and `iad1`; load the production environment.
-3. Deploy with `npx vercel@59.11.7 deploy --prod --scope chalexlab` or push reviewed
-   changes to `main` after the first successful configuration.
-4. Verify `/health`, browser login, denied unauthenticated requests, Twin operator
-   access, FMCSA and live TMS reads from the deployed API.
-5. Follow the [agent runbook](happyrobot-agent-runbook.md#hosted-demo-production) to
-   connect, fork, rewire and publish the normal agent in production.
-6. Run `node --env-file=.env.production.local scripts/verify-production.mjs`.
-7. Complete a real microphone call and check the provider run, MCP trace, screen
-   OTP, simulated booking, operator review and call-end state.
+The [database documentation](architecture.md#data-model-and-persistence) explains
+the schema. The fresh database baseline is intended for an empty workspace;
+redeploying the application should preserve existing records.
 
-The production verifier creates a dedicated browser call and real HappyRobot run,
-then invokes the deployed normal MCP tools. It verifies a simulated booking and
-operator state, and attempts to cancel its own provider run. A voice token without
-an audio participant can leave the provider run absent (404); cancellation then
-remains unconfirmed. It does not connect audio and
-does not establish speech quality or provider hangup behavior.
+### 2. Configure the Vercel project
 
-## Recovery
+Import your repository and choose its production branch. Deploy from the
+repository root so Vercel can build both services defined in
+[`vercel.json`](../vercel.json):
 
-Use the Vercel deployment history to restore the last verified application
-deployment. Restore the matching normal HappyRobot production version separately;
-an app rollback does not roll back the agent or its saved MCP connection. On a
-first-release failure, disable hosted demo access and unpublish only the new
-production agent. Never reset the database or retry an uncertain booking write.
+- `apps/web`: the Next.js interface.
+- `apps/api`: the Node API, including MCP and external integrations.
 
-Keep the release commit, deployment URL, agent version and sanitized verification
-result in ignored `tmp/evidence/production/`. Credentials and OTPs must not appear
-in diagnostic output. An unconfirmed provider ending remains unconfirmed.
+The repository is configured for Node 22 and US East (`iad1`). API traffic is
+routed to the Node service and page traffic to Next.js. Hosting only the web
+folder is insufficient. The US region setting applies to Vercel execution;
+external providers manage their own hosting locations.
+
+Docker and ngrok support local development and are not required by this deployment.
+
+### 3. Set the production configuration
+
+Use [`.env.production.example`](../.env.production.example) as the checklist and
+add the values to the Vercel project's **Production environment variables**.
+The configuration covers:
+
+- Provider credentials for HappyRobot, Twin, FMCSA and TMS.
+- The public application origin and its `/api/mcp` URL.
+- The HappyRobot workflow and production environment.
+- Operator login, session signing, OTP signing and MCP authentication.
+- Feature flags that retain screen OTP and simulated booking, with adversarial
+  tooling disabled.
+
+Generate your own secrets and keep them server-side. A local environment file
+does not configure the hosted project. Preview deployments have separate settings;
+reusing production credentials also reuses the associated services and data.
+
+### 4. Build and deploy the application
+
+Install dependencies and run the repository checks before deploying:
+
+```sh
+npm ci
+npm test
+npm run typecheck
+npm run check:boundaries
+npm run build
+```
+
+Deploy through the connected production branch or the Vercel CLI. Confirm that
+both services build successfully, the public site opens, `/health` responds, and
+operator login works. Check that the inventory map can retrieve real TMS loads.
+
+### 5. Connect the production agent
+
+Create a dedicated HappyRobot MCP connection pointing to the deployed
+`/api/mcp` endpoint. Its bearer token must match the application's `MCP_AUTH_TOKEN`.
+The endpoint must be reachable by HappyRobot without an interactive hosting login.
+
+Fork a normal agent workflow, connect its tools to the production MCP connection,
+and verify tool discovery, run-ID forwarding and result visibility before publishing
+it in HappyRobot's production environment. The app must reference that workflow.
+
+The [HappyRobot runbook](happyrobot-agent-runbook.md#hosted-demo-production) contains
+the detailed commands. Saved HappyRobot connections are configured separately:
+changing a Vercel URL or secret does not automatically update them.
+
+### 6. Validate the complete flow
+
+Verify more than the homepage. A successful deployment should support:
+
+1. Operator login and a browser voice call.
+2. Live carrier verification, screen OTP delivery and OTP verification.
+3. Live load search and negotiation.
+4. A saved simulated booking, call finalization and operator review.
+5. Audio disconnect and a confirmed terminal provider run.
+
+[`scripts/verify-production.mjs`](../scripts/verify-production.mjs) exercises the
+API and service integrations using a private production environment file. It
+creates demo records in the configured database. A real microphone call is still
+needed to verify audio and agent hangup; automated API checks cannot establish those.
+
+## Maintaining a deployment
+
+For subsequent releases, run the checks, deploy the intended commit, and verify
+the affected flow. A local commit alone does not update the hosted application.
+Changes to environment variables require redeployment; changes to the agent or
+its saved MCP connection require separate HappyRobot configuration.
+
+Keep the application version, agent version and credentials compatible. If a
+release fails, restore the last verified application deployment and, if needed,
+the corresponding HappyRobot version. Preserve the database when rolling back.

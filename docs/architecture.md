@@ -6,50 +6,50 @@ HappyRobot owns the voice conversation. The Node API owns authorization and
 business decisions. Twin stores the operational record independently of the
 conversation transcript.
 
-This document describes the current source and local development topology;
-it is not evidence that a remote workflow or production deployment has been
-validated. See [local setup](local-docker.md), the [workflow runbook](happyrobot-agent-runbook.md),
-and [operator guide](operations.md) for operating procedures.
+The [hosted demo](https://happyrobot-fde.vercel.app) runs as one Vercel project
+with separate Next.js and Node API services. HappyRobot runs the normal agent in
+its production environment; screen OTP, booking and manager submission remain
+demo features. See [production operations](production.md), [local setup](local-docker.md),
+and the [workflow runbook](happyrobot-agent-runbook.md) for procedures.
 
 ## System overview
 
 ```mermaid
 flowchart TB
-  Caller[Carrier] <-->|Web Call audio| HR[HappyRobot voice workflow]
-  Caller --> Browser[Local browser]
+  Caller[Carrier / demo user] <-->|Web Call audio| HR[HappyRobot production workflow]
+  Caller --> Browser[Browser]
   Operator[Operations user] --> Browser
-  subgraph Local[Local development stack]
-    Web[Next.js web app :3000]
-    API[Node API :3001]
-    Proxy[MCP-only proxy :3002]
-    Tunnel[ngrok HTTPS tunnel]
-    Web -->|Same-origin API proxy| API
-    Tunnel --> Proxy -->|/api/mcp| API
+  subgraph Vercel[Vercel project: happyrobot-fde]
+    Router[HTTPS routing: happyrobot-fde.vercel.app]
+    Web[web service: Next.js]
+    API[api service: Node.js 22 / iad1]
+    Router -->|Pages and assets| Web
+    Router -->|/api/* and /health| API
   end
-  Browser --> Web
-  HR -->|Bearer token and bound run ID| Tunnel
+  Browser -->|HTTPS and session cookies| Router
+  HR -->|POST /api/mcp: Bearer token and run ID| Router
   API -->|Create token and inspect or cancel run| HR
   API -->|SQL over HTTPS| Twin[(HappyRobot Twin)]
   API -->|Authority lookup over HTTPS| FMCSA[FMCSA QCMobile]
   API -->|Load reads over TCP| TMS[TMS]
-  API -.->|Optional live booking mode| TMS
+  API --> Mock[Simulated booking / manager submission]
 ```
 
-The audio connection does not pass through the Node API. The API creates the
-provider session and binds its run ID before returning Web Call credentials.
-HappyRobot then invokes MCP tools through the public tunnel. Browser requests
-use Next.js as a same-origin proxy to the separate API process.
+Vercel routes browser API requests and HappyRobot MCP calls directly to the API
+service. Hosted requests do not traverse the Next.js API proxy, ngrok or the
+local MCP proxy. Audio flows directly between the browser and HappyRobot; the
+API creates and binds the provider run before returning Web Call credentials.
 
-The default booking adapter produces a simulated reference without sending
-`LOAD_BOOK`. TMS inventory reads and FMCSA lookups use external services.
+FMCSA and TMS reads use external services. Hosted booking produces a simulated
+reference without sending `LOAD_BOOK`; hosted configuration rejects live booking.
 
 ## Code organization and responsibilities
 
 | Area | Responsibility | Entry point |
 | --- | --- | --- |
 | Web application | Dashboard, Web Call controls, demo verification UI | [app](../apps/web/src/app), [features](../apps/web/src/features) |
-| Browser API proxy | Forward requests and responses while preserving browser Host, Origin and cookies | [api-proxy.ts](../apps/web/src/lib/api-proxy.ts) |
-| API host | Node HTTP adapter and explicit route dispatch | [server.ts](../apps/api/src/server.ts), [app.ts](../apps/api/src/app.ts) |
+| Local browser API proxy | Used in local development; Vercel routes hosted API traffic directly | [api-proxy.ts](../apps/web/src/lib/api-proxy.ts) |
+| API host | Vercel entrypoint loads the built Node server; explicit route dispatch | [server.mjs](../apps/api/server.mjs), [app.ts](../apps/api/src/app.ts) |
 | HTTP and MCP transports | Validate inputs, authenticate requests, resolve sessions, filter errors | [transport](../apps/api/src/transport) |
 | Application commands | Dispatch typed commands and derive reviews with state changes | [commands.ts](../apps/api/src/application/commands.ts) |
 | Business modules | Calls, verification, loads, negotiation, booking and operations | [modules](../apps/api/src/modules) |
@@ -90,29 +90,34 @@ they are also used by workflow tooling. They are distinct from browser response 
 | Surface | Access and purpose |
 | --- | --- |
 | `GET /health` | Unauthenticated liveness; does not establish dependency readiness |
-| `POST /api/local/calls` | Start/read local call state; development-only loopback Origin/Host checks |
-| `POST /api/local/carriers`, `/otp`, `/tms` | Local controls; same local checks plus the call cookie |
+| `POST /api/local/calls` | Start/read demo call state; hosted mode requires a trusted HTTPS origin and operator session |
+| `POST /api/local/carriers`, `/otp`, `/tms` | Demo controls; same access checks plus the call cookie |
 | `POST /api/local/voice`, `/voice/end`, `/voice/disconnected` | Create, end or reconcile the cookie-bound voice session |
 | `POST /api/mcp` | Server-to-server Bearer authentication; tool execution resolves `x-happyrobot-run-id` to a saved call |
-| `POST /api/mcp/adversarial` | Separately enabled evaluation adapter with separate credentials and signed session capabilities |
+| `POST /api/mcp/adversarial` | Local evaluation adapter with separate credentials; disabled in hosted mode |
 | `GET /api/operator/auth` | Shared operator-session check; returns no private data when unauthenticated |
 | `POST /api/operator/auth`, `DELETE /api/operator/auth` | Establish or clear the HttpOnly shared operator session |
 | `GET /api/operator/calls`, `/api/operator/inventory` | Operator projections and live inventory; shared session plus server-side feature/configuration checks |
 | `POST /api/operator/review` | Shared session, matching browser Origin, and server-side operator key |
 
 The local cookie is opaque, HttpOnly, SameSite=Strict, scoped to `/api/local`,
-and valid for one hour. Twin stores its SHA-256 hash. The model cannot choose
+and valid for one hour; it also uses Secure in production. Twin stores its SHA-256 hash. The model cannot choose
 a call ID or session hash in tool arguments. The MCP server rejects browser
 Origin headers and supports stateless JSON responses to POST; GET/DELETE return
 405 rather than opening an SSE session.
 
-Operator access is intentionally shared in this demo. The browser authenticates
-with `OPERATOR_PASSWORD` and receives an HMAC-signed, HttpOnly session using
-`OPERATOR_SESSION_SECRET`, scoped only to `/api/operator`; every operator route verifies it before reaching the
-server-only `OPERATOR_RPC_KEY` RPC boundary. Everyone with the password receives
-the full demo surface: this is a single shared operator role, not individual
-user authentication or enterprise role-based access control. Rotate the session
-secret to invalidate existing sessions.
+Operator access is intentionally shared. The browser authenticates with
+`OPERATOR_PASSWORD` and receives an HMAC-signed, Secure, HttpOnly session using
+`OPERATOR_SESSION_SECRET`. In hosted mode its path is `/api`, protecting both
+operator and browser-call routes; locally it is `/api/operator`. The separate
+caller cookie selects the current call. Operator persistence additionally checks
+the server-only `OPERATOR_RPC_KEY` against its registered digest in Twin.
+
+Hosted browser requests must match `APP_PUBLIC_URL` or the current deployment's
+exact `VERCEL_URL`, with matching Origin/Host. Arbitrary preview domains are not
+trusted. MCP uses its own Bearer token and saved run binding, not browser cookies.
+The public MCP endpoint must remain reachable without an interactive Vercel login.
+This is shared demo access, not individual carrier identity or tenant isolation.
 
 ## Carrier call lifecycle
 
@@ -124,7 +129,7 @@ sequenceDiagram
   participant DB as Twin
   participant F as FMCSA
   participant T as TMS
-  C->>API: Start local call
+  C->>API: Start demo call after operator login
   API->>DB: Create call and hashed session
   API-->>C: HttpOnly cookie
   C->>API: Start voice session
@@ -288,11 +293,12 @@ fresh schema, not an upgrade of a populated shared workspace. Legacy SQL under
 | FMCSA | Authority lookup failure saves an unverified result; old eligibility cannot survive a failed recheck |
 | TMS reads | Validate commands/fields and require an `END`-terminated TCP response; bounded retries for retryable reads; strip private fields |
 | TMS booking | Single external write after a durable claim; ambiguous results require review |
-| Twin | Validate response shape, reject truncated data, sanitize SQL errors and recover commit receipts |
+| Twin | Validate responses, reject truncation and recover receipts; retry only explicit HTTP 429 refusals, at most twice within a 10-second budget |
 | OTP | MCP uses screen-only demo delivery. An optional email webhook adapter exists for the separate local OTP path; it is not wired into MCP `create_otp` |
 
-The operator inventory scan reports partial coverage explicitly. Complete scans
-are cached in-process for 60 seconds; incomplete scans are not cached as complete.
+The operator inventory scan has a 50-second total budget and reports partial
+coverage explicitly. Complete scans are cached in-process for 60 seconds;
+incomplete scans are not cached as complete. Instances do not share this cache.
 Dashboard maps use approximate city centers, not pickup/delivery coordinates.
 
 MCP logs record tool name, request ID, duration and safe error codes. They omit
@@ -301,25 +307,62 @@ operator projections; they are not transcript or sentiment analysis. Public
 projections deliberately omit session hashes, OTP digests and private ceilings.
 The authenticated demo UI is the deliberate exception for displaying OTP digits.
 
-## Local deployment and configuration
+## Vercel deployment
 
-[Compose](../compose.yaml) runs four services: Next.js, API, MCP proxy and ngrok.
-Only the web port 3000 and ngrok inspector port 4040 bind to host loopback; the
-API and proxy communicate on the Compose network. The public tunnel targets
-only the MCP proxy. Compose starts no database and runs no migrations.
+[`vercel.json`](../vercel.json) defines two services in one deployment, using
+[Vercel Services](https://vercel.com/docs/services). The project is
+`chalexlab/happyrobot-fde`, with `main` as its GitHub production branch.
 
-[`runtimeConfig()`](../apps/api/src/config/env.ts) parses API settings centrally.
-Negotiation, booking and operations have feature flags. The normal stack uses
-`.env.local` plus `.env.docker.local`; evaluation controllers additionally load
-`.env.eval.local` and use their own adapter/credentials. Optional email settings
-are documented in [the email example](../.env.email.example). Setup and lifecycle
-commands belong in [local-docker.md](local-docker.md).
+| Component | Configuration |
+| --- | --- |
+| Public origin | `https://happyrobot-fde.vercel.app` |
+| Web service | `apps/web`, Next.js; pages and assets |
+| API service | `apps/api`, Node 22; `server.mjs` loads the built API bundle |
+| Routing | `/api/*` and `/health` → API; remaining paths → web |
+| Function region | US East `iad1`; this does not define external-provider data residency |
+| API duration | Configured maximum 180 seconds; individual operations retain shorter deadlines |
+| Persistent state | Existing Twin workspace, outside the Vercel deployment |
 
-This topology is a development demo. Production needs an appropriate browser/session
-policy and secret-management policy in addition to the authenticated operator
-surface, validated external delivery and
-booking configuration, and hosting that supports the TMS TCP connection. A
-frontend deployment alone does not provide the API or its integrations.
+Both services install the root npm workspace. API credentials are read through
+[`runtimeConfig()`](../apps/api/src/config/env.ts); real values belong in Vercel
+environment settings. [`.env.production.example`](../.env.production.example)
+documents required names, and `.vercelignore` excludes local environment files.
+
+`NODE_ENV=production` and `HOSTED_DEMO_ENABLED=true` enable the hosted browser
+flow. The runtime requires mock OTP and booking, disables adversarial MCP, and
+validates the configured HTTPS origin and secrets. The HappyRobot production
+connection points to `https://happyrobot-fde.vercel.app/api/mcp` and supplies
+`x-happyrobot-run-id` on every tool action.
+
+Call state, booking claims and mutation receipts survive process restarts in
+Twin. In-memory caches are disposable. Local/evaluation and hosted records use
+the same configured Twin workspace; deployment does not create a separate database
+or migrate/reset existing data. Ambiguous network/5xx database responses are not
+automatically replayed; recovery reads the operation receipt.
+
+Vercel application releases and HappyRobot workflow publication are separate.
+Rolling back the application does not restore the agent version or saved MCP
+connection. Keep those versions compatible and preserve Twin state. Release,
+verification and recovery commands are in [production.md](production.md).
+
+### Local development
+
+[Compose](../compose.yaml) remains a separate development topology:
+
+```mermaid
+flowchart LR
+  Browser[Local browser] --> Web[Next.js :3000]
+  Web -->|Same-origin proxy| API[Node API :3001]
+  HR[HappyRobot development workflow] --> Tunnel[ngrok HTTPS]
+  Tunnel --> Proxy[MCP-only proxy :3002]
+  Proxy --> API
+  API --> Twin[(Twin)]
+```
+
+The web and ngrok inspector bind to host loopback; API/proxy ports remain inside
+Compose. Local development uses `.env.local` and `.env.docker.local`; native
+controllers separately load `.env.eval.local`. Docker and ngrok are not hosted
+dependencies. See [local-docker.md](local-docker.md) for lifecycle commands.
 
 ## Validation and change guide
 
@@ -333,6 +376,7 @@ coverage and the session-controller design.
 | Schema or conditional writes | `npm run db:generate`, `npm run db:check`, `npm run db:test`, `npm run db:parity` |
 | Web/API packaging | `npm run build`; proxy checks under [web tests](../apps/web/tests) |
 | Local connectivity and saved MCP wiring | `npm run local:check`, `npm run verify:mcp` |
+| Hosted service integration | `node --env-file=.env.production.local scripts/verify-production.mjs`; see [production runbook](production.md) |
 | Agent behavior | Isolated sequential native controllers; [runbook](happyrobot-agent-runbook.md) |
 | Spoken call and hangup | A real microphone/audio call plus provider terminal-state evidence |
 
