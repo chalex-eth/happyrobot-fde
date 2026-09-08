@@ -1,13 +1,23 @@
 import { z } from 'zod';
 import { ErrorResponseSchema } from '@carrier/contracts/calls';
 
+export const operatorSessionExpiredEvent = 'operator-session-expired';
+
 export async function readApiResponse<S extends z.ZodType>(
   response: Response,
   schema: S,
 ): Promise<z.output<S>> {
   const value: unknown = await response.json();
   const failure = ErrorResponseSchema.safeParse(value);
-  if (failure.success) throw new Error(failure.data.error);
+  if (failure.success) {
+    if (
+      response.status === 401 &&
+      failure.data.error === 'OPERATOR_AUTH_REQUIRED' &&
+      typeof window !== 'undefined'
+    )
+      window.dispatchEvent(new Event(operatorSessionExpiredEvent));
+    throw new Error(failure.data.error);
+  }
   if (!response.ok) throw new Error('API_UNAVAILABLE');
   const parsed = schema.safeParse(value);
   if (!parsed.success) throw new Error('API_INVALID_RESPONSE');

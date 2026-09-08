@@ -1,5 +1,6 @@
 'use client';
 
+import { operatorSessionExpiredEvent } from '../../lib/api-client';
 import type { ReactNode } from 'react';
 import { FormEvent, useEffect, useState } from 'react';
 
@@ -36,11 +37,20 @@ export function OperatorGate({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let active = true;
+    let expired = false;
+    const lock = () => {
+      expired = true;
+      setPassword('');
+      setError('Your session has expired. Enter the password to sign in again.');
+      setState('locked');
+    };
+    window.addEventListener(operatorSessionExpiredEvent, lock);
     void readSession().then((next) => {
-      if (active) setState(next);
+      if (active && !expired) setState(next);
     });
     return () => {
       active = false;
+      window.removeEventListener(operatorSessionExpiredEvent, lock);
     };
   }, []);
 

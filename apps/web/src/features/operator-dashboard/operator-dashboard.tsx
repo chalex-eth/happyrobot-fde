@@ -57,7 +57,6 @@ const time = (s: string | null) =>
     : '—';
 const message = (code: string) =>
   ({
-    OPERATOR_AUTH_REQUIRED: 'Your operator session has expired. Reload to sign in again.',
     OPERATOR_AUTH_NOT_CONFIGURED: 'Operator access has not been configured on the server.',
     OPERATOR_NOT_CONFIGURED: 'Operator access has not been configured on the server.',
     REVIEW_CHANGED: 'This review changed. Refresh the call and try again.',
