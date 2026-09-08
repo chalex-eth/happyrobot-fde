@@ -7,7 +7,7 @@ import {
 } from '@carrier/contracts/operations';
 import { requestApi } from '../../lib/api-client';
 import { z } from 'zod';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { LaneMap } from '../load-map/lane-map';
 import {
   Overview,
@@ -519,14 +519,17 @@ export function OperatorDashboard() {
     [inventoryBusy, setInventoryBusy] = useState(false),
     [status, setStatus] = useState('ALL'),
     [selected, setSelected] = useState<string | null>(null);
+  const callsInFlight = useRef(false);
   const loadCalls = useCallback(async () => {
+    if (callsInFlight.current) return;
+    callsInFlight.current = true;
     setCallBusy(true);
     try {
-      const first = await api('calls?source=all&review=false&offset=0', CallsPageSchema);
+      const first = await api('calls?source=all&review=false&offset=0&limit=1000', CallsPageSchema);
       const records = [...first.calls];
-      for (let pageOffset = 30; pageOffset < first.total; pageOffset += 30) {
+      for (let pageOffset = 1000; pageOffset < first.total; pageOffset += 1000) {
         const page = await api(
-          `calls?source=all&review=false&offset=${pageOffset}`,
+          `calls?source=all&review=false&offset=${pageOffset}&limit=1000`,
           CallsPageSchema,
         );
         records.push(...page.calls);
@@ -538,6 +541,7 @@ export function OperatorDashboard() {
       const code = (e as Error).message;
       setCallError(message(code));
     } finally {
+      callsInFlight.current = false;
       setCallBusy(false);
     }
   }, []);

@@ -183,6 +183,7 @@ export const CallsQuerySchema = z.object({
     .regex(/^[a-zA-Z0-9_-]*$/)
     .default(''),
   offset: z.coerce.number().int().min(0).max(10000).default(0),
+  limit: z.coerce.number().int().min(1).max(1000).default(30),
 });
 export const PointSchema = z.tuple([z.number(), z.number()]);
 export type Point = z.infer<typeof PointSchema>;

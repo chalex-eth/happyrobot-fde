@@ -33,9 +33,10 @@ export function listCalls(calls: Snapshot[], m: Data): Data {
         match.test(s.call.selected_load_id ?? '')),
   );
   const offset = Math.min(10000, Math.max(0, Number(m.offset ?? 0)));
+  const limit = Math.min(1000, Math.max(1, Number(m.limit ?? 30)));
   return {
     ok: true,
-    calls: filtered.slice(offset, offset + 30).map(toOperatorCall),
+    calls: filtered.slice(offset, offset + limit).map(toOperatorCall),
     total: filtered.length,
     review_count: calls.filter((s) => s.reviews.some((r) => r.status === 'open')).length,
   };
@@ -61,12 +62,15 @@ export async function operatorCommand(
     if (!s) return { ok: false, error: 'REVIEW_CHANGED' };
     return db.execute({ id: s.call.id }, m, (draft) => updateCallReview(draft, m));
   }
+  let reconciled = false;
   for (const s of calls) {
     const draft = structuredClone(s);
     reconcileOperationalReviews(draft);
-    if (!eq(draft.reviews, s.reviews))
+    if (!eq(draft.reviews, s.reviews)) {
       await db.execute({ id: s.call.id }, { action: 'reconcile' }, reconcileOperationalReviews);
+      reconciled = true;
+    }
   }
-  calls = await allCalls(db, key);
+  if (reconciled) calls = await allCalls(db, key);
   return action === 'list' ? listCalls(calls, m) : getCallDetail(calls, str(m.call_id));
 }

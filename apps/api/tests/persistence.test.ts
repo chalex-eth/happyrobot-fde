@@ -202,6 +202,38 @@ test('Twin transport rejects truncation, duplicate columns and unsafe bigint res
   }
 });
 
+test('Twin retries explicit rate-limit refusals but never uncertain mutations', async () => {
+  for (const status of [429, 503]) {
+    let requests = 0;
+    const transport = createTwinTransport({
+      key: () => 'key',
+      fetch: async () => {
+        requests++;
+        return requests === 1
+          ? new Response('{}', { status, headers: { 'retry-after': '0' } })
+          : Response.json(response({ id: 1 }));
+      },
+    });
+    if (status === 429) {
+      assert.equal((await transport.query('UPDATE test RETURNING id')).rowCount, 1);
+      assert.equal(requests, 2);
+    } else {
+      await assert.rejects(() => transport.query('UPDATE test RETURNING id'), /TWIN_UNAVAILABLE/);
+      assert.equal(requests, 1);
+    }
+  }
+  let requests = 0;
+  const transport = createTwinTransport({
+    key: () => 'key',
+    fetch: async () => {
+      requests++;
+      return new Response('{}', { status: 429, headers: { 'retry-after': '60' } });
+    },
+  });
+  await assert.rejects(() => transport.query('UPDATE test RETURNING id'), /TWIN_UNAVAILABLE/);
+  assert.equal(requests, 1, 'a long Retry-After must not be shortened');
+});
+
 test('operator filters preserve SQL wildcard escaping and empty source semantics', async () => {
   const { listCalls } = await import('../src/modules/operations/index.js');
   const s = snapshot();
@@ -211,4 +243,20 @@ test('operator filters preserve SQL wildcard escaping and empty source semantics
   s.call.selected_load_id = 'LXA';
   assert.equal(listCalls([s], { query: 'L\\_A' }).total, 0);
   assert.equal(listCalls([s], { source: '' }).total, 0);
+});
+
+test('dashboard can retrieve its overview in one bounded page without changing default pagination', async () => {
+  const { listCalls, operatorCommand } = await import('../src/modules/operations/index.js');
+  const records = Array.from({ length: 65 }, snapshot);
+  assert.equal((listCalls(records, {}).calls as unknown[]).length, 30);
+  assert.equal((listCalls(records, { limit: 1000 }).calls as unknown[]).length, 65);
+  assert.equal((listCalls(records, { limit: 50, offset: 50 }).calls as unknown[]).length, 15);
+  let reads = 0;
+  const db = new Persistence();
+  db.queryCalls = async () => {
+    reads++;
+    return records;
+  };
+  await operatorCommand(db, 'operator-key', 'list', { limit: 1000 });
+  assert.equal(reads, 1, 'unchanged reviews must not trigger a second history scan');
 });
