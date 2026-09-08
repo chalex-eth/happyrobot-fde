@@ -48,21 +48,28 @@ must be exactly:
 
     https://NGROK_DOMAIN/api/mcp
 
-Use HAPPYROBOT_ENVIRONMENT=development. Local Docker pins OTP to demo mode and
-booking to mock mode. Never commit either environment file or print expanded
+Use HAPPYROBOT_ENVIRONMENT=development. Startup requires demo OTP configuration,
+and Compose pins booking to mock mode. Never commit either environment file or print expanded
 Compose configuration.
 
 ## Services
 
-~~~text
-Browser -> app:3000 -> api:3001
-HappyRobot -> ngrok -> mcp-proxy:3002 -> api:3001/api/mcp
-~~~
+```mermaid
+flowchart LR
+  Browser[Browser] -->|Host loopback :3000| Web[app:3000]
+  Web --> API[api:3001]
+  HR[HappyRobot] -->|Public HTTPS| Ngrok[ngrok]
+  Ngrok --> Proxy[mcp-proxy:3002]
+  Proxy -->|/api/mcp| API
+```
 
 - app runs Next.js and binds only to loopback on the host.
-- api owns credentials, business rules, integrations, and Twin access.
+- api owns credentials, business rules, integrations, and Twin access; its port
+  is internal to Compose.
 - mcp-proxy exposes only the normal authenticated MCP path.
 - ngrok provides the public HTTPS endpoint for HappyRobot.
+
+See [architecture](architecture.md) for runtime flows and trust boundaries.
 
 The Compose project does not start or migrate a database. Twin must already
 contain the schema required by the configured features. The fresh Drizzle

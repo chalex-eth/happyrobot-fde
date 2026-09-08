@@ -4,6 +4,9 @@ This is the short operating guide for changing and validating the HappyRobot
 development workflow. Read it before changing the prompt, MCP tools, workflow
 bindings, or native conversation tests.
 
+For the evaluation design and backend-session mechanics, see
+[testing strategy](tests.md). This runbook covers execution procedures.
+
 ## Source of truth
 
 | Concern | Source |
@@ -14,6 +17,7 @@ bindings, or native conversation tests.
 | Normal workflow connector | scripts/happyrobot/mcp-connect.ts |
 | Native test controllers | scripts/happyrobot/run-adversarial.ts and run-negotiation.ts |
 | Test definitions | tests/happyrobot |
+| Operator call outcomes and flow branches | [Architecture: booking and follow-up](architecture.md#booking-uncertainty-and-human-follow-up) |
 
 ## Normal integration
 

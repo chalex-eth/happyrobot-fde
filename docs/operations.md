@@ -4,6 +4,9 @@ The local dashboard opens at http://localhost:3000 without a login. It is a
 development operator surface, not an authentication system. A Demo environment
 label identifies the workspace.
 
+For component ownership and persistence guarantees, see the
+[architecture](architecture.md).
+
 ## What it shows
 
 - TMS lane coverage across US origins, with city, equipment, and availability

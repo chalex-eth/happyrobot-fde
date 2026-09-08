@@ -4,8 +4,8 @@ A local carrier-sales voice application built with Next.js, a Node API, Twin
 persistence, live FMCSA/TMS reads, HappyRobot MCP tools, and an operator
 dashboard.
 
-This is a development demo. OTP delivery is screen-only, booking is simulated
-by default, manager approval uses a local adapter, and no outbound callback or
+This is a development demo. The voice flow uses screen-only OTP delivery,
+booking is simulated by default, manager approval uses a local adapter, and no outbound callback or
 notification is sent.
 
 ## Quick start
@@ -67,19 +67,26 @@ This starts the web app and API without the Docker MCP proxy and tunnel.
 
 ## Architecture
 
-~~~text
-Browser -> Next.js web app -> Node API -> Twin / FMCSA / TMS
-HappyRobot -> HTTPS MCP -> proxy -> Node API
-~~~
+```mermaid
+flowchart LR
+  Browser[Browser] --> Web[Next.js]
+  Web --> API[Node API]
+  HR[HappyRobot] --> MCP[HTTPS MCP proxy]
+  MCP --> API
+  API --> Twin[(Twin)]
+  API --> FMCSA[FMCSA]
+  API --> TMS[TMS]
+```
 
 - apps/web contains the interface and same-origin API proxy.
 - apps/api owns business decisions, integrations, MCP dispatch, and persistence.
 - packages/contracts contains browser-safe shared schemas.
-- apps/api/db contains the Drizzle schema, fresh baseline, and disposable
-  database checks.
+- apps/api/src/db contains the Drizzle schema and persistence.
+- apps/api/db contains the fresh baseline and disposable database checks.
 - scripts/happyrobot contains workflow configuration and native test controllers.
 
-See [architecture](docs/architecture.md) for ownership and data boundaries.
+See [architecture](docs/architecture.md) for component ownership, call and booking
+flows, the data model, trust boundaries, and persistence guarantees.
 
 ## Checks
 
@@ -104,10 +111,12 @@ These checks do not replace a spoken microphone/audio acceptance call.
 
 ## Documentation
 
-- [Architecture](docs/architecture.md)
+- [Architecture](docs/architecture.md) — how components, state and integrations work
+- [Testing strategy](docs/tests.md) — Northstars, scenario coverage and backend-session controllers
 - [Local Docker setup](docs/local-docker.md)
 - [HappyRobot agent runbook](docs/happyrobot-agent-runbook.md)
 - [Operator dashboard](docs/operations.md)
 
 Keep credentials in ignored environment files. The browser never receives
-integration keys, OTP secrets, private pricing, or raw Twin records.
+integration keys, OTP signing secrets, private pricing, or raw Twin records.
+The authenticated local demo page deliberately displays the caller’s OTP digits.
