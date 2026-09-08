@@ -9,10 +9,13 @@ import { mockOtpEnabled } from '../../modules/verification/index.js';
 import { SessionError } from '../../errors.js';
 import { prepareDemoChallenge } from '../../modules/verification/index.js';
 import { executeTool, negotiationAction, toolSpecs } from './tools.js';
+import { normalizeMc } from '../../integrations/fmcsa/client.js';
+import { bookUncertainForEval } from './adversarial-booking.js';
 import { FmcsaError } from '../../integrations/fmcsa/client.js';
 import { handleMcp } from './server.js';
 import { publicBooking } from '../../modules/booking/index.js';
 import { type Booking } from '@carrier/contracts/booking';
+import { publicLoadFields } from '@carrier/contracts/loads';
 import { runtimeConfig } from '../../config/env.js';
 
 const directory = () => join(workspaceRoot(), 'tmp', 'adversarial-sessions');
@@ -20,9 +23,10 @@ const planSchema = z.strictObject({
   id: z.string().uuid(),
   hash: z.string().regex(/^[a-f0-9]{64}$/),
   fault: z
-    .enum(['none', 'authority_unavailable', 'otp_delivery_failed', 'tms_unavailable'])
+    .enum(['none', 'authority_unavailable', 'otp_delivery_failed', 'tms_unavailable', 'booking_uncertain'])
     .default('none'),
   bookingAllowed: z.boolean().default(false),
+  carrierChange: z.strictObject({ firstMc: z.string().regex(/^\d{1,8}$/), secondMc: z.string().regex(/^\d{1,8}$/), challengeId: z.string().uuid() }).optional(),
   challengeId: z.string().uuid(),
   callId: z.string().uuid(),
   expiresAt: z.number().int(),
@@ -55,14 +59,21 @@ function authenticate(authorization: string | null) {
 export async function prepareAdversarialSession(
   fault: AdversarialSession['fault'] = 'none',
   bookingAllowed = false,
+  carrierChange?: { firstMc: string; secondMc: string },
 ) {
   secret();
+  if (fault === 'booking_uncertain' && (!bookingAllowed || runtimeConfig().features.bookingTmsMode !== 'mock')) throw new SessionError('ADVERSARIAL_BOOKING_MOCK_REQUIRED', 403);
+  if (carrierChange && (normalizeMc(carrierChange.firstMc) !== carrierChange.firstMc || normalizeMc(carrierChange.secondMc) !== carrierChange.secondMc || carrierChange.firstMc === carrierChange.secondMc)) throw new SessionError('ADVERSARIAL_SCENARIO_UNSUPPORTED', 409);
   const call = await startCall();
   await trackCall(call.hash, 'source', { source: 'evaluation' });
   const prepared = prepareDemoChallenge(call.hash);
+  let secondary = carrierChange ? prepareDemoChallenge(call.hash) : undefined;
+  for (let attempt = 0; secondary?.code === prepared.code && attempt < 128; attempt++) secondary = prepareDemoChallenge(call.hash);
+  if (secondary?.code === prepared.code) throw new SessionError('ADVERSARIAL_CHALLENGE_UNAVAILABLE');
   const plan: AdversarialSession = {
     fault,
     bookingAllowed,
+    ...(carrierChange && secondary ? { carrierChange: { ...carrierChange, challengeId: secondary.challengeId } } : {}),
     id: randomUUID(),
     hash: call.hash,
     callId: call.session.callId,
@@ -75,7 +86,7 @@ export async function prepareAdversarialSession(
     flag: 'wx',
   });
   const payload = Buffer.from(JSON.stringify(plan)).toString('base64url');
-  return { plan, token: `${payload}.${signature(payload)}`, code: prepared.code };
+  return { plan, token: `${payload}.${signature(payload)}`, code: prepared.code, secondaryCode: secondary?.code };
 }
 export async function activateAdversarialSession(plan: AdversarialSession, testRunId: string) {
   z.string().uuid().parse(testRunId);
@@ -129,8 +140,8 @@ export async function resolveAdversarialSession(token: string | null): Promise<A
   const status = await callAction(plan.hash, 'status');
   if (!status.ok || status.session?.callId !== plan.callId)
     throw new SessionError('ADVERSARIAL_SESSION_REQUIRED', 401);
-  // The pre-provisioned envelope covers one carrier identity only.
-  if (status.session.authorityRevision > 1)
+  // Default envelopes cover one identity. A signed opt-in permits exactly two.
+  if (status.session.authorityRevision > (plan.carrierChange ? 2 : 1))
     throw new SessionError('ADVERSARIAL_SCENARIO_UNSUPPORTED', 409);
   return plan;
 }
@@ -163,6 +174,7 @@ export async function handleAdversarialMcp(request: Request) {
   let searchArguments: Record<string, unknown> | undefined;
   let negotiationArguments: Record<string, unknown> | undefined;
   let bookingArguments: Record<string, unknown> | undefined;
+  let finalizationReview: Record<string, unknown> | undefined;
   return handleMcp(request, {
     authenticate,
     resolve: async (req) => {
@@ -174,7 +186,7 @@ export async function handleAdversarialMcp(request: Request) {
       resolved = await resolveAdversarialSession(token);
       return resolved;
     },
-    execute: (name, args, hash, signal, operationId, challengeId) => {
+    execute: async (name, args, hash, signal, operationId, challengeId) => {
       // Only a controller-signed opt-in can use the real booking path. Other
       // suites and inactive configuration probes remain unable to book.
       if (name === 'book_load' && !resolved?.bookingAllowed)
@@ -186,6 +198,21 @@ export async function handleAdversarialMcp(request: Request) {
         ? { ...toolSpecs[name].schema.parse(args), response: negotiationAction(name) }
         : undefined;
       bookingArguments = name === 'book_load' ? toolSpecs.book_load.schema.parse(args) : undefined;
+      const finalArgs = name === 'finalize_call' ? toolSpecs.finalize_call.schema.parse(args) : undefined;
+      finalizationReview = finalArgs ? { review_reason: finalArgs.review_reason, has_callback_number: !!finalArgs.callback_number, callback_consent: finalArgs.callback_consent } : undefined;
+      if (resolved?.carrierChange) {
+        const current = await callAction(hash, 'status');
+        const revision = current.session?.authorityRevision;
+        if (revision === undefined) throw new SessionError('SESSION_REQUIRED', 401);
+        if (name === 'verify_carrier') {
+          const mc = normalizeMc(toolSpecs.verify_carrier.schema.parse(args).mc_number);
+          const expected = revision === 0 ? resolved.carrierChange.firstMc : revision === 1 ? resolved.carrierChange.secondMc : undefined;
+          if (mc !== expected) throw new SessionError('ADVERSARIAL_SCENARIO_UNSUPPORTED', 409);
+        }
+        if (revision === 2) challengeId = resolved.carrierChange.challengeId;
+      }
+      if (name === 'book_load' && resolved?.fault === 'booking_uncertain')
+        return bookUncertainForEval(hash, toolSpecs.book_load.schema.parse(args), signal);
       return executeTool(name, args, hash, signal, operationId, challengeId, {
         ...(resolved?.fault === 'authority_unavailable'
           ? {
@@ -234,11 +261,20 @@ export async function handleAdversarialMcp(request: Request) {
               .map((key) => [key, negotiation[key]]),
           )
         : undefined;
+      const state = (await callAction(resolved.hash, 'status')).session;
       await appendFile(
         join(directory(), `${resolved.id}.jsonl`),
         JSON.stringify({
           at: new Date().toISOString(),
           injected_fault: resolved.fault,
+          authority_revision: state?.authorityRevision,
+          mc_number: state?.check?.mcNumber,
+          session_verified: state?.verified,
+          available_load_ids: state?.availableLoadIds,
+          selected_load_id: state?.selectedLoadId,
+          session_negotiation: state?.negotiation,
+          ...(Array.isArray(result.records) ? { records: result.records.map(r => Object.fromEntries(publicLoadFields.filter(k => k in r).map(k => [k, r[k]]))) } : {}),
+          ...(result.availability ? { availability: result.availability } : {}),
           tool,
           ok: result.ok,
           error: result.error,
@@ -248,6 +284,7 @@ export async function handleAdversarialMcp(request: Request) {
           ...(searchArguments ? { search_arguments: searchArguments } : {}),
           ...(negotiationArguments ? { negotiation_arguments: negotiationArguments } : {}),
           ...(bookingArguments ? { booking_arguments: bookingArguments } : {}),
+          ...(finalizationReview ? { finalization_review: finalizationReview, review_recorded: result.review_recorded } : {}),
           ...(result.booking ? { booking: publicBooking(result.booking as Booking) } : {}),
           ...(publicNegotiation ? { negotiation: publicNegotiation } : {}),
           ...(tool === 'finalize_call' ? { outcome: result.outcome } : {}),

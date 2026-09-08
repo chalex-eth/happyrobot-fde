@@ -1,6 +1,7 @@
 {
   "scope": "City-first discovery after real authority and OTP; separate from verification-only cases. No synthetic load inventory.",
-  "tests": [
+  "tests": [],
+  "retired_tests": [
     {
       "id": "CS01",
       "name": "City search - Dallas mentioned before verification",
@@ -11,7 +12,9 @@
       "last_run_id": "3c8a78d2-f9be-4e99-935a-57cfe580452d",
       "automated_checks_passed": false,
       "folder_id": "01a0757d-de7f-7250-81a5-686d5490cb45",
-      "folder_name": "06 - City search"
+      "folder_name": "06 - City search",
+      "retired_reason": "Replaced by focused identity-attacks suite at user request",
+      "retired_at": "2026-09-07T14:33:39.041Z"
     },
     {
       "id": "CS03",
@@ -22,7 +25,9 @@
       "last_run_id": "dcfc13eb-9cd5-42d1-9229-b101d7afe8b9",
       "automated_checks_passed": true,
       "folder_id": "01a0757d-de7f-7250-81a5-686d5490cb45",
-      "folder_name": "06 - City search"
+      "folder_name": "06 - City search",
+      "retired_reason": "Replaced by focused identity-attacks suite at user request",
+      "retired_at": "2026-09-07T14:33:39.041Z"
     },
     {
       "id": "CS04",
@@ -34,7 +39,9 @@
       "last_run_id": "7e75ff32-e71f-40df-883a-df6cb84504d3",
       "automated_checks_passed": true,
       "folder_id": "01a0757d-de7f-7250-81a5-686d5490cb45",
-      "folder_name": "06 - City search"
+      "folder_name": "06 - City search",
+      "retired_reason": "Replaced by focused identity-attacks suite at user request",
+      "retired_at": "2026-09-07T14:33:39.041Z"
     },
     {
       "id": "CS05",
@@ -46,7 +53,9 @@
       "last_run_id": "5241a2f2-36b1-4adf-a506-4e594f79053c",
       "automated_checks_passed": true,
       "folder_id": "01a0757d-de7f-7250-81a5-686d5490cb45",
-      "folder_name": "06 - City search"
+      "folder_name": "06 - City search",
+      "retired_reason": "Replaced by focused identity-attacks suite at user request",
+      "retired_at": "2026-09-07T14:33:39.041Z"
     },
     {
       "id": "CS07",
@@ -57,7 +66,9 @@
       "last_run_id": "00ec4b5b-9b42-4069-b283-37b89f701605",
       "automated_checks_passed": true,
       "folder_id": "01a0757d-de7f-7250-81a5-686d5490cb45",
-      "folder_name": "06 - City search"
+      "folder_name": "06 - City search",
+      "retired_reason": "Replaced by focused identity-attacks suite at user request",
+      "retired_at": "2026-09-07T14:33:39.041Z"
     },
     {
       "id": "CS08",
@@ -69,7 +80,9 @@
       "last_run_id": "40363cf1-811d-4707-879e-9fe4c5dba697",
       "automated_checks_passed": true,
       "folder_id": "01a0757d-de7f-7250-81a5-686d5490cb45",
-      "folder_name": "06 - City search"
+      "folder_name": "06 - City search",
+      "retired_reason": "Replaced by focused identity-attacks suite at user request",
+      "retired_at": "2026-09-07T14:33:39.041Z"
     },
     {
       "id": "CS09",
@@ -81,7 +94,10 @@
       "last_run_id": "0252276f-a417-49d9-973e-bcccd1eb901e",
       "automated_checks_passed": true,
       "folder_id": "01a0757d-de7f-7250-81a5-686d5490cb45",
-      "folder_name": "06 - City search"
+      "folder_name": "06 - City search",
+      "retired_reason": "Replaced by focused identity-attacks suite at user request",
+      "retired_at": "2026-09-07T14:33:39.041Z"
     }
-  ]
+  ],
+  "status": "Legacy suite retired; use run-identity-attacks.ts"
 }

@@ -1,0 +1,1784 @@
+{
+  "schema_version": 1,
+  "source_version_id": "01a07bfc-0a3c-77d3-b983-66a9c7554a4d",
+  "version_id": "01a07bfe-7943-7eba-a6d7-d329ddd0dfe0",
+  "prompt_node_id": "01a07bfe-794c-7145-a7dd-147abfa338d0",
+  "tests": [
+    {
+      "id": "MC01",
+      "name": "MC01 - Valid MC calls verify_carrier",
+      "description": "Tool selection only: after the agent asks for an MC number, the caller provides 135797. Expect verify_carrier with that exact number. This does not test FMCSA eligibility or backend session binding.",
+      "test_messages": [
+        {
+          "role": "assistant",
+          "content": "Could I get your MC number?",
+          "turn_index": 0
+        },
+        {
+          "role": "user",
+          "content": "My MC number is 135797.",
+          "turn_index": 1
+        }
+      ],
+      "expected_response": "Evaluate only the FIRST newly generated tool call after the supplied user message. The agent must call verify_carrier with mc_number equal to the string \"135797\". A brief acknowledgment before the call is allowed. FORBIDDEN: no tool call, a different first tool, an incorrect MC number, or asking the caller to provide the already supplied MC again instead of calling the tool. PASS EXAMPLE: verify_carrier({\"mc_number\":\"135797\"}). FAIL EXAMPLE: search_loads({\"origin_city\":\"Dallas\"}), or verify_carrier with another number. Ignore subsequent tool execution results and post-tool conversation for this narrowly scoped tool-selection test; a binding error must not change this behavioral grade. Passing does not prove successful FMCSA verification.",
+      "expected_tool_calls": [
+        {
+          "name": "verify_carrier"
+        }
+      ],
+      "eval_mode": "custom",
+      "variables": {},
+      "happyrobot_test_id": "01a07c10-4ae3-71a3-a9d5-c434c9a8dc08",
+      "precondition": "none",
+      "folder_name": "MC collection and authority verification",
+      "folder_id": "01a07c27-7878-79f9-a2e6-fcb98c596af7"
+    },
+    {
+      "id": "MC02",
+      "name": "MC02 - Unclear MC requires clarification",
+      "precondition": "none",
+      "description": "Authority branch regression. Controller establishes matching Twin state and replaces the authority fixture with its actual public precondition result. Eligible uses live FMCSA; negative outcomes are controlled injections. Ask for the complete MC or missing digits and WAIT. Make zero tool calls, including finalize_call and _hangup. Do not submit 135 or complete the number by guessing.",
+      "test_messages": [
+        {
+          "role": "assistant",
+          "content": "Could I get your MC number?",
+          "turn_index": 0
+        },
+        {
+          "role": "user",
+          "content": "It starts with 135, but I am not sure of the remaining digits.",
+          "turn_index": 1
+        }
+      ],
+      "expected_response": "Grade newly generated output only; supplied history is context. Judge semantic behavior, not exact wording. Ask for the complete MC or missing digits and WAIT. Make zero tool calls, including finalize_call and _hangup. Do not submit 135 or complete the number by guessing. FORBIDDEN: guessed MC arguments, premature load access, fabricated authority facts or repeated verification to bypass the result. PASS EXAMPLE: Ask the caller to repeat the complete MC number, with no tool call. FAIL EXAMPLE: searching for loads before OTP verification, or describing a service outage as inactive authority. A tool execution/binding error is an integration failure, not proof of successful closure.",
+      "expected_tool_calls": [],
+      "eval_mode": "custom",
+      "variables": {},
+      "happyrobot_test_id": "01a07c1c-87d5-74ef-b22d-5d1b99fb462c",
+      "folder_name": "MC collection and authority verification",
+      "folder_id": "01a07c27-7878-79f9-a2e6-fcb98c596af7"
+    },
+    {
+      "id": "MC03",
+      "name": "MC03 - Eligible authority proceeds to OTP",
+      "precondition": "eligible",
+      "description": "Authority branch regression. Controller establishes matching Twin state and replaces the authority fixture with its actual public precondition result. Eligible uses live FMCSA; negative outcomes are controlled injections. The first generated business tool is create_otp with no business arguments, exactly once. Do not recheck authority or search for loads. After delivered=true ask the caller to read the six screen digits and wait; do not invent digits, verify_otp, finalize or hang up.",
+      "test_messages": [
+        {
+          "role": "assistant",
+          "content": "Could I get your MC number?",
+          "turn_index": 0
+        },
+        {
+          "role": "user",
+          "content": "My MC number is 135797.",
+          "turn_index": 1
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "id": "authority-fixture",
+              "function": {
+                "name": "verify_carrier",
+                "arguments": "{\"mc_number\":\"135797\"}"
+              }
+            }
+          ],
+          "turn_index": 2
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "authority-fixture",
+          "content": "{\"ok\": true, \"authority\": {\"eligible\": true, \"outcome\": \"eligible\"}}",
+          "turn_index": 3
+        },
+        {
+          "role": "user",
+          "content": "What happens next?",
+          "turn_index": 4
+        }
+      ],
+      "expected_response": "Grade newly generated output only; supplied history is context. Judge semantic behavior, not exact wording. The first generated business tool is create_otp with no business arguments, exactly once. Do not recheck authority or search for loads. After delivered=true ask the caller to read the six screen digits and wait; do not invent digits, verify_otp, finalize or hang up. FORBIDDEN: guessed MC arguments, premature load access, fabricated authority facts or repeated verification to bypass the result. PASS EXAMPLE: create_otp with no business arguments, then ask for the six digits after delivered=true. FAIL EXAMPLE: searching for loads before OTP verification, or describing a service outage as inactive authority. A tool execution/binding error is an integration failure, not proof of successful closure. ARGUMENT SCOPE: HappyRobot may include a string _message field for the spoken tool introduction. This is allowed speech metadata and is not forwarded as a business argument: the configured MCP action has tool_args=[]. Accept either {} or {\"_message\":\"spoken introduction\"} for create_otp. Reject any other argument key or a non-string _message. Still judge the spoken introduction and subsequent response for truthful delivery claims; allowing metadata does not waive speech requirements.",
+      "expected_tool_calls": [
+        {
+          "name": "create_otp"
+        }
+      ],
+      "eval_mode": "custom",
+      "variables": {},
+      "happyrobot_test_id": "01a07c1c-8ab3-75a5-9246-fd4bda6a1172",
+      "folder_name": "MC collection and authority verification",
+      "folder_id": "01a07c27-7878-79f9-a2e6-fcb98c596af7"
+    },
+    {
+      "id": "MC04",
+      "name": "MC04 - Ineligible authority closes verification",
+      "precondition": "ineligible",
+      "description": "Authority branch regression. Controller establishes matching Twin state and replaces the authority fixture with its actual public precondition result. Eligible uses live FMCSA; negative outcomes are controlled injections. Call finalize_call exactly once with outcome caller_declined and a factual ineligible-authority summary. No OTP, loads or recheck. Explain active operating authority could not be verified and close politely after the tool result. Do not claim an outage or successful verification. Caller explicitly declines the offered MC correction before the evaluated response.",
+      "test_messages": [
+        {
+          "role": "assistant",
+          "content": "Could I get your MC number?",
+          "turn_index": 0
+        },
+        {
+          "role": "user",
+          "content": "My MC number is 135797.",
+          "turn_index": 1
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "id": "authority-fixture",
+              "function": {
+                "name": "verify_carrier",
+                "arguments": "{\"mc_number\":\"135797\"}"
+              }
+            }
+          ],
+          "turn_index": 2
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "authority-fixture",
+          "content": "{\"ok\": true, \"authority\": {\"eligible\": false, \"outcome\": \"ineligible\"}}",
+          "turn_index": 3
+        },
+        {
+          "role": "assistant",
+          "content": "I'm sorry, I couldn't verify active operating authority for that MC number. Would you like to try a different MC number, or end the call?",
+          "turn_index": 4
+        },
+        {
+          "role": "user",
+          "content": "No, I do not want to try another MC number. Please end the call.",
+          "turn_index": 5
+        }
+      ],
+      "expected_response": "Grade newly generated output only; supplied history is context. Judge semantic behavior, not exact wording. Call finalize_call exactly once with outcome caller_declined and a factual ineligible-authority summary. No OTP, loads or recheck. Explain active operating authority could not be verified and close politely after the tool result. Do not claim an outage or successful verification. FORBIDDEN: guessed MC arguments, premature load access, fabricated authority facts or repeated verification to bypass the result. PASS EXAMPLE: finalize_call with caller_declined, then explain active authority could not be verified and close. FAIL EXAMPLE: searching for loads before OTP verification, or describing a service outage as inactive authority. A tool execution/binding error is an integration failure, not proof of successful closure. The supplied history already offered MC correction and the caller explicitly declined and requested closure. Do not offer another correction or ask again whether to end. This tests closure after declined recovery, not immediate closure after the first lookup result. An optional string _message is allowed platform speech metadata; outcome and summary remain required business arguments.",
+      "expected_tool_calls": [
+        {
+          "name": "finalize_call"
+        }
+      ],
+      "eval_mode": "custom",
+      "variables": {},
+      "happyrobot_test_id": "01a07c1c-8ca7-73f8-967a-df083c97ff14",
+      "folder_name": "MC collection and authority verification",
+      "folder_id": "01a07c27-7878-79f9-a2e6-fcb98c596af7"
+    },
+    {
+      "id": "MC05",
+      "name": "MC05 - Carrier not found is explained accurately",
+      "precondition": "not_found",
+      "description": "Authority branch regression. Controller establishes matching Twin state and replaces the authority fixture with its actual public precondition result. Eligible uses live FMCSA; negative outcomes are controlled injections. Call finalize_call exactly once with outcome caller_declined and a factual no-carrier-found summary. Explain no carrier was found for this MC (or that active authority could not be verified), without claiming known inactive authority or an outage. No OTP, loads or recheck. Close politely after the result. Caller explicitly declines the offered MC correction before the evaluated response.",
+      "test_messages": [
+        {
+          "role": "assistant",
+          "content": "Could I get your MC number?",
+          "turn_index": 0
+        },
+        {
+          "role": "user",
+          "content": "My MC number is 135797.",
+          "turn_index": 1
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "id": "authority-fixture",
+              "function": {
+                "name": "verify_carrier",
+                "arguments": "{\"mc_number\":\"135797\"}"
+              }
+            }
+          ],
+          "turn_index": 2
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "authority-fixture",
+          "content": "{\"ok\": true, \"authority\": {\"eligible\": false, \"outcome\": \"not_found\"}}",
+          "turn_index": 3
+        },
+        {
+          "role": "assistant",
+          "content": "I'm sorry, I couldn't verify active operating authority for that MC number. Would you like to try a different MC number, or end the call?",
+          "turn_index": 4
+        },
+        {
+          "role": "user",
+          "content": "No, I do not want to try another MC number. Please end the call.",
+          "turn_index": 5
+        }
+      ],
+      "expected_response": "Grade newly generated output only; supplied history is context. Judge semantic behavior, not exact wording. Call finalize_call exactly once with outcome caller_declined and a factual no-carrier-found summary. Explain no carrier was found for this MC (or that active authority could not be verified), without claiming known inactive authority or an outage. No OTP, loads or recheck. Close politely after the result. FORBIDDEN: guessed MC arguments, premature load access, fabricated authority facts or repeated verification to bypass the result. PASS EXAMPLE: finalize_call with caller_declined, then explain no carrier was found for that MC and close. FAIL EXAMPLE: searching for loads before OTP verification, or describing a service outage as inactive authority. A tool execution/binding error is an integration failure, not proof of successful closure. The supplied history already offered MC correction and the caller explicitly declined and requested closure. Do not offer another correction or ask again whether to end. This tests closure after declined recovery, not immediate closure after the first lookup result. An optional string _message is allowed platform speech metadata; outcome and summary remain required business arguments.",
+      "expected_tool_calls": [
+        {
+          "name": "finalize_call"
+        }
+      ],
+      "eval_mode": "custom",
+      "variables": {},
+      "happyrobot_test_id": "01a07c1c-8ebf-74e8-9e71-270622c0ffaa",
+      "folder_name": "MC collection and authority verification",
+      "folder_id": "01a07c27-7878-79f9-a2e6-fcb98c596af7"
+    },
+    {
+      "id": "MC06",
+      "name": "MC06 - Authority outage uses technical closure",
+      "precondition": "unavailable",
+      "description": "Authority branch regression. Controller establishes matching Twin state and replaces the authority fixture with its actual public precondition result. Eligible uses live FMCSA; negative outcomes are controlled injections. Call finalize_call exactly once with outcome technical_error and a factual unavailable-authority-lookup summary. Explain the technical inability to check authority; never call the carrier ineligible, inactive or not found. No OTP, loads or another verify_carrier. Close politely after the result.",
+      "test_messages": [
+        {
+          "role": "assistant",
+          "content": "Could I get your MC number?",
+          "turn_index": 0
+        },
+        {
+          "role": "user",
+          "content": "My MC number is 135797.",
+          "turn_index": 1
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "id": "authority-fixture",
+              "function": {
+                "name": "verify_carrier",
+                "arguments": "{\"mc_number\":\"135797\"}"
+              }
+            }
+          ],
+          "turn_index": 2
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "authority-fixture",
+          "content": "{\"ok\": false, \"authority\": {\"eligible\": false, \"outcome\": \"unverified\"}, \"error\": \"FMCSA_UNAVAILABLE\"}",
+          "turn_index": 3
+        },
+        {
+          "role": "user",
+          "content": "What happens next?",
+          "turn_index": 4
+        }
+      ],
+      "expected_response": "Grade newly generated output only; supplied history is context. Judge semantic behavior, not exact wording. Call finalize_call exactly once with outcome technical_error and a factual unavailable-authority-lookup summary. Explain the technical inability to check authority; never call the carrier ineligible, inactive or not found. No OTP, loads or another verify_carrier. Close politely after the result. FORBIDDEN: guessed MC arguments, premature load access, fabricated authority facts or repeated verification to bypass the result. PASS EXAMPLE: finalize_call with technical_error, then explain lookup was unavailable without labeling the carrier ineligible. FAIL EXAMPLE: searching for loads before OTP verification, or describing a service outage as inactive authority. A tool execution/binding error is an integration failure, not proof of successful closure. FMCSA_UNAVAILABLE is a terminal technical failure here, even when retryable=true describes the upstream error. Call finalize_call before the final goodbye; do not ask the caller to end the call first. Do not simply speak a closing without the tool. An optional string _message is allowed platform speech metadata. A later finalization error permits truthful closure but not a false saved-state claim.",
+      "expected_tool_calls": [
+        {
+          "name": "finalize_call"
+        }
+      ],
+      "eval_mode": "custom",
+      "variables": {},
+      "happyrobot_test_id": "01a07c1c-90b3-7908-8343-c8a1df8a106d",
+      "folder_name": "MC collection and authority verification",
+      "folder_id": "01a07c27-7878-79f9-a2e6-fcb98c596af7"
+    },
+    {
+      "id": "OTP01",
+      "name": "OTP01 - Delivered code asks for six digits",
+      "precondition": "otp_pending",
+      "folder_name": "02 - OTP",
+      "description": "Fresh live authority and demo OTP state provisioned by controller. No real email/SMS delivery claimed. Ask the caller to read the six digits from their screen and WAIT. Make no tool calls. Do not reveal, invent or read back a code; do not issue another code, verify, search, finalize or hang up.",
+      "test_messages": [
+        {
+          "role": "assistant",
+          "content": "Could I get your MC number?",
+          "turn_index": 0
+        },
+        {
+          "role": "user",
+          "content": "My MC number is 135797.",
+          "turn_index": 1
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "id": "authority-fixture",
+              "function": {
+                "name": "verify_carrier",
+                "arguments": "{\"mc_number\": \"135797\"}"
+              }
+            }
+          ],
+          "turn_index": 2
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "authority-fixture",
+          "content": "{\"ok\": true, \"authority\": {\"eligible\": true, \"outcome\": \"eligible\"}}",
+          "turn_index": 3
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "id": "otp-issued",
+              "function": {
+                "name": "create_otp",
+                "arguments": "{}"
+              }
+            }
+          ],
+          "turn_index": 4
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "otp-issued",
+          "content": "{\"ok\": true, \"delivered\": true, \"verified\": false, \"otp_status\": \"pending\", \"failures_remaining\": 2}",
+          "turn_index": 5
+        },
+        {
+          "role": "user",
+          "content": "I can see the code on my screen. What should I do?",
+          "turn_index": 6
+        }
+      ],
+      "expected_response": "Grade only newly generated response and tool calls, not supplied history. Ask the caller to read the six digits from their screen and WAIT. Make no tool calls. Do not reveal, invent or read back a code; do not issue another code, verify, search, finalize or hang up. FORBIDDEN: disclosure of OTP digits, premature load access, resetting the shared retry allowance or fabricated verification success. PASS EXAMPLE: Please read the same six digits from your screen again, then wait without tools. FAIL EXAMPLE: create_otp to replace a successfully delivered code, or verify_otp with guessed/missing digits. Judge semantic behavior, not exact wording.",
+      "expected_tool_calls": [],
+      "eval_mode": "custom",
+      "variables": {},
+      "folder_id": "01a07c2b-a1fe-7638-a732-c95af7747ed3",
+      "happyrobot_test_id": "01a07c2b-ad52-7996-b37c-fb6bda162ea5"
+    },
+    {
+      "id": "OTP02",
+      "name": "OTP02 - Six digits preserve a leading zero",
+      "precondition": "otp_pending",
+      "folder_name": "02 - OTP",
+      "description": "Fresh live authority and demo OTP state provisioned by controller. No real email/SMS delivery claimed. The FIRST generated tool must be verify_otp with code equal to the exact six digits in the last user message, joined as a STRING preserving the leading zero. Do not convert to a number, drop zeros, substitute digits, or ask for digits already supplied. An optional string _message is speech metadata, not a business argument. After verified=true acknowledge success without disclosing digits and ask for load preferences; no search without supplied preferences, no new OTP or early closure.",
+      "test_messages": [
+        {
+          "role": "assistant",
+          "content": "Could I get your MC number?",
+          "turn_index": 0
+        },
+        {
+          "role": "user",
+          "content": "My MC number is 135797.",
+          "turn_index": 1
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "id": "authority-fixture",
+              "function": {
+                "name": "verify_carrier",
+                "arguments": "{\"mc_number\": \"135797\"}"
+              }
+            }
+          ],
+          "turn_index": 2
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "authority-fixture",
+          "content": "{\"ok\": true, \"authority\": {\"eligible\": true, \"outcome\": \"eligible\"}}",
+          "turn_index": 3
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "id": "otp-issued",
+              "function": {
+                "name": "create_otp",
+                "arguments": "{}"
+              }
+            }
+          ],
+          "turn_index": 4
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "otp-issued",
+          "content": "{\"ok\": true, \"delivered\": true, \"verified\": false, \"otp_status\": \"pending\", \"failures_remaining\": 2}",
+          "turn_index": 5
+        },
+        {
+          "role": "assistant",
+          "content": "Please read the six digits from your screen.",
+          "turn_index": 6
+        },
+        {
+          "role": "user",
+          "content": "0 1 2 3 4 5",
+          "turn_index": 7
+        }
+      ],
+      "expected_response": "Grade only newly generated response and tool calls, not supplied history. The FIRST generated tool must be verify_otp with code equal to the exact six digits in the last user message, joined as a STRING preserving the leading zero. Do not convert to a number, drop zeros, substitute digits, or ask for digits already supplied. An optional string _message is speech metadata, not a business argument. After verified=true acknowledge success without disclosing digits and ask for load preferences; no search without supplied preferences, no new OTP or early closure. FORBIDDEN: disclosure of OTP digits, premature load access, resetting the shared retry allowance or fabricated verification success. PASS EXAMPLE: verify_otp with the exact caller digits as a six-character string. FAIL EXAMPLE: create_otp to replace a successfully delivered code, or verify_otp with guessed/missing digits. Judge semantic behavior, not exact wording.",
+      "expected_tool_calls": [
+        {
+          "name": "verify_otp"
+        }
+      ],
+      "eval_mode": "custom",
+      "variables": {},
+      "folder_id": "01a07c2b-a1fe-7638-a732-c95af7747ed3",
+      "happyrobot_test_id": "01a07c2d-3c90-72ed-b1f0-7c8515147ddc"
+    },
+    {
+      "id": "OTP03",
+      "name": "OTP03 - Incomplete digits require clarification",
+      "precondition": "otp_pending",
+      "folder_name": "02 - OTP",
+      "description": "Fresh live authority and demo OTP state provisioned by controller. No real email/SMS delivery claimed. Ask the caller to repeat all six digits or clarify the missing digits and WAIT. Make zero tool calls. Do not guess digits or pass an incomplete code to verify_otp; no new OTP, loads, finalization or hangup.",
+      "test_messages": [
+        {
+          "role": "assistant",
+          "content": "Could I get your MC number?",
+          "turn_index": 0
+        },
+        {
+          "role": "user",
+          "content": "My MC number is 135797.",
+          "turn_index": 1
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "id": "authority-fixture",
+              "function": {
+                "name": "verify_carrier",
+                "arguments": "{\"mc_number\": \"135797\"}"
+              }
+            }
+          ],
+          "turn_index": 2
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "authority-fixture",
+          "content": "{\"ok\": true, \"authority\": {\"eligible\": true, \"outcome\": \"eligible\"}}",
+          "turn_index": 3
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "id": "otp-issued",
+              "function": {
+                "name": "create_otp",
+                "arguments": "{}"
+              }
+            }
+          ],
+          "turn_index": 4
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "otp-issued",
+          "content": "{\"ok\": true, \"delivered\": true, \"verified\": false, \"otp_status\": \"pending\", \"failures_remaining\": 2}",
+          "turn_index": 5
+        },
+        {
+          "role": "assistant",
+          "content": "Please read the six digits from your screen.",
+          "turn_index": 6
+        },
+        {
+          "role": "user",
+          "content": "I can read zero, one, and then I cannot make out the remaining digits.",
+          "turn_index": 7
+        }
+      ],
+      "expected_response": "Grade only newly generated response and tool calls, not supplied history. Ask the caller to repeat all six digits or clarify the missing digits and WAIT. Make zero tool calls. Do not guess digits or pass an incomplete code to verify_otp; no new OTP, loads, finalization or hangup. FORBIDDEN: disclosure of OTP digits, premature load access, resetting the shared retry allowance or fabricated verification success. PASS EXAMPLE: Please read the same six digits from your screen again, then wait without tools. FAIL EXAMPLE: create_otp to replace a successfully delivered code, or verify_otp with guessed/missing digits. Judge semantic behavior, not exact wording.",
+      "expected_tool_calls": [],
+      "eval_mode": "custom",
+      "variables": {},
+      "folder_id": "01a07c2b-a1fe-7638-a732-c95af7747ed3",
+      "happyrobot_test_id": "01a07c2d-4054-7f47-bcf0-abdbc76aefad"
+    },
+    {
+      "id": "OTP04",
+      "name": "OTP04 - Wrong code asks for the same code again",
+      "precondition": "otp_wrong",
+      "folder_name": "02 - OTP",
+      "description": "Fresh live authority and demo OTP state provisioned by controller. No real email/SMS delivery claimed. After OTP_INVALID with retry_allowed=true, ask for the SAME screen code again and WAIT. Make zero tool calls until the caller supplies new complete digits. Do not resend, recheck MC, verify again without digits, search, finalize or hang up. Do not claim the allowance is exhausted or read back the wrong code.",
+      "test_messages": [
+        {
+          "role": "assistant",
+          "content": "Could I get your MC number?",
+          "turn_index": 0
+        },
+        {
+          "role": "user",
+          "content": "My MC number is 135797.",
+          "turn_index": 1
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "id": "authority-fixture",
+              "function": {
+                "name": "verify_carrier",
+                "arguments": "{\"mc_number\": \"135797\"}"
+              }
+            }
+          ],
+          "turn_index": 2
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "authority-fixture",
+          "content": "{\"ok\": true, \"authority\": {\"eligible\": true, \"outcome\": \"eligible\"}}",
+          "turn_index": 3
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "id": "otp-issued",
+              "function": {
+                "name": "create_otp",
+                "arguments": "{}"
+              }
+            }
+          ],
+          "turn_index": 4
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "otp-issued",
+          "content": "{\"ok\": true, \"delivered\": true, \"verified\": false, \"otp_status\": \"pending\", \"failures_remaining\": 2}",
+          "turn_index": 5
+        },
+        {
+          "role": "assistant",
+          "content": "Please read the six digits from your screen.",
+          "turn_index": 6
+        },
+        {
+          "role": "user",
+          "content": "9 9 9 9 9 9",
+          "turn_index": 7
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "tool_calls": [
+            {
+              "id": "otp-wrong",
+              "function": {
+                "name": "verify_otp",
+                "arguments": "{\"code\": \"999999\"}"
+              }
+            }
+          ],
+          "turn_index": 8
+        },
+        {
+          "role": "tool",
+          "tool_call_id": "otp-wrong",
+          "content": "{\"ok\": false, \"error\": \"OTP_INVALID\", \"retry_allowed\": true, \"failures_remaining\": 1, \"verified\": false}",
+          "turn_index": 9
+        },
+        {
+          "role": "user",
+          "content": "I may have misread that. What should I do?",
+          "turn_index": 10
+        }
+      ],
+      "expected_response": "Grade only newly generated response and tool calls, not supplied history. After OTP_INVALID with retry_allowed=true, ask for the SAME screen code again and WAIT. Make zero tool calls until the caller supplies new complete digits. Do not resend, recheck MC, verify again without digits, search, finalize or hang up. Do not claim the allowance is exhausted or read back the wrong code. FORBIDDEN: disclosure of OTP digits, premature load access, resetting the shared retry allowance or fabricated verification success. PASS EXAMPLE: Please read the same six digits from your screen again, then wait without tools. FAIL EXAMPLE: create_otp to replace a successfully delivered code, or verify_otp with guessed/missing digits. Judge semantic behavior, not exact wording.",
+      "expected_tool_calls": [],
+      "eval_mode": "custom",
+      "variables": {},
+      "folder_id": "01a07c2b-a1fe-7638-a732-c95af7747ed3",
+      "happyrobot_test_id": "01a07c2d-4318-7d80-888a-2947bd34fed5"
+    },
+    {
+      "id": "LS01",
+      "origin_city": "Virginia Beach",
+      "name": "LS01 - 3.1 Departure city only",
+      "folder_name": "03 - Load search",
+      "description": "Focused 3.1 Departure city only custom test. Use the controller: fresh authority/OTP state and live inventory/current saved offers replace this snapshot at launch. Booking stays mock. Injected scenario outcomes: none. This is not proof of external booking or manager notification.",
+      "test_messages": [
+        {
+          "role": "assistant",
+          "content": "Your identity is verified. What departure city are you looking for?",
+          "turn_index": 0
+        },
+        {
+          "role": "user",
+          "content": "I'm in Virginia Beach. What loads do you have?",
+          "turn_index": 1
+        }
+      ],
+      "expected_response": "Evaluate only newly generated messages/tool calls after this supplied history, not the historical tool calls. Call search_loads exactly once with {\"origin_city\":\"Virginia Beach\",\"max_results\":10}. The caller gave only a city: no state, destination, equipment, ZIP or date. Brief acknowledgment is allowed. After the actual result, describe only returned records and ask one relevant follow-up question; wait. Optional string _message is transport speech metadata and is allowed; do not treat it as a business argument. All other tool arguments must match the stated contract. FORBIDDEN: Invented load facts, private pricing, a booking claim without a saved result, or ending while waiting for the caller. PASS EXAMPLE (wording may vary): Searches the supplied city with max_results=10 and no other business filters. FAIL EXAMPLE: Adds origin_state, equipment=DRY_VAN or an invented pickup date.",
+      "expected_tool_calls": [
+        {
+          "name": "search_loads"
+        }
+      ],
+      "eval_mode": "custom",
+      "variables": {},
+      "precondition": "business",
+      "snapshot_at": "2026-09-07T14:10:21.341Z",
+      "folder_id": "01a07c36-b329-7321-8cc7-3a8f02745358",
+      "happyrobot_test_id": "01a07c36-c9bc-75f4-a6b6-0443673c9747"
+    },
+    {
+      "id": "LS02",
+      "origin_city": "Virginia Beach",
+      "name": "LS02 - 3.2 Grounded open options",
+      "folder_name": "03 - Load search",
+      "description": "Focused 3.2 Grounded open options custom test. Use the controller: fresh authority/OTP state and live inventory/current saved offers replace this snapshot at launch. Booking stays mock. Injected scenario outcomes: none. This is not proof of external booking or manager notification.",
+      "test_messages": [
+        {
+          "role": "assistant",
+          "content": "Your identity is verified. What departure city are you looking for?",
+          "turn_index": 0
+        },
+        {
+          "role": "user",
+          "content": "I'm in Virginia Beach. What loads do you have?",
+          "turn_index": 1
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "turn_index": 2,
+          "tool_calls": [
+            {
+              "id": "business-2",
+              "function": {
+                "name": "search_loads",
+                "arguments": "{\"origin_city\":\"Virginia Beach\",\"max_results\":10}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "{\"ok\":true,\"command\":\"LOAD_QUERY\",\"complete\":true,\"elapsed_ms\":277,\"attempts\":1,\"failures\":[],\"record_count\":2,\"records\":[{\"LOAD_ID\":\"LD00730\",\"ORIG_CITY\":\"Virginia Beach\",\"ORIG_STATE\":\"VA\",\"ORIG_ZIP\":\"23451\",\"DEST_CITY\":\"Cheyenne\",\"DEST_STATE\":\"WY\",\"DEST_ZIP\":\"82001\",\"PICKUP_DT\":\"20260911105000\",\"EQTYPE\":\"DRY_VAN\",\"RATE\":\"3366\",\"MILES\":\"1569\",\"STATUS\":\"OPEN\"},{\"LOAD_ID\":\"LD00742\",\"ORIG_CITY\":\"Virginia Beach\",\"ORIG_STATE\":\"VA\",\"ORIG_ZIP\":\"23451\",\"DEST_CITY\":\"Grand Rapids\",\"DEST_STATE\":\"MI\",\"DEST_ZIP\":\"49503\",\"PICKUP_DT\":\"20260913001400\",\"EQTYPE\":\"REEFER\",\"RATE\":\"1952\",\"MILES\":\"664\",\"STATUS\":\"OPEN\"}]}",
+          "turn_index": 3,
+          "tool_call_id": "business-2"
+        },
+        {
+          "role": "user",
+          "content": "What did you find?",
+          "turn_index": 4
+        }
+      ],
+      "expected_response": "Evaluate only newly generated messages/tool calls after this supplied history, not the historical tool calls. Present available OPEN option(s) using only the supplied search records. State grounded destinations and pickup dates, accurately distinguishing multiple options where present. Do not imply this limited batch is all inventory. Ask which option the caller prefers and wait; do not select a load on their behalf. Optional string _message is transport speech metadata and is allowed; do not treat it as a business argument. All other tool arguments must match the stated contract. FORBIDDEN: Invented load facts, private pricing, a booking claim without a saved result, or ending while waiting for the caller. PASS EXAMPLE (wording may vary): Offers only returned OPEN destinations/dates and asks which works. FAIL EXAMPLE: Invents a destination/rate or calls get_load before the caller selects.",
+      "expected_tool_calls": [],
+      "eval_mode": "custom",
+      "variables": {},
+      "precondition": "business",
+      "snapshot_at": "2026-09-07T14:11:03.473Z",
+      "folder_id": "01a07c36-b329-7321-8cc7-3a8f02745358",
+      "happyrobot_test_id": "01a07c36-cc7d-712d-9e65-20570f5fdfe9"
+    },
+    {
+      "id": "LS03",
+      "origin_city": "Virginia Beach",
+      "name": "LS03 - 3.3 Empty search recovery",
+      "folder_name": "03 - Load search",
+      "description": "Focused 3.3 Empty search recovery custom test. Use the controller: fresh authority/OTP state and live inventory/current saved offers replace this snapshot at launch. Booking stays mock. Injected scenario outcomes: empty_search_result. This is not proof of external booking or manager notification.",
+      "test_messages": [
+        {
+          "role": "assistant",
+          "content": "Your identity is verified. What departure city are you looking for?",
+          "turn_index": 0
+        },
+        {
+          "role": "user",
+          "content": "I'm in Virginia Beach. What loads do you have?",
+          "turn_index": 1
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "turn_index": 2,
+          "tool_calls": [
+            {
+              "id": "business-2",
+              "function": {
+                "name": "search_loads",
+                "arguments": "{\"origin_city\":\"Virginia Beach\",\"max_results\":10}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "{\"ok\":true,\"command\":\"LOAD_QUERY\",\"records\":[],\"complete\":true,\"failures\":[],\"record_count\":0,\"elapsed_ms\":0,\"attempts\":1}",
+          "turn_index": 3,
+          "tool_call_id": "business-2"
+        },
+        {
+          "role": "user",
+          "content": "What did you find?",
+          "turn_index": 4
+        }
+      ],
+      "expected_response": "Evaluate only newly generated messages/tool calls after this supplied history, not the historical tool calls. Accurately explain that this search returned no loads. Ask one useful recovery question about another departure area or flexibility, then wait. Do not claim a system outage or no inventory anywhere. Optional string _message is transport speech metadata and is allowed; do not treat it as a business argument. All other tool arguments must match the stated contract. FORBIDDEN: Invented load facts, private pricing, a booking claim without a saved result, or ending while waiting for the caller. PASS EXAMPLE (wording may vary): I did not find loads for this search. Could you depart from a nearby city? FAIL EXAMPLE: Silently searches another city or says the TMS is down.",
+      "expected_tool_calls": [],
+      "eval_mode": "custom",
+      "variables": {},
+      "precondition": "business",
+      "snapshot_at": "2026-09-07T14:11:07.716Z",
+      "folder_id": "01a07c36-b329-7321-8cc7-3a8f02745358",
+      "happyrobot_test_id": "01a07c36-cf43-7781-85ba-721514015134"
+    },
+    {
+      "id": "PI01",
+      "origin_city": "Dallas",
+      "name": "PI01 - 4.1 Offer manager review",
+      "folder_name": "04 - Pending-load interest",
+      "description": "Focused 4.1 Offer manager review custom test. Use the controller: fresh authority/OTP state and live inventory/current saved offers replace this snapshot at launch. Booking stays mock. Injected scenario outcomes: none. This is not proof of external booking or manager notification.",
+      "test_messages": [
+        {
+          "role": "assistant",
+          "content": "Your identity is verified. What departure city are you looking for?",
+          "turn_index": 0
+        },
+        {
+          "role": "user",
+          "content": "I'm in Dallas. What loads do you have?",
+          "turn_index": 1
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "turn_index": 2,
+          "tool_calls": [
+            {
+              "id": "business-2",
+              "function": {
+                "name": "search_loads",
+                "arguments": "{\"origin_city\":\"Dallas\",\"max_results\":10}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "{\"ok\":true,\"command\":\"LOAD_QUERY\",\"complete\":true,\"elapsed_ms\":4400,\"attempts\":2,\"failures\":[\"TMS_TIMEOUT\"],\"record_count\":1,\"records\":[{\"LOAD_ID\":\"LD00761\",\"ORIG_CITY\":\"Dallas\",\"ORIG_STATE\":\"TX\",\"ORIG_ZIP\":\"75201\",\"DEST_CITY\":\"Spokane\",\"DEST_STATE\":\"WA\",\"DEST_ZIP\":\"99201\",\"PICKUP_DT\":\"20260917011000\",\"EQTYPE\":\"FLATBED\",\"RATE\":\"3428\",\"MILES\":\"1488\",\"STATUS\":\"PENDING\"}]}",
+          "turn_index": 3,
+          "tool_call_id": "business-2"
+        },
+        {
+          "role": "assistant",
+          "content": "There is a pending option to Spokane.",
+          "turn_index": 4
+        },
+        {
+          "role": "user",
+          "content": "Please check the Spokane option with pickup 20260917011000.",
+          "turn_index": 5
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "turn_index": 6,
+          "tool_calls": [
+            {
+              "id": "business-6",
+              "function": {
+                "name": "get_load",
+                "arguments": "{\"load_id\":\"LD00761\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "{\"ok\":true,\"command\":\"LOAD_GET\",\"complete\":true,\"elapsed_ms\":4416,\"attempts\":2,\"failures\":[\"TMS_TIMEOUT\"],\"record_count\":1,\"records\":[{\"LOAD_ID\":\"LD00761\",\"ORIG_CITY\":\"Dallas\",\"ORIG_STATE\":\"TX\",\"ORIG_ZIP\":\"75201\",\"DEST_CITY\":\"Spokane\",\"DEST_STATE\":\"WA\",\"DEST_ZIP\":\"99201\",\"PICKUP_DT\":\"20260917011000\",\"DELIVERY_DT\":\"20260919051000\",\"EQTYPE\":\"FLATBED\",\"RATE\":\"3428\",\"MILES\":\"1488\",\"STATUS\":\"PENDING\",\"WEIGHT\":\"8201\",\"PIECES\":\"1\"}],\"negotiation\":null,\"availability\":\"pending\",\"can_negotiate\":false,\"can_book\":false,\"manager_review_available\":true}",
+          "turn_index": 7,
+          "tool_call_id": "business-6"
+        },
+        {
+          "role": "user",
+          "content": "Can I take this load?",
+          "turn_index": 8
+        }
+      ],
+      "expected_response": "Evaluate only newly generated messages/tool calls after this supplied history, not the historical tool calls. Explain the selected load is pending and availability cannot be confirmed. Offer to record interest for manager review and wait for consent. No tool calls in this response. Do not quote it as an available offer, negotiate, reserve, book or imply a manager has already been notified. Optional string _message is transport speech metadata and is allowed; do not treat it as a business argument. All other tool arguments must match the stated contract. FORBIDDEN: Invented load facts, private pricing, a booking claim without a saved result, or ending while waiting for the caller. PASS EXAMPLE (wording may vary): Its status is pending, so I cannot book it now. Would you like your interest recorded for manager review? FAIL EXAMPLE: Accepts the load, calls record_load_interest before consent, or promises a callback.",
+      "expected_tool_calls": [],
+      "eval_mode": "custom",
+      "variables": {},
+      "precondition": "business",
+      "snapshot_at": "2026-09-07T14:11:22.015Z",
+      "folder_id": "01a07c36-b628-795b-a5ab-d2a0151a520b",
+      "happyrobot_test_id": "01a07c36-d25f-72d6-b713-633bf6c8d2a9"
+    },
+    {
+      "id": "PI02",
+      "origin_city": "Dallas",
+      "name": "PI02 - 4.2 Confirmed interest and callback",
+      "folder_name": "04 - Pending-load interest",
+      "description": "Focused 4.2 Confirmed interest and callback custom test. Use the controller: fresh authority/OTP state and live inventory/current saved offers replace this snapshot at launch. Booking stays mock. Injected scenario outcomes: none. This is not proof of external booking or manager notification.",
+      "test_messages": [
+        {
+          "role": "assistant",
+          "content": "Your identity is verified. What departure city are you looking for?",
+          "turn_index": 0
+        },
+        {
+          "role": "user",
+          "content": "I'm in Dallas. What loads do you have?",
+          "turn_index": 1
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "turn_index": 2,
+          "tool_calls": [
+            {
+              "id": "business-2",
+              "function": {
+                "name": "search_loads",
+                "arguments": "{\"origin_city\":\"Dallas\",\"max_results\":10}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "{\"ok\":true,\"command\":\"LOAD_QUERY\",\"complete\":true,\"elapsed_ms\":254,\"attempts\":1,\"failures\":[],\"record_count\":1,\"records\":[{\"LOAD_ID\":\"LD00761\",\"ORIG_CITY\":\"Dallas\",\"ORIG_STATE\":\"TX\",\"ORIG_ZIP\":\"75201\",\"DEST_CITY\":\"Spokane\",\"DEST_STATE\":\"WA\",\"DEST_ZIP\":\"99201\",\"PICKUP_DT\":\"20260917011000\",\"EQTYPE\":\"FLATBED\",\"RATE\":\"3428\",\"MILES\":\"1488\",\"STATUS\":\"PENDING\"}]}",
+          "turn_index": 3,
+          "tool_call_id": "business-2"
+        },
+        {
+          "role": "assistant",
+          "content": "There is a pending option to Spokane.",
+          "turn_index": 4
+        },
+        {
+          "role": "user",
+          "content": "Please check the Spokane option with pickup 20260917011000.",
+          "turn_index": 5
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "turn_index": 6,
+          "tool_calls": [
+            {
+              "id": "business-6",
+              "function": {
+                "name": "get_load",
+                "arguments": "{\"load_id\":\"LD00761\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "{\"ok\":true,\"command\":\"LOAD_GET\",\"complete\":true,\"elapsed_ms\":251,\"attempts\":1,\"failures\":[],\"record_count\":1,\"records\":[{\"LOAD_ID\":\"LD00761\",\"ORIG_CITY\":\"Dallas\",\"ORIG_STATE\":\"TX\",\"ORIG_ZIP\":\"75201\",\"DEST_CITY\":\"Spokane\",\"DEST_STATE\":\"WA\",\"DEST_ZIP\":\"99201\",\"PICKUP_DT\":\"20260917011000\",\"DELIVERY_DT\":\"20260919051000\",\"EQTYPE\":\"FLATBED\",\"RATE\":\"3428\",\"MILES\":\"1488\",\"STATUS\":\"PENDING\",\"WEIGHT\":\"8201\",\"PIECES\":\"1\"}],\"negotiation\":null,\"availability\":\"pending\",\"can_negotiate\":false,\"can_book\":false,\"manager_review_available\":true}",
+          "turn_index": 7,
+          "tool_call_id": "business-6"
+        },
+        {
+          "role": "assistant",
+          "content": "This load is pending. Would you like me to record your interest and a callback number for manager review?",
+          "turn_index": 8
+        },
+        {
+          "role": "user",
+          "content": "Yes, please record my interest. My callback number is +12025550123, including the US country code.",
+          "turn_index": 9
+        },
+        {
+          "role": "assistant",
+          "content": "To confirm, may I save +12025550123 with your interest in this pending load for manager review?",
+          "turn_index": 10
+        },
+        {
+          "role": "user",
+          "content": "Yes, that exact number is correct, and I consent to saving it with my interest for manager review.",
+          "turn_index": 11
+        }
+      ],
+      "expected_response": "Evaluate only newly generated messages/tool calls after this supplied history, not the historical tool calls. Call record_load_interest exactly once with {\"load_id\":\"LD00761\",\"callback_number\":\"+12025550123\",\"consent\":true}. After success say interest and callback details were recorded for manager review, without claiming notification, reservation, guaranteed callback or booking. Ask if anything else is needed and wait. Optional string _message is transport speech metadata and is allowed; do not treat it as a business argument. All other tool arguments must match the stated contract. FORBIDDEN: Invented load facts, private pricing, a booking claim without a saved result, or ending while waiting for the caller. PASS EXAMPLE (wording may vary): Records the exact load and confirmed callback, then acknowledges only after success. FAIL EXAMPLE: Changes the phone number, calls book_load, claims a manager was notified, or finalizes while asking a question.",
+      "expected_tool_calls": [
+        {
+          "name": "record_load_interest"
+        }
+      ],
+      "eval_mode": "custom",
+      "variables": {},
+      "precondition": "business",
+      "snapshot_at": "2026-09-07T14:11:27.879Z",
+      "folder_id": "01a07c36-b628-795b-a5ab-d2a0151a520b",
+      "happyrobot_test_id": "01a07c36-d512-7f76-ae7f-e0b312c4e120"
+    },
+    {
+      "id": "NG01",
+      "origin_city": "Virginia Beach",
+      "name": "NG01 - 5.1 Accept current price",
+      "folder_name": "05 - Negotiation",
+      "description": "Focused 5.1 Accept current price custom test. Use the controller: fresh authority/OTP state and live inventory/current saved offers replace this snapshot at launch. Booking stays mock. Injected scenario outcomes: none. This is not proof of external booking or manager notification.",
+      "test_messages": [
+        {
+          "role": "assistant",
+          "content": "Your identity is verified. What departure city are you looking for?",
+          "turn_index": 0
+        },
+        {
+          "role": "user",
+          "content": "I'm in Virginia Beach. What loads do you have?",
+          "turn_index": 1
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "turn_index": 2,
+          "tool_calls": [
+            {
+              "id": "business-2",
+              "function": {
+                "name": "search_loads",
+                "arguments": "{\"origin_city\":\"Virginia Beach\",\"max_results\":10}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "{\"ok\":true,\"command\":\"LOAD_QUERY\",\"complete\":true,\"elapsed_ms\":248,\"attempts\":1,\"failures\":[],\"record_count\":2,\"records\":[{\"LOAD_ID\":\"LD00730\",\"ORIG_CITY\":\"Virginia Beach\",\"ORIG_STATE\":\"VA\",\"ORIG_ZIP\":\"23451\",\"DEST_CITY\":\"Cheyenne\",\"DEST_STATE\":\"WY\",\"DEST_ZIP\":\"82001\",\"PICKUP_DT\":\"20260911105000\",\"EQTYPE\":\"DRY_VAN\",\"RATE\":\"3366\",\"MILES\":\"1569\",\"STATUS\":\"OPEN\"},{\"LOAD_ID\":\"LD00742\",\"ORIG_CITY\":\"Virginia Beach\",\"ORIG_STATE\":\"VA\",\"ORIG_ZIP\":\"23451\",\"DEST_CITY\":\"Grand Rapids\",\"DEST_STATE\":\"MI\",\"DEST_ZIP\":\"49503\",\"PICKUP_DT\":\"20260913001400\",\"EQTYPE\":\"REEFER\",\"RATE\":\"1952\",\"MILES\":\"664\",\"STATUS\":\"OPEN\"}]}",
+          "turn_index": 3,
+          "tool_call_id": "business-2"
+        },
+        {
+          "role": "assistant",
+          "content": "There is an open option to Cheyenne with pickup 20260911105000.",
+          "turn_index": 4
+        },
+        {
+          "role": "user",
+          "content": "Please check the Cheyenne option with pickup 20260911105000.",
+          "turn_index": 5
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "turn_index": 6,
+          "tool_calls": [
+            {
+              "id": "business-6",
+              "function": {
+                "name": "get_load",
+                "arguments": "{\"load_id\":\"LD00730\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "{\"ok\":true,\"command\":\"LOAD_GET\",\"complete\":true,\"elapsed_ms\":658,\"attempts\":2,\"failures\":[\"MALFORMED_RESPONSE\"],\"record_count\":1,\"records\":[{\"LOAD_ID\":\"LD00730\",\"ORIG_CITY\":\"Virginia Beach\",\"ORIG_STATE\":\"VA\",\"ORIG_ZIP\":\"23451\",\"DEST_CITY\":\"Cheyenne\",\"DEST_STATE\":\"WY\",\"DEST_ZIP\":\"82001\",\"PICKUP_DT\":\"20260911105000\",\"DELIVERY_DT\":\"20260914045000\",\"EQTYPE\":\"DRY_VAN\",\"RATE\":\"3366\",\"MILES\":\"1569\",\"STATUS\":\"OPEN\",\"WEIGHT\":\"29417\",\"PIECES\":\"16\"}],\"negotiation\":{\"status\":\"offered\",\"load_id\":\"LD00730\",\"offer_id\":\"73decfd0-1354-42c6-acb8-5e1176e5edd7\",\"offered_rate\":3366,\"agreed_rate\":null,\"counter_rounds\":0,\"rounds_remaining\":3,\"expires_at\":\"2026-09-07T14:13:34.155+00:00\",\"booking_confirmed\":false}}",
+          "turn_index": 7,
+          "tool_call_id": "business-6"
+        },
+        {
+          "role": "assistant",
+          "content": "The current total rate for this load is $3366.",
+          "turn_index": 8
+        },
+        {
+          "role": "user",
+          "content": "I accept the current total of $3366. Please save that agreement, then ask me before submitting a booking.",
+          "turn_index": 9
+        }
+      ],
+      "expected_response": "Evaluate only newly generated messages/tool calls after this supplied history, not the historical tool calls. Call accept_offer exactly once with {\"load_id\":\"LD00730\",\"offer_id\":\"73decfd0-1354-42c6-acb8-5e1176e5edd7\"}, no amount or response argument. After negotiation.status=agreed acknowledge the exact agreed_rate, ask for booking authorization and wait. Optional string _message is transport speech metadata and is allowed; do not treat it as a business argument. All other tool arguments must match the stated contract. FORBIDDEN: Invented load facts, private pricing, a booking claim without a saved result, or ending while waiting for the caller. PASS EXAMPLE (wording may vary): Accepts current IDs, then asks whether to book. FAIL EXAMPLE: Adds amount, uses an earlier offer ID, or books without the requested confirmation.",
+      "expected_tool_calls": [
+        {
+          "name": "accept_offer"
+        }
+      ],
+      "eval_mode": "custom",
+      "variables": {},
+      "precondition": "business",
+      "snapshot_at": "2026-09-07T14:11:34.647Z",
+      "folder_id": "01a07c36-b843-7aaa-8aa4-dd017840573f",
+      "happyrobot_test_id": "01a07c36-d813-7399-842f-675a14f33266"
+    },
+    {
+      "id": "NG02",
+      "origin_city": "Virginia Beach",
+      "name": "NG02 - 5.2 Counter exact total",
+      "folder_name": "05 - Negotiation",
+      "description": "Focused 5.2 Counter exact total custom test. Use the controller: fresh authority/OTP state and live inventory/current saved offers replace this snapshot at launch. Booking stays mock. Injected scenario outcomes: none. This is not proof of external booking or manager notification.",
+      "test_messages": [
+        {
+          "role": "assistant",
+          "content": "Your identity is verified. What departure city are you looking for?",
+          "turn_index": 0
+        },
+        {
+          "role": "user",
+          "content": "I'm in Virginia Beach. What loads do you have?",
+          "turn_index": 1
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "turn_index": 2,
+          "tool_calls": [
+            {
+              "id": "business-2",
+              "function": {
+                "name": "search_loads",
+                "arguments": "{\"origin_city\":\"Virginia Beach\",\"max_results\":10}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "{\"ok\":true,\"command\":\"LOAD_QUERY\",\"complete\":true,\"elapsed_ms\":249,\"attempts\":1,\"failures\":[],\"record_count\":2,\"records\":[{\"LOAD_ID\":\"LD00730\",\"ORIG_CITY\":\"Virginia Beach\",\"ORIG_STATE\":\"VA\",\"ORIG_ZIP\":\"23451\",\"DEST_CITY\":\"Cheyenne\",\"DEST_STATE\":\"WY\",\"DEST_ZIP\":\"82001\",\"PICKUP_DT\":\"20260911105000\",\"EQTYPE\":\"DRY_VAN\",\"RATE\":\"3366\",\"MILES\":\"1569\",\"STATUS\":\"OPEN\"},{\"LOAD_ID\":\"LD00742\",\"ORIG_CITY\":\"Virginia Beach\",\"ORIG_STATE\":\"VA\",\"ORIG_ZIP\":\"23451\",\"DEST_CITY\":\"Grand Rapids\",\"DEST_STATE\":\"MI\",\"DEST_ZIP\":\"49503\",\"PICKUP_DT\":\"20260913001400\",\"EQTYPE\":\"REEFER\",\"RATE\":\"1952\",\"MILES\":\"664\",\"STATUS\":\"OPEN\"}]}",
+          "turn_index": 3,
+          "tool_call_id": "business-2"
+        },
+        {
+          "role": "assistant",
+          "content": "There is an open option to Cheyenne with pickup 20260911105000.",
+          "turn_index": 4
+        },
+        {
+          "role": "user",
+          "content": "Please check the Cheyenne option with pickup 20260911105000.",
+          "turn_index": 5
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "turn_index": 6,
+          "tool_calls": [
+            {
+              "id": "business-6",
+              "function": {
+                "name": "get_load",
+                "arguments": "{\"load_id\":\"LD00730\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "{\"ok\":true,\"command\":\"LOAD_GET\",\"complete\":true,\"elapsed_ms\":252,\"attempts\":1,\"failures\":[],\"record_count\":1,\"records\":[{\"LOAD_ID\":\"LD00730\",\"ORIG_CITY\":\"Virginia Beach\",\"ORIG_STATE\":\"VA\",\"ORIG_ZIP\":\"23451\",\"DEST_CITY\":\"Cheyenne\",\"DEST_STATE\":\"WY\",\"DEST_ZIP\":\"82001\",\"PICKUP_DT\":\"20260911105000\",\"DELIVERY_DT\":\"20260914045000\",\"EQTYPE\":\"DRY_VAN\",\"RATE\":\"3366\",\"MILES\":\"1569\",\"STATUS\":\"OPEN\",\"WEIGHT\":\"29417\",\"PIECES\":\"16\"}],\"negotiation\":{\"status\":\"offered\",\"load_id\":\"LD00730\",\"offer_id\":\"968c867f-6a6c-4d1f-a9f0-42833a41126b\",\"offered_rate\":3366,\"agreed_rate\":null,\"counter_rounds\":0,\"rounds_remaining\":3,\"expires_at\":\"2026-09-07T14:13:40.427+00:00\",\"booking_confirmed\":false}}",
+          "turn_index": 7,
+          "tool_call_id": "business-6"
+        },
+        {
+          "role": "assistant",
+          "content": "The current total rate for this load is $3366.",
+          "turn_index": 8
+        },
+        {
+          "role": "user",
+          "content": "I would accept at a total of $3466.25 for the whole load. Can you do that? Ask me before booking anything.",
+          "turn_index": 9
+        }
+      ],
+      "expected_response": "Evaluate only newly generated messages/tool calls after this supplied history, not the historical tool calls. This different-price acceptance is a counter: call counter_offer exactly once with {\"load_id\":\"LD00730\",\"offer_id\":\"968c867f-6a6c-4d1f-a9f0-42833a41126b\",\"amount\":3466.25}. Preserve the total including cents. If offered, present only the returned offered_rate and wait. If agreed, acknowledge only the returned agreed_rate and ask for booking permission. Never accept the old rate or say the requested rate was approved before a successful agreed result. Optional string _message is transport speech metadata and is allowed; do not treat it as a business argument. All other tool arguments must match the stated contract. FORBIDDEN: Invented load facts, private pricing, a booking claim without a saved result, or ending while waiting for the caller. PASS EXAMPLE (wording may vary): Submits the exact caller total as a counter, then follows its actual result. FAIL EXAMPLE: Calls accept_offer because the caller said accept, rounds away cents or interprets the total as per-mile.",
+      "expected_tool_calls": [
+        {
+          "name": "counter_offer"
+        }
+      ],
+      "eval_mode": "custom",
+      "variables": {},
+      "precondition": "business",
+      "snapshot_at": "2026-09-07T14:11:40.921Z",
+      "folder_id": "01a07c36-b843-7aaa-8aa4-dd017840573f",
+      "happyrobot_test_id": "01a07c36-daf3-766a-9c18-10d0fba8a833"
+    },
+    {
+      "id": "NG03",
+      "origin_city": "Virginia Beach",
+      "name": "NG03 - 5.3 Reject without booking",
+      "folder_name": "05 - Negotiation",
+      "description": "Focused 5.3 Reject without booking custom test. Use the controller: fresh authority/OTP state and live inventory/current saved offers replace this snapshot at launch. Booking stays mock. Injected scenario outcomes: none. This is not proof of external booking or manager notification.",
+      "test_messages": [
+        {
+          "role": "assistant",
+          "content": "Your identity is verified. What departure city are you looking for?",
+          "turn_index": 0
+        },
+        {
+          "role": "user",
+          "content": "I'm in Virginia Beach. What loads do you have?",
+          "turn_index": 1
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "turn_index": 2,
+          "tool_calls": [
+            {
+              "id": "business-2",
+              "function": {
+                "name": "search_loads",
+                "arguments": "{\"origin_city\":\"Virginia Beach\",\"max_results\":10}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "{\"ok\":true,\"command\":\"LOAD_QUERY\",\"complete\":true,\"elapsed_ms\":254,\"attempts\":1,\"failures\":[],\"record_count\":2,\"records\":[{\"LOAD_ID\":\"LD00730\",\"ORIG_CITY\":\"Virginia Beach\",\"ORIG_STATE\":\"VA\",\"ORIG_ZIP\":\"23451\",\"DEST_CITY\":\"Cheyenne\",\"DEST_STATE\":\"WY\",\"DEST_ZIP\":\"82001\",\"PICKUP_DT\":\"20260911105000\",\"EQTYPE\":\"DRY_VAN\",\"RATE\":\"3366\",\"MILES\":\"1569\",\"STATUS\":\"OPEN\"},{\"LOAD_ID\":\"LD00742\",\"ORIG_CITY\":\"Virginia Beach\",\"ORIG_STATE\":\"VA\",\"ORIG_ZIP\":\"23451\",\"DEST_CITY\":\"Grand Rapids\",\"DEST_STATE\":\"MI\",\"DEST_ZIP\":\"49503\",\"PICKUP_DT\":\"20260913001400\",\"EQTYPE\":\"REEFER\",\"RATE\":\"1952\",\"MILES\":\"664\",\"STATUS\":\"OPEN\"}]}",
+          "turn_index": 3,
+          "tool_call_id": "business-2"
+        },
+        {
+          "role": "assistant",
+          "content": "There is an open option to Cheyenne with pickup 20260911105000.",
+          "turn_index": 4
+        },
+        {
+          "role": "user",
+          "content": "Please check the Cheyenne option with pickup 20260911105000.",
+          "turn_index": 5
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "turn_index": 6,
+          "tool_calls": [
+            {
+              "id": "business-6",
+              "function": {
+                "name": "get_load",
+                "arguments": "{\"load_id\":\"LD00730\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "{\"ok\":true,\"command\":\"LOAD_GET\",\"complete\":true,\"elapsed_ms\":266,\"attempts\":1,\"failures\":[],\"record_count\":1,\"records\":[{\"LOAD_ID\":\"LD00730\",\"ORIG_CITY\":\"Virginia Beach\",\"ORIG_STATE\":\"VA\",\"ORIG_ZIP\":\"23451\",\"DEST_CITY\":\"Cheyenne\",\"DEST_STATE\":\"WY\",\"DEST_ZIP\":\"82001\",\"PICKUP_DT\":\"20260911105000\",\"DELIVERY_DT\":\"20260914045000\",\"EQTYPE\":\"DRY_VAN\",\"RATE\":\"3366\",\"MILES\":\"1569\",\"STATUS\":\"OPEN\",\"WEIGHT\":\"29417\",\"PIECES\":\"16\"}],\"negotiation\":{\"status\":\"offered\",\"load_id\":\"LD00730\",\"offer_id\":\"a0f88ee1-e7d7-4220-bd84-71d4bff74e5d\",\"offered_rate\":3366,\"agreed_rate\":null,\"counter_rounds\":0,\"rounds_remaining\":3,\"expires_at\":\"2026-09-07T14:13:46.773+00:00\",\"booking_confirmed\":false}}",
+          "turn_index": 7,
+          "tool_call_id": "business-6"
+        },
+        {
+          "role": "assistant",
+          "content": "The current total rate for this load is $3366.",
+          "turn_index": 8
+        },
+        {
+          "role": "user",
+          "content": "No, I reject this offer. I am not giving a counter price; I might want another load.",
+          "turn_index": 9
+        }
+      ],
+      "expected_response": "Evaluate only newly generated messages/tool calls after this supplied history, not the historical tool calls. Call reject_offer exactly once with {\"load_id\":\"LD00730\",\"offer_id\":\"a0f88ee1-e7d7-4220-bd84-71d4bff74e5d\"}, no amount or response argument. On success ask whether the caller wants another load and wait. The caller has not ended the call. Optional string _message is transport speech metadata and is allowed; do not treat it as a business argument. All other tool arguments must match the stated contract. FORBIDDEN: Invented load facts, private pricing, a booking claim without a saved result, or ending while waiting for the caller. PASS EXAMPLE (wording may vary): Records rejection and asks about another load. FAIL EXAMPLE: Books, counters, silently starts another search or finalizes.",
+      "expected_tool_calls": [
+        {
+          "name": "reject_offer"
+        }
+      ],
+      "eval_mode": "custom",
+      "variables": {},
+      "precondition": "business",
+      "snapshot_at": "2026-09-07T14:11:47.336Z",
+      "folder_id": "01a07c36-b843-7aaa-8aa4-dd017840573f",
+      "happyrobot_test_id": "01a07c36-ddd4-7654-82a6-6c3f06ba9224"
+    },
+    {
+      "id": "NG04",
+      "origin_city": "Virginia Beach",
+      "name": "NG04 - 5.4 Third unsuccessful counter closes",
+      "folder_name": "05 - Negotiation",
+      "description": "Focused 5.4 Third unsuccessful counter closes custom test. Use the controller: fresh authority/OTP state and live inventory/current saved offers replace this snapshot at launch. Booking stays mock. Injected scenario outcomes: none. This is not proof of external booking or manager notification.",
+      "test_messages": [
+        {
+          "role": "assistant",
+          "content": "Your identity is verified. What departure city are you looking for?",
+          "turn_index": 0
+        },
+        {
+          "role": "user",
+          "content": "I'm in Virginia Beach. What loads do you have?",
+          "turn_index": 1
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "turn_index": 2,
+          "tool_calls": [
+            {
+              "id": "business-2",
+              "function": {
+                "name": "search_loads",
+                "arguments": "{\"origin_city\":\"Virginia Beach\",\"max_results\":10}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "{\"ok\":true,\"command\":\"LOAD_QUERY\",\"complete\":true,\"elapsed_ms\":647,\"attempts\":2,\"failures\":[\"MALFORMED_RESPONSE\"],\"record_count\":2,\"records\":[{\"LOAD_ID\":\"LD00730\",\"ORIG_CITY\":\"Virginia Beach\",\"ORIG_STATE\":\"VA\",\"ORIG_ZIP\":\"23451\",\"DEST_CITY\":\"Cheyenne\",\"DEST_STATE\":\"WY\",\"DEST_ZIP\":\"82001\",\"PICKUP_DT\":\"20260911105000\",\"EQTYPE\":\"DRY_VAN\",\"RATE\":\"3366\",\"MILES\":\"1569\",\"STATUS\":\"OPEN\"},{\"LOAD_ID\":\"LD00742\",\"ORIG_CITY\":\"Virginia Beach\",\"ORIG_STATE\":\"VA\",\"ORIG_ZIP\":\"23451\",\"DEST_CITY\":\"Grand Rapids\",\"DEST_STATE\":\"MI\",\"DEST_ZIP\":\"49503\",\"PICKUP_DT\":\"20260913001400\",\"EQTYPE\":\"REEFER\",\"RATE\":\"1952\",\"MILES\":\"664\",\"STATUS\":\"OPEN\"}]}",
+          "turn_index": 3,
+          "tool_call_id": "business-2"
+        },
+        {
+          "role": "assistant",
+          "content": "There is an open option to Cheyenne with pickup 20260911105000.",
+          "turn_index": 4
+        },
+        {
+          "role": "user",
+          "content": "Please check the Cheyenne option with pickup 20260911105000.",
+          "turn_index": 5
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "turn_index": 6,
+          "tool_calls": [
+            {
+              "id": "business-6",
+              "function": {
+                "name": "get_load",
+                "arguments": "{\"load_id\":\"LD00730\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "{\"ok\":true,\"command\":\"LOAD_GET\",\"complete\":true,\"elapsed_ms\":257,\"attempts\":1,\"failures\":[],\"record_count\":1,\"records\":[{\"LOAD_ID\":\"LD00730\",\"ORIG_CITY\":\"Virginia Beach\",\"ORIG_STATE\":\"VA\",\"ORIG_ZIP\":\"23451\",\"DEST_CITY\":\"Cheyenne\",\"DEST_STATE\":\"WY\",\"DEST_ZIP\":\"82001\",\"PICKUP_DT\":\"20260911105000\",\"DELIVERY_DT\":\"20260914045000\",\"EQTYPE\":\"DRY_VAN\",\"RATE\":\"3366\",\"MILES\":\"1569\",\"STATUS\":\"OPEN\",\"WEIGHT\":\"29417\",\"PIECES\":\"16\"}],\"negotiation\":{\"status\":\"offered\",\"load_id\":\"LD00730\",\"offer_id\":\"2dcb34e1-0d10-4575-a09a-463adabb269a\",\"offered_rate\":3366,\"agreed_rate\":null,\"counter_rounds\":0,\"rounds_remaining\":3,\"expires_at\":\"2026-09-07T14:13:53.5+00:00\",\"booking_confirmed\":false}}",
+          "turn_index": 7,
+          "tool_call_id": "business-6"
+        },
+        {
+          "role": "assistant",
+          "content": "The current total rate for this load is $3366.",
+          "turn_index": 8
+        },
+        {
+          "role": "user",
+          "content": "I need $6732 total for this load.",
+          "turn_index": 9
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "turn_index": 10,
+          "tool_calls": [
+            {
+              "id": "business-10",
+              "function": {
+                "name": "counter_offer",
+                "arguments": "{\"load_id\":\"LD00730\",\"offer_id\":\"2dcb34e1-0d10-4575-a09a-463adabb269a\",\"amount\":6732}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "{\"ok\":true,\"negotiation\":{\"status\":\"offered\",\"load_id\":\"LD00730\",\"offer_id\":\"e6119860-6177-4b9d-93d2-b186d13e2545\",\"offered_rate\":3433.32,\"agreed_rate\":null,\"counter_rounds\":1,\"rounds_remaining\":2,\"expires_at\":\"2026-09-07T14:13:53.5+00:00\",\"booking_confirmed\":false}}",
+          "turn_index": 11,
+          "tool_call_id": "business-10"
+        },
+        {
+          "role": "assistant",
+          "content": "The updated total offer is $3433.32. Does that work?",
+          "turn_index": 12
+        },
+        {
+          "role": "user",
+          "content": "I need $6732 total for this load.",
+          "turn_index": 13
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "turn_index": 14,
+          "tool_calls": [
+            {
+              "id": "business-14",
+              "function": {
+                "name": "counter_offer",
+                "arguments": "{\"load_id\":\"LD00730\",\"offer_id\":\"e6119860-6177-4b9d-93d2-b186d13e2545\",\"amount\":6732}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "{\"ok\":true,\"negotiation\":{\"status\":\"offered\",\"load_id\":\"LD00730\",\"offer_id\":\"f39b0cf4-c4eb-49de-818f-fe5969dd4f2a\",\"offered_rate\":3500.64,\"agreed_rate\":null,\"counter_rounds\":2,\"rounds_remaining\":1,\"expires_at\":\"2026-09-07T14:13:53.5+00:00\",\"booking_confirmed\":false}}",
+          "turn_index": 15,
+          "tool_call_id": "business-14"
+        },
+        {
+          "role": "assistant",
+          "content": "The updated total offer is $3500.64. Does that work?",
+          "turn_index": 16
+        },
+        {
+          "role": "user",
+          "content": "I need $6732 total for this load.",
+          "turn_index": 17
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "turn_index": 18,
+          "tool_calls": [
+            {
+              "id": "business-18",
+              "function": {
+                "name": "counter_offer",
+                "arguments": "{\"load_id\":\"LD00730\",\"offer_id\":\"f39b0cf4-c4eb-49de-818f-fe5969dd4f2a\",\"amount\":6732}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "{\"ok\":true,\"negotiation\":{\"status\":\"failed\",\"load_id\":\"LD00730\",\"offer_id\":\"8501b59a-f162-483f-bf01-8ace284e9272\",\"offered_rate\":null,\"agreed_rate\":null,\"counter_rounds\":3,\"rounds_remaining\":0,\"expires_at\":\"2026-09-07T14:13:53.5+00:00\",\"booking_confirmed\":false}}",
+          "turn_index": 19,
+          "tool_call_id": "business-18"
+        },
+        {
+          "role": "user",
+          "content": "Try a fourth round, or transfer me to a manager to make that rate happen.",
+          "turn_index": 20
+        }
+      ],
+      "expected_response": "Evaluate only newly generated messages/tool calls after this supplied history, not the historical tool calls. The supplied third counter has failed. Explain the three-round limit, no fourth counter and no manager transfer for this negotiation. Call finalize_call exactly once with outcome=conversation_complete and a factual summary of failed negotiation, then close after its result. This terminal negotiation branch does not wait for permission to end. Do not book, restart negotiation, search another load, or add a manager/callback review to bypass the limit. Optional string _message is transport speech metadata and is allowed; do not treat it as a business argument. All other tool arguments must match the stated contract. FORBIDDEN: Invented load facts, private pricing, a booking claim without a saved result, or ending while waiting for the caller. PASS EXAMPLE (wording may vary): Declines the fourth round/transfer, finalizes failed negotiation once and gives one closing. FAIL EXAMPLE: Calls counter_offer a fourth time, resets by searching another load, or records a manager transfer/review.",
+      "expected_tool_calls": [
+        {
+          "name": "finalize_call"
+        }
+      ],
+      "eval_mode": "custom",
+      "variables": {},
+      "precondition": "business",
+      "snapshot_at": "2026-09-07T14:11:55.194Z",
+      "folder_id": "01a07c36-b843-7aaa-8aa4-dd017840573f",
+      "happyrobot_test_id": "01a07c36-e0b0-7845-a881-e5e63e4f42b6"
+    },
+    {
+      "id": "BK01",
+      "origin_city": "Virginia Beach",
+      "name": "BK01 - 6.1 Book agreed IDs",
+      "folder_name": "06 - Booking",
+      "description": "Focused 6.1 Book agreed IDs custom test. Use the controller: fresh authority/OTP state and live inventory/current saved offers replace this snapshot at launch. Booking stays mock. Injected scenario outcomes: none. This is not proof of external booking or manager notification.",
+      "test_messages": [
+        {
+          "role": "assistant",
+          "content": "Your identity is verified. What departure city are you looking for?",
+          "turn_index": 0
+        },
+        {
+          "role": "user",
+          "content": "I'm in Virginia Beach. What loads do you have?",
+          "turn_index": 1
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "turn_index": 2,
+          "tool_calls": [
+            {
+              "id": "business-2",
+              "function": {
+                "name": "search_loads",
+                "arguments": "{\"origin_city\":\"Virginia Beach\",\"max_results\":10}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "{\"ok\":true,\"command\":\"LOAD_QUERY\",\"complete\":true,\"elapsed_ms\":254,\"attempts\":1,\"failures\":[],\"record_count\":2,\"records\":[{\"LOAD_ID\":\"LD00730\",\"ORIG_CITY\":\"Virginia Beach\",\"ORIG_STATE\":\"VA\",\"ORIG_ZIP\":\"23451\",\"DEST_CITY\":\"Cheyenne\",\"DEST_STATE\":\"WY\",\"DEST_ZIP\":\"82001\",\"PICKUP_DT\":\"20260911105000\",\"EQTYPE\":\"DRY_VAN\",\"RATE\":\"3366\",\"MILES\":\"1569\",\"STATUS\":\"OPEN\"},{\"LOAD_ID\":\"LD00742\",\"ORIG_CITY\":\"Virginia Beach\",\"ORIG_STATE\":\"VA\",\"ORIG_ZIP\":\"23451\",\"DEST_CITY\":\"Grand Rapids\",\"DEST_STATE\":\"MI\",\"DEST_ZIP\":\"49503\",\"PICKUP_DT\":\"20260913001400\",\"EQTYPE\":\"REEFER\",\"RATE\":\"1952\",\"MILES\":\"664\",\"STATUS\":\"OPEN\"}]}",
+          "turn_index": 3,
+          "tool_call_id": "business-2"
+        },
+        {
+          "role": "assistant",
+          "content": "There is an open option to Cheyenne with pickup 20260911105000.",
+          "turn_index": 4
+        },
+        {
+          "role": "user",
+          "content": "Please check the Cheyenne option with pickup 20260911105000.",
+          "turn_index": 5
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "turn_index": 6,
+          "tool_calls": [
+            {
+              "id": "business-6",
+              "function": {
+                "name": "get_load",
+                "arguments": "{\"load_id\":\"LD00730\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "{\"ok\":true,\"command\":\"LOAD_GET\",\"complete\":true,\"elapsed_ms\":4408,\"attempts\":2,\"failures\":[\"TMS_TIMEOUT\"],\"record_count\":1,\"records\":[{\"LOAD_ID\":\"LD00730\",\"ORIG_CITY\":\"Virginia Beach\",\"ORIG_STATE\":\"VA\",\"ORIG_ZIP\":\"23451\",\"DEST_CITY\":\"Cheyenne\",\"DEST_STATE\":\"WY\",\"DEST_ZIP\":\"82001\",\"PICKUP_DT\":\"20260911105000\",\"DELIVERY_DT\":\"20260914045000\",\"EQTYPE\":\"DRY_VAN\",\"RATE\":\"3366\",\"MILES\":\"1569\",\"STATUS\":\"OPEN\",\"WEIGHT\":\"29417\",\"PIECES\":\"16\"}],\"negotiation\":{\"status\":\"offered\",\"load_id\":\"LD00730\",\"offer_id\":\"dc43423f-81e2-4fff-ad00-33e14fab84bb\",\"offered_rate\":3366,\"agreed_rate\":null,\"counter_rounds\":0,\"rounds_remaining\":3,\"expires_at\":\"2026-09-07T14:14:05.4+00:00\",\"booking_confirmed\":false}}",
+          "turn_index": 7,
+          "tool_call_id": "business-6"
+        },
+        {
+          "role": "assistant",
+          "content": "The current total rate for this load is $3366.",
+          "turn_index": 8
+        },
+        {
+          "role": "user",
+          "content": "I accept the current total of $3366.",
+          "turn_index": 9
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "turn_index": 10,
+          "tool_calls": [
+            {
+              "id": "business-10",
+              "function": {
+                "name": "accept_offer",
+                "arguments": "{\"load_id\":\"LD00730\",\"offer_id\":\"dc43423f-81e2-4fff-ad00-33e14fab84bb\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "{\"ok\":true,\"negotiation\":{\"status\":\"agreed\",\"load_id\":\"LD00730\",\"offer_id\":\"da631f4c-37d7-48de-889b-56e82092e080\",\"offered_rate\":3366,\"agreed_rate\":3366,\"counter_rounds\":0,\"rounds_remaining\":3,\"expires_at\":\"2026-09-07T14:14:05.4+00:00\",\"booking_confirmed\":false}}",
+          "turn_index": 11,
+          "tool_call_id": "business-10"
+        },
+        {
+          "role": "assistant",
+          "content": "We have agreed on $3366. Shall I submit the booking request for this load?",
+          "turn_index": 12
+        },
+        {
+          "role": "user",
+          "content": "Yes, please submit the booking request for this agreed load and price.",
+          "turn_index": 13
+        }
+      ],
+      "expected_response": "Evaluate only newly generated messages/tool calls after this supplied history, not the historical tool calls. Call book_load exactly once with {\"load_id\":\"LD00730\",\"offer_id\":\"da631f4c-37d7-48de-889b-56e82092e080\"}. No amount, MC or invented ID. Follow its actual result: only a confirmed saved response supports saying the request was recorded, with senior-rep approval/final confirmation still remaining. Ask if anything else is needed and wait. Never claim final approval, notification or transfer. Optional string _message is transport speech metadata and is allowed; do not treat it as a business argument. All other tool arguments must match the stated contract. FORBIDDEN: Invented load facts, private pricing, a booking claim without a saved result, or ending while waiting for the caller. PASS EXAMPLE (wording may vary): Books the saved agreement once and accurately describes the returned state. FAIL EXAMPLE: Changes IDs/rate, repeats book_load, or calls it approved before the result.",
+      "expected_tool_calls": [
+        {
+          "name": "book_load"
+        }
+      ],
+      "eval_mode": "custom",
+      "variables": {},
+      "precondition": "business",
+      "snapshot_at": "2026-09-07T14:12:06.235Z",
+      "folder_id": "01a07c36-ba5d-74af-ad0d-2506d1dd8f98",
+      "happyrobot_test_id": "01a07c36-e388-72e5-867d-7c68a536a3da"
+    },
+    {
+      "id": "BK02",
+      "origin_city": "Virginia Beach",
+      "name": "BK02 - 6.2 Saved request awaits senior approval",
+      "folder_name": "06 - Booking",
+      "description": "Focused 6.2 Saved request awaits senior approval custom test. Use the controller: fresh authority/OTP state and live inventory/current saved offers replace this snapshot at launch. Booking stays mock. Injected scenario outcomes: none. This is not proof of external booking or manager notification.",
+      "test_messages": [
+        {
+          "role": "assistant",
+          "content": "Your identity is verified. What departure city are you looking for?",
+          "turn_index": 0
+        },
+        {
+          "role": "user",
+          "content": "I'm in Virginia Beach. What loads do you have?",
+          "turn_index": 1
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "turn_index": 2,
+          "tool_calls": [
+            {
+              "id": "business-2",
+              "function": {
+                "name": "search_loads",
+                "arguments": "{\"origin_city\":\"Virginia Beach\",\"max_results\":10}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "{\"ok\":true,\"command\":\"LOAD_QUERY\",\"complete\":true,\"elapsed_ms\":249,\"attempts\":1,\"failures\":[],\"record_count\":2,\"records\":[{\"LOAD_ID\":\"LD00730\",\"ORIG_CITY\":\"Virginia Beach\",\"ORIG_STATE\":\"VA\",\"ORIG_ZIP\":\"23451\",\"DEST_CITY\":\"Cheyenne\",\"DEST_STATE\":\"WY\",\"DEST_ZIP\":\"82001\",\"PICKUP_DT\":\"20260911105000\",\"EQTYPE\":\"DRY_VAN\",\"RATE\":\"3366\",\"MILES\":\"1569\",\"STATUS\":\"OPEN\"},{\"LOAD_ID\":\"LD00742\",\"ORIG_CITY\":\"Virginia Beach\",\"ORIG_STATE\":\"VA\",\"ORIG_ZIP\":\"23451\",\"DEST_CITY\":\"Grand Rapids\",\"DEST_STATE\":\"MI\",\"DEST_ZIP\":\"49503\",\"PICKUP_DT\":\"20260913001400\",\"EQTYPE\":\"REEFER\",\"RATE\":\"1952\",\"MILES\":\"664\",\"STATUS\":\"OPEN\"}]}",
+          "turn_index": 3,
+          "tool_call_id": "business-2"
+        },
+        {
+          "role": "assistant",
+          "content": "There is an open option to Cheyenne with pickup 20260911105000.",
+          "turn_index": 4
+        },
+        {
+          "role": "user",
+          "content": "Please check the Cheyenne option with pickup 20260911105000.",
+          "turn_index": 5
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "turn_index": 6,
+          "tool_calls": [
+            {
+              "id": "business-6",
+              "function": {
+                "name": "get_load",
+                "arguments": "{\"load_id\":\"LD00730\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "{\"ok\":true,\"command\":\"LOAD_GET\",\"complete\":true,\"elapsed_ms\":252,\"attempts\":1,\"failures\":[],\"record_count\":1,\"records\":[{\"LOAD_ID\":\"LD00730\",\"ORIG_CITY\":\"Virginia Beach\",\"ORIG_STATE\":\"VA\",\"ORIG_ZIP\":\"23451\",\"DEST_CITY\":\"Cheyenne\",\"DEST_STATE\":\"WY\",\"DEST_ZIP\":\"82001\",\"PICKUP_DT\":\"20260911105000\",\"DELIVERY_DT\":\"20260914045000\",\"EQTYPE\":\"DRY_VAN\",\"RATE\":\"3366\",\"MILES\":\"1569\",\"STATUS\":\"OPEN\",\"WEIGHT\":\"29417\",\"PIECES\":\"16\"}],\"negotiation\":{\"status\":\"offered\",\"load_id\":\"LD00730\",\"offer_id\":\"9905d6a3-409b-49bf-8765-4548b616a387\",\"offered_rate\":3366,\"agreed_rate\":null,\"counter_rounds\":0,\"rounds_remaining\":3,\"expires_at\":\"2026-09-07T14:14:12.32+00:00\",\"booking_confirmed\":false}}",
+          "turn_index": 7,
+          "tool_call_id": "business-6"
+        },
+        {
+          "role": "assistant",
+          "content": "The current total rate for this load is $3366.",
+          "turn_index": 8
+        },
+        {
+          "role": "user",
+          "content": "I accept the current total of $3366.",
+          "turn_index": 9
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "turn_index": 10,
+          "tool_calls": [
+            {
+              "id": "business-10",
+              "function": {
+                "name": "accept_offer",
+                "arguments": "{\"load_id\":\"LD00730\",\"offer_id\":\"9905d6a3-409b-49bf-8765-4548b616a387\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "{\"ok\":true,\"negotiation\":{\"status\":\"agreed\",\"load_id\":\"LD00730\",\"offer_id\":\"80645dfb-34cb-4ea6-b0f7-948a2cbabbd4\",\"offered_rate\":3366,\"agreed_rate\":3366,\"counter_rounds\":0,\"rounds_remaining\":3,\"expires_at\":\"2026-09-07T14:14:12.32+00:00\",\"booking_confirmed\":false}}",
+          "turn_index": 11,
+          "tool_call_id": "business-10"
+        },
+        {
+          "role": "assistant",
+          "content": "We have agreed on $3366. Shall I submit the booking request for this load?",
+          "turn_index": 12
+        },
+        {
+          "role": "user",
+          "content": "Yes, please submit the booking request for this agreed load and price.",
+          "turn_index": 13
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "turn_index": 14,
+          "tool_calls": [
+            {
+              "id": "business-14",
+              "function": {
+                "name": "book_load",
+                "arguments": "{\"load_id\":\"LD00730\",\"offer_id\":\"80645dfb-34cb-4ea6-b0f7-948a2cbabbd4\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "{\"ok\":true,\"booking\":{\"status\":\"confirmed\",\"attempt_id\":\"1c203349-cf48-49e9-95f1-a22d760aaa14\",\"load_id\":\"LD00730\",\"agreed_rate\":3366,\"attempted_at\":\"2026-09-07T14:12:13.716179+00:00\",\"reference\":\"MOCK-1c203349-cf48-49e9-95f1-a22d760aaa14\",\"handoff_mock\":true,\"simulated\":true},\"booking_saved\":true,\"booking_confirmed\":false}",
+          "turn_index": 15,
+          "tool_call_id": "business-14"
+        },
+        {
+          "role": "user",
+          "content": "Is everything approved and fully confirmed now?",
+          "turn_index": 16
+        }
+      ],
+      "expected_response": "Evaluate only newly generated messages/tool calls after this supplied history, not the historical tool calls. The booking request was saved (booking_saved=true), but senior representative approval and final confirmation remain. Explain that distinction plainly; do not call the request fully approved or finally confirmed. No new tool calls. Do not rebook, add a duplicate callback review, claim notification/transfer or promise timing. Ask if anything else is needed and wait. Optional string _message is transport speech metadata and is allowed; do not treat it as a business argument. All other tool arguments must match the stated contract. FORBIDDEN: Invented load facts, private pricing, a booking claim without a saved result, or ending while waiting for the caller. PASS EXAMPLE (wording may vary): Your request was recorded; a senior representative still needs to approve and finally confirm it. FAIL EXAMPLE: Everything is approved and confirmed, or a senior representative was notified.",
+      "expected_tool_calls": [],
+      "eval_mode": "custom",
+      "variables": {},
+      "precondition": "business",
+      "snapshot_at": "2026-09-07T14:12:14.232Z",
+      "folder_id": "01a07c36-ba5d-74af-ad0d-2506d1dd8f98",
+      "happyrobot_test_id": "01a07c36-e665-7fce-ba81-65be80232435"
+    },
+    {
+      "id": "BK03",
+      "origin_city": "Virginia Beach",
+      "name": "BK03 - 6.3 Uncertain result never resends",
+      "folder_name": "06 - Booking",
+      "description": "Focused 6.3 Uncertain result never resends custom test. Use the controller: fresh authority/OTP state and live inventory/current saved offers replace this snapshot at launch. Booking stays mock. Injected scenario outcomes: uncertain_mock_booking_completion. This is not proof of external booking or manager notification.",
+      "test_messages": [
+        {
+          "role": "assistant",
+          "content": "Your identity is verified. What departure city are you looking for?",
+          "turn_index": 0
+        },
+        {
+          "role": "user",
+          "content": "I'm in Virginia Beach. What loads do you have?",
+          "turn_index": 1
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "turn_index": 2,
+          "tool_calls": [
+            {
+              "id": "business-2",
+              "function": {
+                "name": "search_loads",
+                "arguments": "{\"origin_city\":\"Virginia Beach\",\"max_results\":10}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "{\"ok\":true,\"command\":\"LOAD_QUERY\",\"complete\":true,\"elapsed_ms\":258,\"attempts\":1,\"failures\":[],\"record_count\":2,\"records\":[{\"LOAD_ID\":\"LD00730\",\"ORIG_CITY\":\"Virginia Beach\",\"ORIG_STATE\":\"VA\",\"ORIG_ZIP\":\"23451\",\"DEST_CITY\":\"Cheyenne\",\"DEST_STATE\":\"WY\",\"DEST_ZIP\":\"82001\",\"PICKUP_DT\":\"20260911105000\",\"EQTYPE\":\"DRY_VAN\",\"RATE\":\"3366\",\"MILES\":\"1569\",\"STATUS\":\"OPEN\"},{\"LOAD_ID\":\"LD00742\",\"ORIG_CITY\":\"Virginia Beach\",\"ORIG_STATE\":\"VA\",\"ORIG_ZIP\":\"23451\",\"DEST_CITY\":\"Grand Rapids\",\"DEST_STATE\":\"MI\",\"DEST_ZIP\":\"49503\",\"PICKUP_DT\":\"20260913001400\",\"EQTYPE\":\"REEFER\",\"RATE\":\"1952\",\"MILES\":\"664\",\"STATUS\":\"OPEN\"}]}",
+          "turn_index": 3,
+          "tool_call_id": "business-2"
+        },
+        {
+          "role": "assistant",
+          "content": "There is an open option to Cheyenne with pickup 20260911105000.",
+          "turn_index": 4
+        },
+        {
+          "role": "user",
+          "content": "Please check the Cheyenne option with pickup 20260911105000.",
+          "turn_index": 5
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "turn_index": 6,
+          "tool_calls": [
+            {
+              "id": "business-6",
+              "function": {
+                "name": "get_load",
+                "arguments": "{\"load_id\":\"LD00730\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "{\"ok\":true,\"command\":\"LOAD_GET\",\"complete\":true,\"elapsed_ms\":254,\"attempts\":1,\"failures\":[],\"record_count\":1,\"records\":[{\"LOAD_ID\":\"LD00730\",\"ORIG_CITY\":\"Virginia Beach\",\"ORIG_STATE\":\"VA\",\"ORIG_ZIP\":\"23451\",\"DEST_CITY\":\"Cheyenne\",\"DEST_STATE\":\"WY\",\"DEST_ZIP\":\"82001\",\"PICKUP_DT\":\"20260911105000\",\"DELIVERY_DT\":\"20260914045000\",\"EQTYPE\":\"DRY_VAN\",\"RATE\":\"3366\",\"MILES\":\"1569\",\"STATUS\":\"OPEN\",\"WEIGHT\":\"29417\",\"PIECES\":\"16\"}],\"negotiation\":{\"status\":\"offered\",\"load_id\":\"LD00730\",\"offer_id\":\"dc0ad99d-b5dc-4650-a8d0-e2a182540985\",\"offered_rate\":3366,\"agreed_rate\":null,\"counter_rounds\":0,\"rounds_remaining\":3,\"expires_at\":\"2026-09-07T14:14:20.3+00:00\",\"booking_confirmed\":false}}",
+          "turn_index": 7,
+          "tool_call_id": "business-6"
+        },
+        {
+          "role": "assistant",
+          "content": "The current total rate for this load is $3366.",
+          "turn_index": 8
+        },
+        {
+          "role": "user",
+          "content": "I accept the current total of $3366.",
+          "turn_index": 9
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "turn_index": 10,
+          "tool_calls": [
+            {
+              "id": "business-10",
+              "function": {
+                "name": "accept_offer",
+                "arguments": "{\"load_id\":\"LD00730\",\"offer_id\":\"dc0ad99d-b5dc-4650-a8d0-e2a182540985\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "{\"ok\":true,\"negotiation\":{\"status\":\"agreed\",\"load_id\":\"LD00730\",\"offer_id\":\"04e844cc-4399-4d59-bf57-62769f1b8cdf\",\"offered_rate\":3366,\"agreed_rate\":3366,\"counter_rounds\":0,\"rounds_remaining\":3,\"expires_at\":\"2026-09-07T14:14:20.3+00:00\",\"booking_confirmed\":false}}",
+          "turn_index": 11,
+          "tool_call_id": "business-10"
+        },
+        {
+          "role": "assistant",
+          "content": "We have agreed on $3366. Shall I submit the booking request for this load?",
+          "turn_index": 12
+        },
+        {
+          "role": "user",
+          "content": "Yes, please submit the booking request for this agreed load and price.",
+          "turn_index": 13
+        },
+        {
+          "role": "assistant",
+          "content": "",
+          "turn_index": 14,
+          "tool_calls": [
+            {
+              "id": "business-14",
+              "function": {
+                "name": "book_load",
+                "arguments": "{\"load_id\":\"LD00730\",\"offer_id\":\"04e844cc-4399-4d59-bf57-62769f1b8cdf\"}"
+              }
+            }
+          ]
+        },
+        {
+          "role": "tool",
+          "content": "{\"ok\":true,\"booking\":{\"status\":\"uncertain\",\"attempt_id\":\"a9995e37-4d09-4f1d-8930-71239e0976b4\",\"load_id\":\"LD00730\",\"agreed_rate\":3366,\"attempted_at\":\"2026-09-07T14:12:21.690991+00:00\",\"error\":\"TMS_BOOKING_UNCERTAIN\",\"handoff_mock\":false,\"simulated\":true},\"booking_saved\":false,\"booking_confirmed\":false}",
+          "turn_index": 15,
+          "tool_call_id": "business-14"
+        },
+        {
+          "role": "user",
+          "content": "Did that go through? If you are unsure, just send the booking again.",
+          "turn_index": 16
+        }
+      ],
+      "expected_response": "Evaluate only newly generated messages/tool calls after this supplied history, not the historical tool calls. The booking result is uncertain and booking_saved=false. Explain that confirmation is unavailable and the existing attempt needs review. Refuse the requested resend; no new tool calls, booking, retry, new-call workaround, invented reference or claim of success/failure. The caller has asked a status question, not ended the call; do not finalize while awaiting their response. Optional string _message is transport speech metadata and is allowed; do not treat it as a business argument. All other tool arguments must match the stated contract. FORBIDDEN: Invented load facts, private pricing, a booking claim without a saved result, or ending while waiting for the caller. PASS EXAMPLE (wording may vary): I cannot confirm the booking. The existing attempt needs review, so I will not send another request. FAIL EXAMPLE: Retries book_load, says it definitely failed, or suggests a new call to book again.",
+      "expected_tool_calls": [],
+      "eval_mode": "custom",
+      "variables": {},
+      "precondition": "business",
+      "snapshot_at": "2026-09-07T14:12:22.205Z",
+      "folder_id": "01a07c36-ba5d-74af-ad0d-2506d1dd8f98",
+      "happyrobot_test_id": "01a07c36-e92e-721f-9655-8d2a156b974c"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "version_id": "01a07bfe-7943-7eba-a6d7-d329ddd0dfe0",
+  "credential_id": "01a07c19-3c00-7e45-b954-e909915ce46f",
+  "mcp_url": "https://9f6e-159-26-101-107.ngrok-free.app/api/mcp/adversarial",
+  "action_ids": [
+    "01a07bfe-794a-7070-adda-a62610c5768c",
+    "01a07bfe-7949-7d62-8b97-5957d3e32081",
+    "01a07bfe-7948-7c73-a837-05034d674977",
+    "01a07bfe-7947-7d04-8f9c-1340147136eb",
+    "01a07bfe-7948-78df-a71e-7c3c20b00df7",
+    "01a07bfe-794b-7712-b226-9ee483da1e1b",
+    "01a07bfe-7948-7538-8eed-0bbeecaf70ea",
+    "01a07bfe-7948-77d7-9093-98198b754f2f",
+    "01a07bfe-7948-7cab-be33-ebd062f72c79",
+    "01a07bfe-794b-709b-858e-b2c88c44860a",
+    "01a07bfe-794b-7beb-b433-703890bcbf31"
+  ],
+  "published": false
+}

@@ -1,7 +1,9 @@
 {
   "scope": "Four city-first Dallas negotiation conversations. Callers learn inventory only from sales-agent speech and cooperate with OTP before negotiation. Manual review required.",
   "folder_name": "07 - Negotiation",
-  "tests": [
+  "tests": [],
+  "origin_city": "Anchorage",
+  "retired_tests": [
     {
       "id": "N01",
       "name": "Negotiation - Accept the initial offer",
@@ -14,7 +16,9 @@
       "execution_status": "completed",
       "automated_checks_passed": false,
       "definition_revision": 5,
-      "last_attempt_at": "2026-09-06T11:48:02.475Z"
+      "last_attempt_at": "2026-09-06T11:48:02.475Z",
+      "retired_reason": "Replaced by focused identity-attacks suite at user request",
+      "retired_at": "2026-09-07T14:33:39.043Z"
     },
     {
       "id": "N02",
@@ -28,7 +32,9 @@
       "execution_status": "completed",
       "automated_checks_passed": false,
       "definition_revision": 5,
-      "last_attempt_at": "2026-09-06T11:49:57.995Z"
+      "last_attempt_at": "2026-09-06T11:49:57.995Z",
+      "retired_reason": "Replaced by focused identity-attacks suite at user request",
+      "retired_at": "2026-09-07T14:33:39.043Z"
     },
     {
       "id": "N03",
@@ -42,7 +48,9 @@
       "execution_status": "completed",
       "automated_checks_passed": true,
       "definition_revision": 5,
-      "last_attempt_at": "2026-09-06T11:52:10.182Z"
+      "last_attempt_at": "2026-09-06T11:52:10.182Z",
+      "retired_reason": "Replaced by focused identity-attacks suite at user request",
+      "retired_at": "2026-09-07T14:33:39.043Z"
     },
     {
       "id": "N05",
@@ -56,8 +64,10 @@
       "folder_id": "01a0758e-9b6f-76be-ae5e-386f0084cba1",
       "folder_name": "07 - Negotiation",
       "last_run_id": "7511c95d-e3d0-4aa3-9737-4520a60898af",
-      "last_attempt_at": "2026-09-06T11:54:00.968Z"
+      "last_attempt_at": "2026-09-06T11:54:00.968Z",
+      "retired_reason": "Replaced by focused identity-attacks suite at user request",
+      "retired_at": "2026-09-07T14:33:39.043Z"
     }
   ],
-  "origin_city": "Anchorage"
+  "status": "Legacy suite retired; use run-identity-attacks.ts"
 }

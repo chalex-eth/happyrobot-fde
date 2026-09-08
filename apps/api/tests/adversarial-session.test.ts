@@ -242,6 +242,26 @@ test('native test envelope remains private, authority-gated, isolated and revoca
     () => resolveAdversarialSession(`${forged}.${second.token.split('.')[1]}`),
     /ADVERSARIAL_SESSION_REQUIRED/,
   );
+  // Default envelopes still reject a second identity revision.
+  sessions.get(bookingSession.plan.hash)!.session.authorityRevision = 2;
+  await assert.rejects(() => resolveAdversarialSession(bookingSession.token), /ADVERSARIAL_SCENARIO_UNSUPPORTED/);
+  await revokeAdversarialSession(bookingSession.plan);
+  const multi = await prepareAdversarialSession('none', false, { firstMc: '135797', secondMc: '1515' });
+  plans.push(multi.plan);
+  assert.notEqual(multi.code, multi.secondaryCode);
+  await activateAdversarialSession(multi.plan, multi.plan.id);
+  const secondCarrier = sessions.get(multi.plan.hash)!.session;
+  secondCarrier.authorityRevision = 2;
+  secondCarrier.check = { ...session.check!, mcNumber: '1515' };
+  assert.equal((await resolveAdversarialSession(multi.token)).id, multi.plan.id);
+  assert.equal((await faultInvoke('create_otp')).delivered, true);
+  assert.equal(secondCarrier.challengeId, multi.plan.carrierChange!.challengeId);
+  assert.equal((await readDemoOtp(multi.plan.hash, secondCarrier))?.code, multi.secondaryCode);
+  assert.equal((await faultInvoke('verify_carrier', { mc_number: '135797' })).error, 'ADVERSARIAL_SCENARIO_UNSUPPORTED');
+  secondCarrier.authorityRevision = 3;
+  await assert.rejects(() => resolveAdversarialSession(multi.token), /ADVERSARIAL_SCENARIO_UNSUPPORTED/);
+  const forgedMulti = Buffer.from(JSON.stringify({ ...first.plan, carrierChange: multi.plan.carrierChange })).toString('base64url');
+  await assert.rejects(() => resolveAdversarialSession(`${forgedMulti}.${first.token.split('.')[1]}`), /ADVERSARIAL_SESSION_REQUIRED/);
   Object.assign(process.env, { NODE_ENV: 'production' });
   assert.equal((await handleAdversarialMcp(req(values.ADVERSARIAL_MCP_TOKEN))).status, 403);
 });
