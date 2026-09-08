@@ -459,3 +459,19 @@ an implicit creation fallback. The live version is unchanged.
 Native run polling retries transient read errors up to three consecutive
 failures, with safe HTTP-status diagnostics. It never redispatches runs or
 retries mutating tools as part of polling recovery.
+
+### V34 production audit rubric
+
+At the user's explicit request, V34's audit criteria were aligned with V33's
+twelve Northstars without editing, publishing, or rewiring runtime nodes.
+`copy-v33-northstars-to-v34.mjs --apply` is a version-specific rubric migration,
+not a general exception to the live workflow edit guard. It snapshots the old
+37 criteria, updates twelve existing resources, retires the superseded entries,
+and verifies runtime nodes, custom/adversarial definitions and V33 remain intact.
+The resulting production IDs are in `tests/happyrobot/northstars-production.json`;
+the eval controller keeps its separate V33 definition and session bindings.
+
+Descriptions, examples, categories and priorities match V33. Its empty sequential
+category_config values are invalid on API update, so V34 explicitly supplies
+current/prerequisite stages consistent with each copied criterion. This does not
+claim prompt coverage; coverage requires a separate platform assessment.
