@@ -174,7 +174,7 @@ export const ManagerReviewRequestSchema = z
 export const ReviewRequestSchema = z.union([LegacyReviewRequestSchema, ManagerReviewRequestSchema]);
 export const CallsQuerySchema = z.object({
   source: z
-    .enum(['all', 'browser_demo', 'evaluation', 'integration_test', 'unknown'])
+    .enum(['all', 'browser_demo', 'evaluation', 'integration_test', 'seed', 'unknown'])
     .default('all'),
   review: z.enum(['true', 'false']).default('false'),
   query: z

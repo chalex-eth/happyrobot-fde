@@ -475,3 +475,32 @@ Descriptions, examples, categories and priorities match V33. Its empty sequentia
 category_config values are invalid on API update, so V34 explicitly supplies
 current/prerequisite stages consistent with each copied criterion. This does not
 claim prompt coverage; coverage requires a separate platform assessment.
+
+## Synthetic database seed
+
+`npm run db:seed -- --dry-run` builds and validates fourteen synthetic historical
+calls without network access. `npm run db:seed -- --apply` writes them to the Twin
+instance selected by `TWIN_API_KEY` in `.env.local`; `--verify` reads them back and
+checks the expected dashboard outcomes. To use a different environment file,
+invoke `node --env-file=PATH --import tsx apps/api/db/seed/run.ts --apply` directly.
+
+The seed includes three approved demo bookings (direct acceptance, one counter,
+and multiple counters), awaiting approval, changes requested, manager rejection,
+ineligible/not-found MCs, exhausted OTP attempts, failed OTP delivery, caller
+rejection, exhausted negotiation, an empty search, and uncertain booking.
+Fixtures intentionally use synthetic SEED load IDs/carriers and simulated provider
+results. They do not query or alter TMS inventory, call FMCSA, send OTPs, start
+voice runs, or establish live integration evidence. Historical sessions are expired
+and contain no usable OTP digest. Manager reviews can still be exercised.
+
+The implementation lives in `apps/api/db/seed/`. It uses the domain decision
+functions and validates operator projections, then inserts calls and dependent
+records in one atomic Twin request. Stable versioned call IDs make reapplication
+additive: existing calls, histories, operator credentials, and later review edits
+are preserved. Seed provenance is `source=seed` plus call-start metadata and visible
+summary labels. No migration or reset is performed. `--verify` checks the original
+scenario outcomes, so deliberate later manager changes can cause it to report a
+scenario mismatch; reapplying preserves those changes.
+
+Run `npm run db:test-seed` for disposable PostgreSQL coverage of rollback,
+round-trip outcomes, intermediate event history, and idempotent reapplication.

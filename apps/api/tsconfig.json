@@ -5,12 +5,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "include": [
-    "src/**/*.ts",
-    "tests/**/*.ts",
-    "db/scripts/**/*.ts"
-  ],
-  "exclude": [
-    "dist"
-  ]
+  "include": ["src/**/*.ts", "tests/**/*.ts", "db/scripts/**/*.ts", "db/seed/**/*.ts"],
+  "exclude": ["dist"]
 }

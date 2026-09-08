@@ -33,7 +33,9 @@
     "check:boundaries": "node scripts/check-boundaries.mjs",
     "db:parity": "node --import tsx apps/api/db/scripts/parity.ts",
     "db:test-reset": "node --import tsx apps/api/db/scripts/verify-reset.ts",
-    "db:verify-twin": "node --env-file=.env.local --import tsx apps/api/db/scripts/verify-drizzle-twin.ts"
+    "db:verify-twin": "node --env-file=.env.local --import tsx apps/api/db/scripts/verify-drizzle-twin.ts",
+    "db:seed": "node --env-file=.env.local --import tsx apps/api/db/seed/run.ts",
+    "db:test-seed": "node --import tsx --test apps/api/db/seed/seed.test.ts"
   },
   "devDependencies": {
     "@happyrobot-ai/sdk": "0.1.45",
