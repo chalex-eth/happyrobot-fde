@@ -15,5 +15,5 @@ are examples, not production performance. The workspace link comes from the
 repository README. Add the walkthrough link when the final video is available.
 
 Keep the simulation explanations beside the approval and follow-up instructions
-when editing. The guide includes the shared frontend password on page 7, as requested.
+when editing. The guide includes the shared frontend password on page 1, as requested.
 Update the HTML and PDF together when that password changes.
