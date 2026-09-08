@@ -45,6 +45,8 @@ const runtimeSchema = z.object({
   BOOKING_TMS_MODE: optionalString,
   OPERATIONS_ENABLED: envBoolean,
   OPERATOR_RPC_KEY: optionalString,
+  OPERATOR_PASSWORD: optionalString,
+  OPERATOR_SESSION_SECRET: optionalString,
 });
 
 export type RuntimeConfig = {
@@ -81,6 +83,7 @@ export type RuntimeConfig = {
     operationsEnabled: boolean;
     operatorRpcKey?: string;
   };
+  operator: { password?: string; sessionSecret?: string };
 };
 
 export function runtimeConfig(): RuntimeConfig {
@@ -121,6 +124,10 @@ export function runtimeConfig(): RuntimeConfig {
       bookingTmsMode: env.BOOKING_TMS_MODE ?? 'mock',
       operationsEnabled: env.OPERATIONS_ENABLED,
       operatorRpcKey: env.OPERATOR_RPC_KEY,
+    },
+    operator: {
+      password: env.OPERATOR_PASSWORD,
+      sessionSecret: env.OPERATOR_SESSION_SECRET,
     },
   };
 }

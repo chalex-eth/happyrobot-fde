@@ -10,6 +10,7 @@ import * as mcp from './transport/http/routes/mcp/route.js';
 import * as operatorCalls from './transport/http/routes/operator/calls/route.js';
 import * as operatorInventory from './transport/http/routes/operator/inventory/route.js';
 import * as operatorReview from './transport/http/routes/operator/review/route.js';
+import * as operatorAuth from './transport/http/routes/operator/auth/route.js';
 import * as tms from './transport/http/routes/tms/route.js';
 type Handler = (request: Request) => Promise<Response>;
 const routes: Record<string, Partial<Record<string, Handler>>> = {
@@ -29,6 +30,11 @@ const routes: Record<string, Partial<Record<string, Handler>>> = {
   '/api/operator/calls': { GET: operatorCalls.GET },
   '/api/operator/inventory': { GET: operatorInventory.GET },
   '/api/operator/review': { POST: operatorReview.POST },
+  '/api/operator/auth': {
+    POST: operatorAuth.POST,
+    GET: operatorAuth.GET,
+    DELETE: operatorAuth.DELETE,
+  },
   '/api/tms': { POST: tms.POST },
 };
 export async function handleRequest(request: Request): Promise<Response> {

@@ -33,15 +33,31 @@ test('operator review writes require a matching browser origin', () => {
     /INVALID_ORIGIN/,
   );
 });
-test('operator routes validate requests without requiring login', async () => {
+test('operator routes require the shared session before request validation', async (t) => {
+  const previous = {
+    NODE_ENV: process.env.NODE_ENV,
+    OPERATOR_PASSWORD: process.env.OPERATOR_PASSWORD,
+    OPERATOR_SESSION_SECRET: process.env.OPERATOR_SESSION_SECRET,
+  };
+  Object.assign(process.env, {
+    NODE_ENV: 'development',
+    OPERATOR_PASSWORD: 'correct-horse-battery-staple',
+    OPERATOR_SESSION_SECRET: 'operator-session-secret-for-tests-'.repeat(2),
+  });
+  t.after(() => {
+    for (const [key, value] of Object.entries(previous)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+  });
   assert.equal(
     (await calls(new Request('http://localhost:3000/api/operator/calls?call_id=invalid'))).status,
-    400,
+    401,
   );
   assert.equal(
     (await review(new Request('http://localhost:3000/api/operator/review', { method: 'POST' })))
       .status,
-    403,
+    401,
   );
   assert.equal(
     (
@@ -55,9 +71,9 @@ test('operator routes validate requests without requiring login', async () => {
           },
           body: '{}',
         }),
-      )
+    )
     ).status,
-    400,
+    401,
   );
 });
 test('geographic lookup uses city and state; unknown locations stay unmapped', () => {

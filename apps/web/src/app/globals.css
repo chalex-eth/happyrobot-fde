@@ -73,6 +73,16 @@ h3 { font-size: 21px; font-weight: 700; }
 small, .hint { color: var(--muted); font-size: 12px; line-height: 1.5; }
 time, output, .count { font-variant-numeric: tabular-nums; }
 
+.auth-shell { display: grid; min-height: 100vh; place-items: center; padding: 32px 24px; background: var(--paper); }
+.auth-card { width: min(100%, 440px); padding: 36px; border: 1px solid var(--ink); background: var(--surface); box-shadow: 12px 12px 0 var(--ink); }
+.auth-card h1 { max-width: none; margin: 9px 0 14px; font-size: clamp(42px, 8vw, 64px); }
+.auth-card > p { color: var(--muted); }
+.eyebrow { color: var(--teal); font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.auth-form { display: grid; gap: 9px; margin-top: 26px; }
+.auth-form label { display: block; }
+.auth-form button { margin-top: 8px; }
+.auth-card .notice { margin-top: 18px; }
+
 .site-header {
   display: flex;
   align-items: center;

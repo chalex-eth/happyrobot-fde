@@ -5,6 +5,7 @@ import {
   lookupCarrier,
   normalizeMc,
   parseCarrierCheck,
+  redactFmcsaUrl,
 } from '../src/integrations/fmcsa/client.js';
 
 // Synthetic contract fixtures only. The application never uses these as fallback data.
@@ -182,6 +183,21 @@ test('handles auth denial, throttling, upstream failure and invalid JSON without
   await assert.rejects(lookupCarrier('1515', undefined, jsonFetch({ content: null })), {
     code: 'FMCSA_INVALID_RESPONSE',
   });
+});
+test('FMCSA diagnostics redact the credential-bearing query parameter', async (t) => {
+  const url = 'https://mobile.fmcsa.dot.gov/qc/services/carriers/docket-number/1515/?webKey=fixture-secret';
+  assert.equal(redactFmcsaUrl(url), 'https://mobile.fmcsa.dot.gov/qc/services/carriers/docket-number/1515/?webKey=%5BREDACTED%5D');
+  const warnings: string[] = [];
+  t.mock.method(console, 'warn', (value: string) => warnings.push(value));
+  await assert.rejects(
+    lookupCarrier('1515', undefined, async () => {
+      throw new Error(url);
+    }),
+    { message: 'FMCSA_UNAVAILABLE' },
+  );
+  assert.equal(warnings.length, 1);
+  assert.ok(warnings[0].includes('%5BREDACTED%5D'));
+  assert.ok(!warnings[0].includes('fixture-secret'));
 });
 test('rejects oversized responses', async () => {
   await assert.rejects(

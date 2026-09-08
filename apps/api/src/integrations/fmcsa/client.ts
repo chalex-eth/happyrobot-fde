@@ -22,6 +22,12 @@ const yesNo = (value: unknown): boolean | null =>
 const authority = (value: unknown): string | null =>
   typeof value === 'string' && ['A', 'I', 'N'].includes(value) ? value : null;
 
+export function redactFmcsaUrl(value: string | URL) {
+  const safe = new URL(String(value));
+  if (safe.searchParams.has('webKey')) safe.searchParams.set('webKey', '[REDACTED]');
+  return safe.toString();
+}
+
 // Only explicit affirmative evidence passes. Unknown fields never mean active.
 export function parseCarrierCheck(payload: unknown, mcNumber: string): CarrierCheck {
   const result = (
@@ -130,6 +136,20 @@ export async function lookupCarrier(
     }
     return parseCarrierCheck(JSON.parse(Buffer.concat(chunks).toString('utf8')), mc);
   } catch (error) {
+    const code =
+      error instanceof FmcsaError
+        ? error.code
+        : error instanceof SyntaxError
+          ? 'FMCSA_INVALID_RESPONSE'
+          : 'FMCSA_UNAVAILABLE';
+    if (!(error instanceof FmcsaError))
+      console.warn(
+        JSON.stringify({
+          event: 'fmcsa_request_failed',
+          endpoint: redactFmcsaUrl(url),
+          code,
+        }),
+      );
     if (signal?.aborted) throw new FmcsaError('CANCELLED', 499);
     if (timeout.aborted || (error instanceof Error && error.name === 'TimeoutError'))
       throw new FmcsaError('FMCSA_TIMEOUT', 504, true);

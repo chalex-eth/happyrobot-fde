@@ -4,8 +4,10 @@ import { operatorRpc } from '../../../../../modules/operations/index.js';
 import { operatorResponse, operatorError } from '../../../operator-response.js';
 import { readJson } from '../../../read-json.js';
 import { SessionError } from '../../../../../errors.js';
+import { requireOperatorSession } from '../../../middleware/operator-session.js';
 export async function POST(request: Request) {
   try {
+    requireOperatorSession(request);
     checkOperatorOrigin(request);
     const p = ReviewRequestSchema.safeParse(await readJson(request, 2500));
     if (!p.success) throw new SessionError('INVALID_REVIEW', 400);

@@ -3,8 +3,10 @@ import { z } from 'zod';
 import { operatorRpc } from '../../../../../modules/operations/index.js';
 import { operatorResponse, operatorError } from '../../../operator-response.js';
 import { SessionError } from '../../../../../errors.js';
+import { requireOperatorSession } from '../../../middleware/operator-session.js';
 export async function GET(request: Request) {
   try {
+    requireOperatorSession(request);
     const p = Object.fromEntries(new URL(request.url).searchParams);
     if (p.call_id) {
       const id = z.string().uuid().safeParse(p.call_id);
